@@ -1,4 +1,4 @@
-<img src="https://www.isec.pt/assets_isec/logo-isec-transparente.png" alt="ISEC Logo" width="25%" />
+<img src="./assets/imgs/logo.png" alt="ISEC Logo" width="25%" />
 
 # ISEC Internship and Project Partnerships Management System
 
@@ -29,7 +29,7 @@ This separation allows for a clear division between data handling and user inter
 
 ## 📚 Documentation
 
-The complete and detailed project report, covering all aspects of the development process, architecture, and conclusions, is available in the `/docs` directory.
+The complete and detailed project report, covering all aspects of the development process, architecture, and conclusions, is available in the `assets/docs` directory.
 
 
 ## 🚀 How to Run
