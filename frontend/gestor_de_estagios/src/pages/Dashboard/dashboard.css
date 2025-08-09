@@ -1,0 +1,12 @@
+.modules {
+	gap: var(--spacing-xl);
+}
+.modules-btns {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: var(--spacing-l);
+}
+
+.sidebar.admin {
+	gap: var(--spacing-l);
+}

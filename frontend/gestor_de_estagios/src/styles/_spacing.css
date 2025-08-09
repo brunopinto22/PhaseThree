@@ -1,0 +1,83 @@
+/* X-Small screens */
+@media (width < 576px) {
+	:root {
+		--spacing-xs: 0.790rem;
+		--spacing-s: 0.889rem;
+		--spacing-m: 1.000rem;
+		--spacing-l: 1.125rem;
+		--spacing-xl: 1.266rem;
+		--spacing-2xl: 1.424rem;
+		--spacing-3xl: 1.602rem;
+		--spacing-4xl: 1.802rem;
+	}
+}
+
+/* Small screens */
+@media (width >= 576px) {
+	:root {
+		--spacing-xs: 0.790rem;
+		--spacing-s: 0.889rem;
+		--spacing-m: 1.000rem;
+		--spacing-l: 1.125rem;
+		--spacing-xl: 1.266rem;
+		--spacing-2xl: 1.424rem;
+		--spacing-3xl: 1.602rem;
+		--spacing-4xl: 1.802rem;
+	}
+}
+
+/* Medium screens */
+@media (width >= 768px) {
+	:root {
+		--spacing-xs: 0.382rem;
+		--spacing-s: 0.618rem;
+		--spacing-m: 1.000rem;
+		--spacing-l: 1.618rem;
+		--spacing-xl: 2.618rem;
+		--spacing-2xl: 4.236rem;
+		--spacing-3xl: 6.854rem;
+		--spacing-4xl: 11.089rem;
+	}
+}
+
+/* Large screens */
+@media (width >= 992px) {
+	:root {
+		--spacing-xs: 0.382rem;
+		--spacing-s: 0.618rem;
+		--spacing-m: 1.000rem;
+		--spacing-l: 1.618rem;
+		--spacing-xl: 2.618rem;
+		--spacing-2xl: 4.236rem;
+		--spacing-3xl: 6.854rem;
+		--spacing-4xl: 11.089rem;
+	}
+}
+
+/* X-Large screens */
+@media (width >= 1200px) {
+	:root {
+		--spacing-xs: 0.382rem;
+		--spacing-s: 0.618rem;
+		--spacing-m: 1.000rem;
+		--spacing-l: 1.618rem;
+		--spacing-xl: 2.618rem;
+		--spacing-2xl: 4.236rem;
+		--spacing-3xl: 6.854rem;
+		--spacing-4xl: 11.089rem;
+	}
+}
+
+/* X-X-Large screens */
+@media (width >= 1400px) {
+	:root {
+		--spacing-xs: 0.382rem;
+		--spacing-s: 0.618rem;
+		--spacing-m: 1.000rem;
+		--spacing-l: 1.618rem;
+		--spacing-xl: 2.618rem;
+		--spacing-2xl: 4.236rem;
+		--spacing-3xl: 6.854rem;
+		--spacing-4xl: 11.089rem;
+	}
+}

@@ -1,0 +1,11 @@
+#calendar {
+	gap: var(--spacing-2xl);
+}
+
+#calendar section {
+	gap: var(--spacing-l);
+}
+
+#calendar .inputs {
+	gap: var(--spacing-l);
+}

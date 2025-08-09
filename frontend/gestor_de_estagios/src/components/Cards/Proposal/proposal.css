@@ -1,0 +1,68 @@
+.card-proposal {
+	--background: var(--secundary-color-200);
+	--title-color: var(--text-color-800);
+	--body-color: var(--text-color-700);
+	--border-color: var(--secundary-color-700);
+
+	gap: var(--spacing-xl);
+	padding: var(--spacing-l);
+
+	background-color: var(--background);
+	color: var(--body-color);
+
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-s);
+
+	transition: all 0.2s;
+}
+
+.card-proposal:hover {
+	background-color: var(--secundary-color-300);
+}
+
+
+.card-proposal.disabled {
+	--background: var(--background-color-700);
+	--title-color: var(--text-color-600);
+	--body-color: var(--text-color-500);
+	--border-color: transparent;
+}
+.card-proposal.disabled {
+	background-color: var(--background-color-700);
+	box-shadow: none;
+}
+
+.card-proposal.accepted {
+	--background: var(--secundary-color-100);
+	--title-color: var(--green);
+	--body-color: var(--green);
+	--border-color: var(--green);
+	outline: 4px solid var(--green);
+}
+
+.card-proposal.rejected {
+	--background: var(--text-color-100);
+	--title-color: var(--red);
+	--body-color: var(--red);
+	--border-color: var(--red);
+}
+
+.card-title {
+	color: var(--title-color);
+}
+.card-title div {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.card-title div *{
+	display: inline;
+}
+
+.card-proposal .bi-heart,
+.card-proposal .bi-heart-fill {
+	font-size: var(--icon-size-xs);
+}
+.card-proposal .fav {
+	color: var(--red);
+}

@@ -1,0 +1,21 @@
+:root {
+	
+  /* Border */
+  --border-xs: 0.5rem;
+  --border-s: 0.75rem;
+  --border-m: 1rem;
+  --border-l: 1.25rem;
+  --border-xl: 1.5rem;
+
+  /* Opacity */
+  --opacity-4: 0.04;
+  --opacity-8: 0.08;
+  --opacity-16: 0.16;
+  --opacity-24: 0.24;
+  --opacity-40: 0.40;
+  --opacity-56: 0.56;
+  --opacity-64: 0.64;
+  --opacity-80: 0.80;
+  --opacity-100: 1.00;
+
+}

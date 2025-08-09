@@ -1,0 +1,74 @@
+#profile {
+	gap: var(--spacing-xl);
+}
+
+.card {
+	gap: var(--spacing-l);
+	padding: var(--spacing-l);
+	background-color: var(--secundary-color-300);
+	border-radius: var(--border-m);
+	border: none;
+}
+
+.profile-title {
+	gap: var(--spacing-m);
+}
+.profile-title h3 {
+	color: var(--text-color-800);
+}
+.profile-title h5 {
+	color: var(--text-color-700);
+}
+
+.options {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-s);
+	padding: var(--spacing-m);
+}
+.options button {
+	width: 100%;
+}
+
+.profile-info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xl);
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-m);
+	color: var(--text-color-800);
+}
+
+.section .content {
+	gap: var(--spacing-s);
+	padding: var(--spacing-l);
+	background-color: var(--secundary-color-200);
+	color: var(--text-color-700);
+	border: 1px solid var(--secundary-color-500);
+	border-radius: var(--border-xs);
+}
+
+.content-list {
+	display: grid;
+	grid-template-rows: auto;
+}
+.content-list .content-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	border-bottom: 1px solid var(--secundary-color-500);
+}
+.content-list .row.header {
+	color: var(--text-color-700);
+}
+
+.content-row .red {
+	color: var(--error-color-600);
+}
+.content-row .yellow {
+	color: var(--warning-color-700);
+}

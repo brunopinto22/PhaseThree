@@ -1,0 +1,31 @@
+#candidature {
+	gap: var(--spacing-2xl);
+}
+
+#candidature .header {
+	gap: var(--spacing-s);
+}
+#candidature .header * {
+	width: fit-content;
+}
+#candidature.header .title {
+	color: var(--text-color-800);
+}
+#candidature.header .sub-title {
+	color: var(--text-color-500);
+}
+
+.text-link {
+	transition: all 0.2s;
+}
+.text-link:hover {
+	cursor: pointer;
+	color: var(--blue);
+	transition: 0.2s;
+}
+
+.state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}

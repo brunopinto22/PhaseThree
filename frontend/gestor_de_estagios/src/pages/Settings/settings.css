@@ -1,0 +1,17 @@
+#settings {
+	gap: var(--spacing-2xl);
+}
+
+#admin,
+#accounts,
+#scientific-areas {
+	gap: var(--spacing-xl)
+}
+
+.title {
+	color: var(--text-color-800);
+}
+
+.sub-title {
+	color: var(--text-color-600);
+}

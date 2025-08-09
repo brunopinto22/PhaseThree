@@ -1,0 +1,4 @@
+main {
+	min-height: 80svh;
+	padding: var(--spacing-2xl) var(--spacing-3xl);
+}

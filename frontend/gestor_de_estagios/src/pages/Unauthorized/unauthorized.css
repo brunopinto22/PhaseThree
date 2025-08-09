@@ -1,0 +1,25 @@
+#unauthorized {
+  display: flex;
+  position: relative;
+  height: 100svh;
+  width: 100%;
+	overflow: hidden;
+	transition: all 0.5s;
+}
+
+#unauthorized section {
+	padding: var(--spacing-m);
+	color: var(--text-color-800);
+}
+
+#unauthorized .title {
+	font-size: var(--fs-950);
+	color: var(--primary-color-700);
+}
+#unauthorized .sub-title {
+	color: var(--primary-color-700);
+}
+
+#unauthorized .content {
+	gap: var(--spacing-l);
+}

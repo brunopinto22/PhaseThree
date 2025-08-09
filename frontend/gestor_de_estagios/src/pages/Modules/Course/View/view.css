@@ -1,0 +1,54 @@
+#course {
+	gap: var(--spacing-2xl);
+}
+
+.main {
+	gap: var(--spacing-xl);
+}
+
+.title .sub {
+	color: var(--text-color-400);
+}
+
+.branches {
+	gap: var(--spacing-m)
+}
+.branches .branch {
+	gap: var(--spacing-s);
+}
+
+.admins, .admins ul {
+	gap: var(--spacing-m);
+}
+
+.branch i.red { color: var(--red); }
+
+.branch i.green { color: var(--green); }
+
+.branch i.blue { color: var(--blue); }
+
+.branch i.orange { color: var(--orange); }
+
+.branch i.yellow { color: var(--yellow); }
+
+.branch i.pink { color: var(--pink); }
+
+.branch i.purple { color: var(--purple); }
+
+.branch i.brown { color: var(--brown); }
+
+.branch i.teal { color: var(--teal); }
+
+
+.sidebar .title {
+	color: var(--text-color-800);
+}
+.sidebar .content {
+	gap: var(--spacing-m);
+}
+.sidebar .content i {
+	font-size: var(--icon-size-xs);
+}
+.sidebar .content p{
+	gap: var(--spacing-s);
+}

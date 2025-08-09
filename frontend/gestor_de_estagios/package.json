@@ -1,0 +1,61 @@
+{
+  "name": "gestor_de_estagios",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@dnd-kit/abstract": "^0.0.5",
+    "@dnd-kit/core": "^6.2.0",
+    "@dnd-kit/helpers": "^0.0.5",
+    "@dnd-kit/react": "^0.0.5",
+    "@dnd-kit/sortable": "^9.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@lit/react": "^1.0.6",
+    "@mdui/icons": "^1.0.2",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "bootstrap": "^5.3.3",
+    "cropperjs": "^1.6.2",
+    "crypto-js": "^4.2.0",
+    "gestor_de_estagios": "file:",
+    "jwt-decode": "^4.0.0",
+    "mdui": "^2.1.3",
+    "mui-file-input": "^6.0.0",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-calendar": "^5.1.0",
+    "react-cropper": "^2.3.3",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "web-types": [
+    "./node_modules/mdui/web-types.en.json"
+  ]
+}

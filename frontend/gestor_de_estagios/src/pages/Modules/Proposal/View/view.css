@@ -1,0 +1,54 @@
+#proposal {
+	gap: var(--spacing-xl);
+}
+
+#proposal section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-s);
+	padding: 0;
+}
+#proposal section .title {
+	color: var(--text-color-900);
+}
+#proposal section p {
+	color: var(--text-color-700)
+}
+
+.main {
+	gap: var(--spacing-2xl);
+}
+
+.title-container {
+	gap: var(--spacing-xs);
+}
+.title-container .number {
+	color: var(--text-color-300);
+}
+.title-container .title {
+	color: var(--text-color-900);
+}
+.title-container .company {
+	color: var(--text-color-500);
+}
+
+.sidebar {
+	gap: var(--spacing-xl);
+}
+
+.sidebar .content {
+	gap: var(--spacing-m);
+}
+
+.sidebar .content .divider {
+	padding: 0 var(--spacing-xs);
+}
+.sidebar .content .divider hr {
+	margin: 0;
+	color: var(--secundary-color-500);
+	opacity: 1;
+}
+
+.sidebar .btns {
+	gap: var(--spacing-m);
+}

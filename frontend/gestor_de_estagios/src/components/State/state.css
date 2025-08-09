@@ -1,0 +1,35 @@
+.state-text {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-xs);
+}
+.state-text .bi {
+	font-size: var(--icon-size-s);
+}
+
+.state-text.unset {
+	color: var(--text-color-300);
+}
+.state-text.pending {
+	color: var(--yellow);
+}
+.state-text.accpeted {
+	color: var(--green);
+}
+.state-text.protocol-generated {
+	color: var(--blue);
+}
+.state-text.protocol-isec {
+	color: var(--primary-color-400);
+}
+.state-text.protocol-company {
+	color: var(--teal);
+}
+.state-text.protocol-student {
+	color: var(--orange);
+}
+.state-text.start {
+	color: var(--green);
+}

@@ -1,0 +1,84 @@
+.state-tracker {
+	position: relative;
+	padding: var(--spacing-s) 0;
+	overflow: hidden;
+}
+
+
+.state-tracker .state {
+	position: relative;
+	display: flex;
+	gap: var(--spacing-s);
+	width: 200%;
+	z-index: 1;
+}
+
+.state-tracker .state .icon {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	aspect-ratio: 1 / 1;
+	height: 3vw;
+
+	outline: 4px solid var(--background-color-100);
+	border-radius: 100%;
+}
+
+.state-tracker .state .icon::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translateY(-50%);
+	width: 400%;
+	height: var(--fs-100);
+	background-color: var(--background-color-600);
+	z-index: -1;
+}
+
+.state-tracker .state:last-child .icon::before {
+	display: none;
+}
+
+.state-tracker .state .icon i{
+	font-size: var(--icon-size-s);
+}
+.state-tracker .state .icon b {
+	font-size: var(--fs-400);
+}
+
+.state-tracker .state .description {
+	width: min-content;
+	text-align: center;
+	color: var(--text-color-500);
+	font-weight: 600;
+}
+
+
+.state.done .icon{
+	background-color: var(--primary-color-600);
+	color: var(--background-color-100);
+	outline-color: transparent;
+}
+.state.done .icon::before {
+	background-color: var(--primary-color-500);
+}
+.state.done .description {
+	color: var(--text-color-300);
+}
+
+.state.current .icon {
+	background-color: var(--background-color-100);
+	color: var(--primary-color-600);
+	outline-color: var(--primary-color-600);
+}
+.state.current .description {
+	color: var(--text-color-900);
+}
+
+.state.to-do .icon {
+	background-color: var(--background-color-700);
+	color: var(--background-color-100);
+}

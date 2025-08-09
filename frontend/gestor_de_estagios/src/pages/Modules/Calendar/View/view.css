@@ -1,0 +1,22 @@
+#calendar {
+	gap: var(--spacing-2xl);
+}
+
+#calendar .title {
+	color: var(--text-color-900);
+}
+
+#calendar .sub-title {
+	color: var(--text-color-400);
+}
+
+#calendar .dates {
+	color: var(--text-color-800);
+}
+#calendar .dates .active {
+	color: var(--blue);
+}
+
+#calendar .list-container {
+	gap: var(--spacing-xl)
+}

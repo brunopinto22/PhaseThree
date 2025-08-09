@@ -1,0 +1,29 @@
+.dash-btn {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--spacing-m);
+	text-align: left;
+	padding: var(--spacing-m) var(--spacing-l);
+	background-color: var(--primary-color-700);
+  color: var(--background-color-100);
+  border: 5px solid var(--primary-color-700);
+  border-radius: var(--border-s);
+  transition: 0.2s;
+}
+
+.dash-btn:hover {
+  cursor: pointer;
+  background-color: var(--primary-color-500);
+  border-color: var(--primary-color-600);
+}
+
+.dash-btn:disabled {
+  background-color: var(--background-color-900);
+  border-color: var(--text-color-200);
+  color: var(--text-color-200);
+}
+
+.dash-btn .btn-icon {
+	font-size: var(--icon-size-m);
+}

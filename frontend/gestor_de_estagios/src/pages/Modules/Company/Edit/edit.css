@@ -1,0 +1,19 @@
+#company {
+	gap: var(--spacing-2xl);
+}
+
+section {
+	gap: var(--spacing-xl);
+}
+
+.profile {
+	gap: var(--spacing-l);
+}
+
+.inputs {
+	gap: var(--spacing-l);
+}
+
+.buttons button {
+	width: 100%;
+}

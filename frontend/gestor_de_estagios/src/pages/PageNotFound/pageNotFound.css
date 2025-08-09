@@ -1,0 +1,25 @@
+#not-found {
+  display: flex;
+  position: relative;
+  height: 100svh;
+  width: 100%;
+	overflow: hidden;
+	transition: all 0.5s;
+}
+
+#not-found section {
+	padding: var(--spacing-m);
+	color: var(--text-color-800);
+}
+
+#not-found .title {
+	font-size: var(--fs-950);
+	color: var(--primary-color-700);
+}
+#not-found .sub-title {
+	color: var(--primary-color-700);
+}
+
+#not-found .content {
+	gap: var(--spacing-l);
+}

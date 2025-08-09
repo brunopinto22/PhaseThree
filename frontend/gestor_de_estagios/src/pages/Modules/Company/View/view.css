@@ -1,0 +1,51 @@
+#company {
+	gap: var(--spacing-2xl);
+}
+
+.header {
+	gap: var(--spacing-xl);
+}
+.header .title {
+	color: var(--text-color-800);
+}
+
+.info {
+	gap: var(--spacing-2xl);
+}
+.info p {
+	color: var(--text-color-700);
+}
+
+.representatives .collapsible {
+	position: relative;
+}
+
+/* X-Small screens */
+@media (width < 576px) {
+ .representatives .collapsible { overflow-x: scroll; }
+}
+
+/* Small screens */
+@media (width >= 576px) {
+ .representatives .collapsible { overflow-x: scroll; }
+}
+
+/* Medium screens */
+@media (width >= 768px) {
+ .representatives .collapsible { overflow-x: hidden; }
+}
+
+/* Large screens */
+@media (width >= 992px) {
+ .representatives .collapsible { overflow-x: hidden; }
+}
+
+/* X-Large screens */
+@media (width >= 1200px) {
+ .representatives .collapsible { overflow-x: hidden; }
+}
+
+/* X-X-Large screens */
+@media (width >= 1400px) {
+ .representatives .collapsible { overflow-x: hidden; }
+}

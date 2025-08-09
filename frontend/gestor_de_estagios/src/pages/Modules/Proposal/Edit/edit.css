@@ -1,0 +1,19 @@
+#student {
+	gap: var(--spacing-2xl);
+}
+
+section {
+	gap: var(--spacing-xl);
+}
+
+.inputs {
+	gap: var(--spacing-l);
+}
+
+.branches b {
+	color: var(--primary-color-800);
+}
+
+.buttons button {
+	width: 100%;
+}

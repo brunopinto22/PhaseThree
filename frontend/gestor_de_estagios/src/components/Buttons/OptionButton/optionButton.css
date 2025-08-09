@@ -1,0 +1,58 @@
+.option-btn {
+	--bg: var(--primary-color-500);
+	--hover: var(--primary-color-400);
+
+	padding: var(--spacing-s);
+	background-color: var(--bg);
+	color: var(--background-color-100);
+	border: none;
+	border-radius: var(--border-s);
+
+	transition: all 0.2s;
+}
+.option-btn:hover {
+	background-color: var(--hover);
+}
+
+.option-btn div {
+	--size: var(--icon-size-xs);
+	width: var(--size);
+	height: var(--size);
+	font-size: var(--size);
+}
+
+.option-btn.disabled,
+.option-btn:disabled {
+	background-color: var(--text-color-300);
+	color: var(--background-color-400);
+}
+
+.option-btn.view {
+	--bg: var(--blue);
+	--hover: var(--blue-lighter);
+}
+
+.option-btn.edit {
+	--bg: var(--teal);
+	--hover: var(--teal-lighter);
+}
+
+.option-btn.delete {
+	--bg: var(--red);
+	--hover: var(--red-lighter);
+}
+
+.option-btn.remove {
+	--bg: var(--primary-color-400);
+	--hover: var(--primary-color-300);
+}
+
+.option-btn.student {
+	--bg: var(--yellow);
+	--hover: var(--yellow-lighter);
+}
+
+.option-btn.proposal {
+	--bg: var(--green);
+	--hover: var(--green-lighter);
+}

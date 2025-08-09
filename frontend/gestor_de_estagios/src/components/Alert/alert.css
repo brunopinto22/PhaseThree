@@ -1,0 +1,35 @@
+.alert {
+	margin: 0;
+	gap: var(--spacing-m);
+	padding: var(--spacing-m) var(--spacing-l);
+	border-radius: var(--border-s);
+	box-shadow: 0 0 var(--spacing-xs) 0 rgba(0,0,0, var(--opacity-16));
+}
+
+.alert i {
+	font-size: var(--icon-size-m);
+}
+
+.alert-danger {
+	background-color: var(--error-color-200);
+	color: var(--error-color-700);
+	border-color: var(--error-color-300);
+}
+
+.alert-warning {
+	background-color: var(--warning-color-100);
+	color: var(--warning-color-800);
+	border-color: var(--warning-color-300);
+}
+
+.alert-success {
+	background-color: #d4f3e2;
+	color: var(--green);
+	border-color: var(--green-lighter);
+}
+
+.alert-info {
+	background-color: #c8deff;
+	color: var(--blue-darker);
+	border-color: var(--blue);
+}

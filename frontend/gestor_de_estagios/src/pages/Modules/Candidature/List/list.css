@@ -1,0 +1,36 @@
+.candidatures-list {
+	gap: var(--spacing-xl);
+}
+
+.captions {
+	color: var(--text-color-100);
+}
+
+.cap .bi {
+	font-size: var(--icon-size-xs);
+}
+
+.cap.unset {
+	color: var(--text-color-300);
+}
+.cap.pending {
+	color: var(--yellow);
+}
+.cap.accpeted {
+	color: var(--green);
+}
+.cap.protocol-generated {
+	color: var(--blue);
+}
+.cap.protocol-isec {
+	color: var(--primary-color-400);
+}
+.cap.protocol-company {
+	color: var(--teal);
+}
+.cap.protocol-student {
+	color: var(--orange);
+}
+.cap.start {
+	color: var(--green);
+}

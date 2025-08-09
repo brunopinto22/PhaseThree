@@ -1,0 +1,74 @@
+#login {
+  display: flex;
+  position: relative;
+  height: 100svh;
+  width: 100%;
+	overflow: hidden;
+	transition: all 0.5s;
+}
+
+section {
+	padding: var(--spacing-l);
+} 
+
+
+.image-container {
+  overflow: hidden;
+
+  padding: var(--spacing-xl);
+
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: var(--border-xs);
+}
+.image-container img {
+  height: 5%;
+}
+
+
+.form {
+  padding: var(--spacing-2xl) var(--spacing-2xl);
+}
+.form h1 {
+  text-align: center;
+  color: var(--primary-color-700);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-m);
+}
+
+form button {
+  margin-top: var(--spacing-l);
+}
+
+.password-field {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: var(--spacing-xs);
+}
+.password-field .input {
+  width: 100%;
+}
+
+.create-account {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-s);
+  width: 100%;
+  text-align: center;
+}
+.create-account .btns {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.help {
+	text-align: center;
+}

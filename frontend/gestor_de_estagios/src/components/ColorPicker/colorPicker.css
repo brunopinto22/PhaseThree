@@ -1,0 +1,35 @@
+.color-picker {
+	gap: var(--spacing-s);
+}
+
+.color-picker .color {
+	height: var(--fs-800);
+	aspect-ratio: 1 / 1;
+	border: 2px solid vaR(--background-color-300);
+	border-radius: var(--border-xs);
+	outline: 3px solid transparent;
+	transition: all 0.2s;
+}
+
+.color-picker .color.selected {
+	outline: 3px solid var(--text-color-800);
+}
+
+
+.color-picker .color.red { background-color: var(--red); }
+
+.color-picker .color.green { background-color: var(--green); }
+
+.color-picker .color.blue { background-color: var(--blue); }
+
+.color-picker .color.orange { background-color: var(--orange); }
+
+.color-picker .color.yellow { background-color: var(--yellow); }
+
+.color-picker .color.pink { background-color: var(--pink); }
+
+.color-picker .color.purple { background-color: var(--purple); }
+
+.color-picker .color.brown { background-color: var(--brown); }
+
+.color-picker .color.teal { background-color: var(--teal); }

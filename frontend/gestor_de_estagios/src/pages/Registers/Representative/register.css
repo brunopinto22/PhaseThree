@@ -1,0 +1,25 @@
+#register-representative {
+  display: flex;
+  position: relative;
+  height: 100svh;
+  width: 100%;
+	overflow: hidden;
+}
+
+section {
+	padding: var(--spacing-l);
+}
+
+.form {
+	padding: var(--spacing-m) var(--spacing-xl);
+}
+
+#register-representative .title-container .title {
+	color: var(--primary-color-600);
+	text-align: left;
+}
+
+#register-representative .title-container .sub-title {
+	color: var(--text-color-600);
+	text-align: left;
+}

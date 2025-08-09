@@ -1,0 +1,18 @@
+#course {
+	gap: var(--spacing-2xl);
+}
+
+section {
+	gap: var(--spacing-xl);
+}
+
+.inputs {
+	gap: var(--spacing-l);
+}
+.inputs textarea {
+	height: 25svh;
+}
+
+.buttons button {
+	width: 100%;
+}

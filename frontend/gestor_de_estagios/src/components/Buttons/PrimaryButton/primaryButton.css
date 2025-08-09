@@ -1,0 +1,20 @@
+.primary-btn {
+  padding: var(--spacing-m) var(--spacing-l);
+  background-color: var(--primary-color-700);
+  color: var(--background-color-100);
+  border: 5px solid var(--primary-color-700);
+  border-radius: var(--border-xs);
+  transition: 0.2s;
+}
+
+.primary-btn:hover {
+  cursor: pointer;
+  background-color: var(--primary-color-500);
+  border-color: var(--primary-color-600);
+}
+
+.primary-btn:disabled {
+  background-color: var(--background-color-900);
+  border-color: var(--text-color-200);
+  color: var(--text-color-200);
+}

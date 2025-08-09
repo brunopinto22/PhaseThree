@@ -1,0 +1,21 @@
+.tertiary-btn {
+  padding: var(--spacing-s) var(--spacing-l);
+  background-color: var(--secundary-color-900);
+  color: var(--background-color-100);
+  border: 3px solid var(--secundary-color-900);
+  border-radius: var(--border-s);
+  transition: 0.2s;
+}
+
+.tertiary-btn:hover {
+  cursor: pointer;
+  background-color: var(--secundary-color-700);
+  color: var(--background-color-100);
+  border-color: var(--secundary-color-800);
+}
+
+.tertiary-btn:disabled {
+  background-color: var(--background-color-900);
+  border-color: var(--text-color-200);
+  color: var(--text-color-200);
+}

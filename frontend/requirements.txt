@@ -1,0 +1,5 @@
+Node.js Version = v23.0.0
+React = v18.0
+Bootstrap = v5.3.3
+crypto-js
+mdui

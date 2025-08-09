@@ -1,0 +1,11 @@
+#candidature {
+	gap: var(--spacing-2xl);
+}
+
+section {
+	gap: var(--spacing-xl);
+}
+
+.buttons button {
+	width: 100%;
+}

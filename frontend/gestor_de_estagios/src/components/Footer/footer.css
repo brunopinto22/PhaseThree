@@ -1,0 +1,6 @@
+footer {
+	text-align: end;
+	padding: var(--spacing-l) var(--spacing-2xl);
+	background-color: var(--background-color-400);
+	color: var(--text-color-700);
+}

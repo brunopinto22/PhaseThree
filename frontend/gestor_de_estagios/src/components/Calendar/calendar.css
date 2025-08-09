@@ -1,0 +1,17 @@
+.calendar {
+	height: fit-content;
+	gap: var(--spacing-l);
+	padding: var(--spacing-xl);
+	background-color: var(--secundary-color-300);
+	color: var(--text-color-700);
+	border-radius: var(--border-s);
+}
+.calendar .title {
+	gap: var(--spacing-m);
+}
+.calendar .title i {
+	font-size: var(--icon-size-l);
+}
+.calendar .dates {
+	gap: var(--spacing-s);
+}
