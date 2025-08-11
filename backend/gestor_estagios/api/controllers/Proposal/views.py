@@ -45,6 +45,7 @@ def getProposal(request, pk):
                 return Response({"message":"Ainda não é possível ver as Propostas"}, status=HTTP_403_FORBIDDEN)
 
         data = {
+            "proposal_number": p.calendar_proposal_number,
             "title": p.proposal_title,
             "description": p.proposal_description,
             "technologies": p.proposal_technologies,
@@ -137,6 +138,7 @@ def listProposals(request):
         data = [
             {
                 "id": p.id_proposal,
+                "proposal_number": p.calendar_proposal_number,
                 "type": p.proposal_type,
                 "title": p.proposal_title,
                 "company": p.company.company_name if p.company is not None else "ISEC",
@@ -160,10 +162,8 @@ def listProposals(request):
         return Response(data, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return Response({
-            "error": "Erro interno do servidor",
-            "details": str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        traceback.print_exc()
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])

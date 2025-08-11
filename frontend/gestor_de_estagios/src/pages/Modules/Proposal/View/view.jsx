@@ -27,6 +27,7 @@ function View() {
   const id = searchParams.get('id');
 
 	const [proposal, setProposal] = useState({
+		proposal_number: 0,
 		title: "",
 		description: "",
 		technologies: "",
@@ -72,6 +73,7 @@ function View() {
 	const types = ["Estágio", "Projeto"];
 	const formats = ["Presencial", "Híbrido", "Remoto"];
 
+	const proposal_number = proposal.proposal_number;
 	const title = proposal.title;
 	const description = proposal.description;
 	const technologies = proposal.technologies;
@@ -101,7 +103,7 @@ function View() {
 			<div className="main col d-flex flex-column p-0">
 
 				<div className="title-container d-flex flex-column">
-					<h5 className="number">#{id}</h5>
+					<h5 className="number">#{proposal_number}</h5>
 					<h3 className="title">{title}</h3>
 					<h4 className="company">{company.id !== null ? <a href={`/company/view?id=${company.id}`} className="text-link">{company.title}</a> : <span>{company.title}</span>}</h4>
 					<div className="d-flex flex-row gap-2 mt-3">

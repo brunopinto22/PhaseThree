@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Alert, OptionButton, PrimaryButton, ProposalCard } from '../../../../components';
 import { getCompany } from '../../../../helpers';
 import { UserContext } from '../../../../contexts';
+import Proposals from './Lists/proposals'
 
 function View() {
 
@@ -37,7 +38,9 @@ function View() {
 		website: "",
 		linkedin: "",
 		representatives: [],
-		proposals: []
+		representatives_count: 0,
+		proposals: [],
+		proposals_count: 0,
 	});
 
 
@@ -71,10 +74,12 @@ function View() {
 	const website = company.website;
 	const linkedin = company.linkedin;
 	const representatives = company.representatives;
+	const nRepresentatives = company.representatives_count;
 	const proposals = company.proposals;
+	const nProposals = company.proposals_count;
 
 
-	const [seeR, setSeeR] = useState(true);
+	const [seeR, setSeeR] = useState(false);
 	const [seeP, setSeeP] = useState(false);
 
 
@@ -141,7 +146,7 @@ function View() {
 				<div className="d-flex flex-row align-content-center">
 					<h4 className='d-flex flex-row align-items-center gap-2 noselect' style={{cursor: "default"}} onClick={() => setSeeR(!seeR)}>
 						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeR ? "0" : "-90deg"})` }}></i>
-						<span>Contactos</span>
+						<span>Contactos{nRepresentatives > 0 && <span style={{fontSize: "small"}}> ({nRepresentatives} {nRepresentatives === 1 ? "contacto" : "contactos"})</span>}</span>
 					</h4>
 				</div>
 				<div className={`collapsible ${seeR ? "" : "collapse"}`}>
@@ -165,17 +170,15 @@ function View() {
 				</div>
 			</div>
 
-			<div className='proposals d-flex flex-column gap-4'>
+						<div className='proposals d-flex flex-column gap-4'>
 				<div className="d-flex flex-row align-content-center">
-					<h4 className='d-flex flex-row align-items-center gap-2 noselect' style={{cursor: "default"}} onClick={() => setSeeP(!seeP)}>
+					<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeP(!seeP)}>
 						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeP ? "0" : "-90deg"})` }}></i>
-						<span>Propostas</span>
+						<span>Propostas{nProposals > 0 && <span style={{fontSize: "small"}}> ({nProposals} {nProposals === 1 ? "proposta" : "propostas"})</span>}</span>
 					</h4>
 				</div>
 				<div className={`collapsible ${seeP ? "" : "collapse"}`}>
-					<div className="d-flex flex-wrap gap-3">
-						{proposals?.length === 0 && <Alert text='Não existe nenhuma proposta de momento' />}
-					</div>
+					<Proposals list={proposals} />
 				</div>
 			</div>
 

@@ -145,7 +145,7 @@ def getCompany(request, pk):
             "website": company.company_website,
             "linkedin": company.company_linkedin,
             "active": company.active,
-
+            "representatives_count": company.representatives.count(),
             "representatives": [
                 {
                     "id": rep.id_representative,
@@ -156,12 +156,14 @@ def getCompany(request, pk):
                 }
                 for rep in company.representatives.all()
             ],
-
+            "proposals_count": company.company_proposals.count(),
             "proposals": [
                 {
                     "id": p.id_proposal,
+                    "proposal_number": p.calendar_proposal_number,
                     "title": p.proposal_title,
                     "type": p.proposal_type,
+                    "location": p.location,
                     "course": {
                         "id": p.course.id_course,
                         "name": p.course.course_name,

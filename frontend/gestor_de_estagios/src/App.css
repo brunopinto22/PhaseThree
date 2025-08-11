@@ -265,6 +265,11 @@ table td:first-child {
   white-space: nowrap;
   width: 1%;
 }
+.overflow-column {
+	max-width: 30ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 
 table .inactive {
 	color: var(--text-color-300);

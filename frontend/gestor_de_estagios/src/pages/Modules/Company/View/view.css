@@ -20,32 +20,37 @@
 	position: relative;
 }
 
+
+#company .list-container {
+	gap: var(--spacing-xl)
+}
+
 /* X-Small screens */
 @media (width < 576px) {
- .representatives .collapsible { overflow-x: scroll; }
+ #company .collapsible { overflow-x: scroll; }
 }
 
 /* Small screens */
 @media (width >= 576px) {
- .representatives .collapsible { overflow-x: scroll; }
+ #company .collapsible { overflow-x: scroll; }
 }
 
 /* Medium screens */
 @media (width >= 768px) {
- .representatives .collapsible { overflow-x: hidden; }
+ #company .collapsible { overflow-x: hidden; }
 }
 
 /* Large screens */
 @media (width >= 992px) {
- .representatives .collapsible { overflow-x: hidden; }
+ #company .collapsible { overflow-x: hidden; }
 }
 
 /* X-Large screens */
 @media (width >= 1200px) {
- .representatives .collapsible { overflow-x: hidden; }
+ #company .collapsible { overflow-x: hidden; }
 }
 
 /* X-X-Large screens */
 @media (width >= 1400px) {
- .representatives .collapsible { overflow-x: hidden; }
+ #company .collapsible { overflow-x: hidden; }
 }

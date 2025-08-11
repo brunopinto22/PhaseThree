@@ -46,6 +46,7 @@ def getCalendar(request, pk):
             "max": c.max_proposals,
             "course_id": c.course.id_course,
             "course_name": c.course.course_name,
+            "students_count": c.students.count(),
             "students": [
                 {
                     "number": s.student_number,
@@ -60,10 +61,11 @@ def getCalendar(request, pk):
             "proposals":[
                 {
                     "id": p.id_proposal,
+                    "proposal_number": p.calendar_proposal_number,
                     "title": p.proposal_title,
                     "company": {
-                        "id": p.company.id_company,
-                        "name": p.company.company_name
+                        "id": p.company.id_company if p.company else None,
+                        "name": p.company.company_name if p.company else "ISEC",
                     },
                     "course": {
                         "id": p.course.id_course,
@@ -83,10 +85,8 @@ def getCalendar(request, pk):
     except Calendar.DoesNotExist:
         return Response({"message": "Calendário não encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        traceback.print_exc()
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])

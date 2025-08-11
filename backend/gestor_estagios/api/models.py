@@ -368,6 +368,7 @@ class Proposal(models.Model):
     ]
 
     id_proposal = models.AutoField(primary_key=True)
+    calendar_proposal_number = models.PositiveIntegerField(editable=False)
     company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, related_name='company_proposals')
     proposal_title = models.CharField(max_length=255, null=False, blank=False)
     proposal_description = models.TextField(null=False, blank=False)
@@ -398,6 +399,12 @@ class Proposal(models.Model):
 
     def __str__(self):
         return self.proposal_title or f"Proposal {self.id_proposal}"
+
+    def save(self, *args, **kwargs):
+        if not self.calendar_proposal_number:
+            last_number = Proposal.objects.filter(calendar=self.calendar).aggregate(models.Max('calendar_proposal_number'))['calendar_proposal_number__max']
+            self.calendar_proposal_number = (last_number or 0) + 1
+        super().save(*args, **kwargs)
 
     def get_slots_left(self):
         return self.slots - len(self.students.all())

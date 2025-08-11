@@ -40,8 +40,9 @@ const View = () => {
 		mix: 0,
 		max: 0,
 		students: [],
-		proposals_count: 0,
+		students_count: 0,
 		proposals: [],
+		proposals_count: 0,
 	});
 
 	useEffect(() => {
@@ -75,8 +76,9 @@ const View = () => {
 	const min = calendar.min;
 	const max = calendar.max;
 	const students = calendar.students;
-	const nProposals = calendar.proposals_count;
+	const nStudents = calendar.students_count;
 	const proposals = calendar.proposals;
+	const nProposals = calendar.proposals_count;
 
 	const [seeP, setSeeP] = useState(false);
 	const [seeS, setSeeS] = useState(false);
@@ -118,7 +120,7 @@ const View = () => {
 				<div className="d-flex flex-row align-content-center">
 					<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeS(!seeS)}>
 						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeS ? "0" : "-90deg"})` }}></i>
-						<span>Alunos</span>
+						<span>Alunos{nStudents > 0 && <span style={{fontSize: "small"}}> ({nStudents} {nStudents === 1 ? "aluno" : "alunos"})</span>}</span>
 					</h4>
 				</div>
 				<div className={`collapsible ${seeS ? "" : "collapse"}`}>
