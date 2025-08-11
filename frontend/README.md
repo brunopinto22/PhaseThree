@@ -12,3 +12,30 @@ The frontend communicates with the backend API to display data, handle user inte
 - [Bootstrap](https://getbootstrap.com/) – Prebuilt UI components and responsive grid system
 
 
+## 🚀 How to Run
+
+1. **Clone the repository** (or navigate to the `frontend` directory if you already have the project):
+    ```
+    git clone <your-repo-url>
+    cd <repo-root>/frontend
+    ```
+
+2. **Install dependencies** using npm or yarn:
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+3. **Configure environment variables**:  
+    Create a `.env` file in the project root and define the necessary environment variables.  
+    Example:
+    ```env
+    REACT_APP_API_URL=http://localhost:8000
+    ```
+
+4. **Start the application**:  
+    Run the following command to start the development server:  
+    ```bash
+    npm start
+    ```
