@@ -91,13 +91,13 @@ const List = () => {
 	}
 
 
-	const Row = ({id, studentName, num, email, course, branch}) => {
+	const Row = ({studentName, num, email, course, branch}) => {
 		
 		const view = () => {
-			navigate("/student/view?id="+id);
+			navigate("/student/view?id="+num);
 		}
 		const edit = () => {
-			navigate("/student/edit?id="+id);
+			navigate("/student/edit?id="+num);
 		}
 		const handleDelete = () => {
 			// TODO : eliminar Aluno

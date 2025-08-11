@@ -59,7 +59,6 @@ function Dashboard() {
 							<DashButton
 								icon={<i className="bi bi-clipboard2-plus-fill"></i>} // TODO : submeter candidatura de um aluno (PÁGINAS)
 								text="Submeter Candidatura"
-								action={() => navigate("/proposal/edit?new=true")}
 							/>
 							
 							<DashButton

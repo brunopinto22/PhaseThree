@@ -5,10 +5,10 @@ import React, { useContext } from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, Alert } from '../../../../components';
+import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox } from '../../../../components';
 
-import { getStudent, createStudent } from '../../../../helpers';
-import { listCourses } from '../../../../helpers/courses';
+import { getStudent, createStudent, editStudent } from '../../../../helpers';
+import { getCourse, listCourses } from '../../../../helpers/courses';
 import { UserContext } from '../../../../contexts';
 
 
@@ -24,7 +24,7 @@ const Row = ({index, name, state, onChange, onDelete}) => {
 
 	return(
 		<tr className='table-row'>
-			<th><p>{index+1}</p></th>
+			<th className='text-center'><p>{index+1}</p></th>
 			<th className='w-75'><p><input onChange={e => handleChange('name', e.target.value)} className='no-decor w-100' type='text' value={name}/></p></th>
 			<th>
 				<Dropdown text='' value={state} setValue={val => handleChange('state', val)}>
@@ -61,7 +61,8 @@ const Edit = () =>  {
 	const id = searchParams.get("id");
   const isNew = searchParams.get("new");
 	
-	const [profilePicture, setProfilePicture] = useState(null);
+	const [active, setActive] = useState(null);
+	const [pfp, setPfp] = useState(null);
 	const [fullName, setFullName] = useState(null);
 	const [idType, setIdType] = useState(null);
 	const [idNumber, setIdNumber] = useState(null);
@@ -86,25 +87,35 @@ const Edit = () =>  {
 	const [todo, setTodo] = useState([]);
 
 	const [courses, setCourses] = useState([]);
+	const [branches, setBranches] = useState([]);
+	const [calendars, setCalendars] = useState([]);
 	useEffect(() => {
-    const fetchCourses = async () => {
-			const token = localStorage.getItem("access_token");
-			const courses = await listCourses(token, setStatus, setError);
-			setCourses(courses);
-    };
-    fetchCourses();
-  }, []);
+		const fetchCourses = async () => {
+			const c = await listCourses(userInfo.token, setStatus, setError);
+			setCourses(c.filter(c => c.active_calendars_registrations));
+		};
+		fetchCourses();
+	}, []);
+
 	useEffect(() => {
-		const selectedCourse = courses.find(c => c.id === course);
-		if (!selectedCourse || selectedCourse.branches.length === 0) {
-			setBranch(null);
-		}
-	}, [course, courses]);
+		setBranch(null);
+		setCalendar(null);
+
+		const fetchCourse = async () => {
+			if(course === null) return;
+			const c = await getCourse(userInfo.token, course, setStatus, setError);
+
+			setBranches(c.branches);
+			setCalendars(c.calendars);
+		};
+		fetchCourse();
+	}, [course]);
 
 
-	const submit = () => {
+	const submit = async () => {
 
 		const data = {
+			active: active,
 			email: email,
 			student_number: number,
 			student_name: fullName,
@@ -117,8 +128,10 @@ const Edit = () =>  {
 			contact: contact,
 			year: year,
 			average: average,
+			subjects_done: subjectsDone,
 			student_course: course,
 			student_branch: branch,
+			student_calendar: calendar,
 			student_ects: ects,
 			subjects: todo.map(t => ({
 				subject_name: t.name,
@@ -127,26 +140,48 @@ const Edit = () =>  {
 		};
 
 		if (isNew) {
-			if(createStudent(token, data, setStatus, setError)){
-				navigate(-1);
-			}
+			if(await createStudent(token, data, setStatus, setError))
+				cancel();
 		} else {
-			// TODO : editStudent()
+			if(await editStudent(token, id, data, setStatus, setError))
+				cancel();
 		}
 	}
 
 	const cancel = () => {
-		if (window.history.length > 2)
+		if (window.history?.length > 2)
 			navigate(-1);
 		else
 			navigate('/');
 	}
 
 	useEffect(() => {
-		if (status === 401) {
-			navigate("/unauthorized");
+		if (id && !isNew) {
+			getStudent(userInfo.token, id, setStatus, setError).then(data => {
+				setActive(data.active)
+				setPfp(data.pfp);
+				setFullName(data.name);
+				setNumber(data.student_number);
+				setOriginalEmail(data.email);
+				setEmail(data.email);
+				setNif(data.nif);
+				setGender(data.gender);
+				setNacionality(data.nationality);
+				setIdType(data.ident_type);
+				setIdNumber(data.ident_doc);
+				setAddress(data.address);
+				setContact(data.contact);
+				setYear(data.year);
+				setEcts(data.ects);
+				setAverage(data.average);
+				setSubjectsDone(data.subjects_done);
+				setCourse(data.course.id);
+				setBranch(data.branch.id);
+				setCalendar(data.calendar.id);
+				setTodo(data.subjects);
+			});
 		}
-	}, [status, navigate]);
+	}, [id, isNew]);
 
 
 	const handleTodoChange = React.useCallback((index, field, value) => {
@@ -167,8 +202,9 @@ const Edit = () =>  {
 			<section className='row p-0'>
 				<h4>Perfil</h4>
 				<div className="profile d-flex flex-column flex-md-row p-0 col-sm-12 col-md-4">
-					<div className="profile-picture h-100" style={{backgroundImage: `url(${ profilePicture ? profilePicture : default_pfp })`}}></div>
+					<div className="profile-picture h-100" style={{backgroundImage: `url(${ pfp ? pfp : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
+						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Alunos"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
 						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} />
 						<PrimaryButtonSmall content={<p>Alterar Currículo</p>} />
 						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
@@ -224,35 +260,35 @@ const Edit = () =>  {
 					</div>
 					<div className="row">
 						<Dropdown className='col' text='Curso' value={course} setValue={(v) => setCourse(Number(v))}>
-							{courses.map((c, index) => (
-								<option key={index} value={c.id}>{c.name}</option>
+							{courses.map((c) => (
+								<option key={"c_" + c.id} value={c.id}>{c.name}</option>
 							))}
 						</Dropdown>
-						<Dropdown className='col' text='Ramo' value={branch} setValue={(v) => setBranch(Number(v))} disabled={!courses.find(c => c.id === course)?.branches.length}>
-							{(courses.find(c => c.id === course)?.branches || []).map((b) => (
-								<option key={b.id_branch} value={b.id_branch}>{b.branch_name}</option>
+						<Dropdown className='col' text='Ramo' value={branch} setValue={(v) => setBranch(Number(v))} disabled={branches.length <= 0}>
+							{branches.map((b) => (
+								<option key={"b_" + b.id_branch} value={b.id_branch}>{b.branch_name}</option>
 							))}
 						</Dropdown>
-						{(role !== "student") && <Dropdown className='col' text='Calendário' value={calendar} setValue={(v) => setCalendar(Number(v))} disabled={!courses.find(c => c.id === course)?.calendars.length}>
-							{(courses.find(c => c.id === course)?.calendars || []).map((cl) => (
-								<option key={cl.id_calendar} value={cl.id_calendar}>{cl.title}</option>
+						{(role !== "student") && <Dropdown className='col' text='Calendário' value={calendar} setValue={(v) => setCalendar(Number(v))} disabled={calendars.length <= 0}>
+							{calendars.map((cl) => (
+								<option key={"cl_" + cl.id} value={cl.id}>{cl.title}</option>
 							))}
 						</Dropdown>}
 					</div>
 				</div>
 			</section>
 
-			<section className='row p-0'>
+			<section className='row p-0 w-100'>
 				<div className="d-flex flex-row justify-content-between align-items-center">
 					<h4>Cadeiras por fazer</h4>
 					<PrimaryButtonSmall action={() => {setTodo(prev => [...prev, {name: '', state: 2}]);}} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar cadeira</p></div>} />
 				</div>
-				{todo.length == 0 && (<Alert type='info' text='Não tem nenhuma Unidade Curricular registada.' />)}
+				{(todo?.length === 0) && (<Alert type='info' text='Não tem nenhuma Unidade Curricular registada.' />)}
 
-				{todo.length > 0 && (
+				{todo?.length > 0 && (
 					<table>
 						<tr className='header'>
-							<th><p>#</p></th>
+							<th className='fit-column'><p>#</p></th>
 							<th><p>Cadeira</p></th>
 							<th><p>Estado</p></th>
 							<th></th>

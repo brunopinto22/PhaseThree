@@ -108,9 +108,9 @@ export async function editCourse(token, id, data, setStatus, setErrorMessage) {
 
 		const responseData = await res.json();
 		setStatus(res.status)
-		setErrorMessage(responseData.message || "Erro ao criar curso");
+		setErrorMessage(responseData.message || "Erro ao editar curso");
 
-    if(res.status !== 200)
+    if(res.status === 200)
       return true;
 
 	} catch {
@@ -133,7 +133,7 @@ export async function deleteCourse(token, id) {
 
 		const data = await res.json();
 
-    if(res.status !== 200)
+    if(res.status === 200)
       return true;
 
 	} catch {
@@ -185,12 +185,14 @@ export async function addScientificArea(token, name) {
 
 		const data = await res.json();
 
-    if(res.status !== 200)
+    if(res.status === 200)
       return true;
 
 	} catch {
 		return false;
 	}
+
+	return false;
 	
 }
 
@@ -206,11 +208,13 @@ export async function deleteScientificArea(token, id) {
 
 		const data = await res.json();
 
-    if(res.status !== 200)
+    if(res.status === 200)
       return true;
 
 	} catch {
 		return false;
 	}
+	
+	return false;
 	
 }

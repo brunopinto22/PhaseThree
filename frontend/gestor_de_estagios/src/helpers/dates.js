@@ -13,7 +13,7 @@ export function toDate(dateStr) {
 }
 
 export function formatDate(dateStr) {
-	if (!dateStr) return "";
+	if (!dateStr) return "dd/mm/aaaa";
   const date = new Date(dateStr);
   return date.toLocaleDateString('pt-PT');
 }

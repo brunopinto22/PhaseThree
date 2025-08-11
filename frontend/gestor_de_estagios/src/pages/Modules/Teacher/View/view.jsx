@@ -10,7 +10,6 @@ function View() {
 
 	const navigate = useNavigate();
 	const { userInfo } = useContext(UserContext);
-	const token = localStorage.getItem("access_token");
 
 	const [status, setStatus] = useState([]);
 	const [error, setError] = useState([]);
@@ -42,7 +41,7 @@ function View() {
         navigate('/pagenotfound');
         return;
       }
-      const data = await getTeacher(token, id, setStatus, setError);
+      const data = await getTeacher(userInfo.token, id, setStatus, setError);
 
       if (status === 404) {
         navigate('/pagenotfound');
@@ -53,7 +52,7 @@ function View() {
       }
     }
     fetchTeacher();
-  }, [id, token, navigate, status]);
+  }, [id, userInfo, navigate, status]);
 
 
   const active = teacherData.active;

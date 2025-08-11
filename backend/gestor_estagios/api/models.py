@@ -53,12 +53,13 @@ class Student(models.Model):
 
     current_year = models.IntegerField(null=False)
     average = models.FloatField(null=True)
+    subjects_done = models.IntegerField(null=True)
     student_course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='students_in_course')
     student_branch = models.ForeignKey('Branch', on_delete=models.SET_NULL, related_name='students_in_branch', null=True, blank=True)
     student_ects = models.IntegerField(null=True, blank=False)
 
-    student_profile_picture = models.ImageField(upload_to='protected/profile_pics/', null=True, blank=True)
     curriculum = models.FileField(upload_to='protected/curriculums/', validators=[validate_pdf], null=True, blank=True)
+    calendar = models.ForeignKey('Calendar', on_delete=models.SET_NULL, related_name='students_in_calendar', null=True, blank=True)
 
     active = models.BooleanField(default=True)
 
@@ -309,6 +310,7 @@ class Calendar(models.Model):
     submission_start = models.DateField(null=False, blank=False)
     submission_end = models.DateField(null=False, blank=False)
     divulgation = models.DateField(null=False, blank=False)
+    registrations = models.DateField(null=True, blank=False)
     candidatures = models.DateField(null=False, blank=False)
     placements = models.DateField(null=False, blank=False)
 

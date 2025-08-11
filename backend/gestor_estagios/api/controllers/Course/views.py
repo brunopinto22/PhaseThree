@@ -72,6 +72,7 @@ def getCourse(request, pk):
                     "submissionStart": cl.submission_start.strftime("%d/%m/%Y"),
                     "submissionEnd": cl.submission_end.strftime("%d/%m/%Y"),
                     "divulgation": cl.divulgation.strftime("%d/%m/%Y"),
+                    "registrations": cl.registrations.strftime("%d/%m/%Y"),
                     "candidatures": cl.candidatures.strftime("%d/%m/%Y"),
                     "placements": cl.placements.strftime("%d/%m/%Y"),
                 }
@@ -110,6 +111,7 @@ def listCourses(request):
                 "num_branches": c.branches.count(),
                 "active_calendars": any(cl.submission_start <= date.today() <= cl.placements for cl in Calendar.objects.filter(course=c).all()),
                 "active_calendars_submission": any(cl.submission_start <= date.today() <= cl.submission_end for cl in Calendar.objects.filter(course=c).all()),
+                "active_calendars_registrations": any(date.today() <= cl.registrations for cl in Calendar.objects.filter(course=c).all()),
             })
 
         return JsonResponse(data, status=status.HTTP_200_OK, safe=False)

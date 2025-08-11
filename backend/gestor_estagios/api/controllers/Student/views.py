@@ -32,17 +32,10 @@ def getStudent(request, pk):
 
     try:
         student = Student.objects.get(student_number=pk)
-        subjects = student.get_subjects()
-        subject_list = [
-            {
-                "name": subject.subject_name,
-                "state": subject.state,
-            }
-            for subject in subjects
-        ]
 
         data = {
             "pfp": request.build_absolute_uri(student.user.photo.url) if student.user.photo else None,
+            "active": student.active,
             "name": student.student_name,
             "student_number": student.student_number,
             "email": student.user.email,
@@ -56,17 +49,27 @@ def getStudent(request, pk):
             "year": student.current_year,
             "ects": student.student_ects,
             "average": student.average,
+            "subjects_done": student.subjects_done,
             "course": {
-                "id": student.student_course.id,
+                "id": student.student_course.id_course,
                 "name": student.student_course.course_name
             },
             "branch": {
-                "id": student.student_branch.id if student.student_branch else None,
+                "id": student.student_branch.id_branch if student.student_branch else None,
                 "name": student.student_branch.branch_name if student.student_branch else None
             },
-            "subjects": subject_list,
+            "calendar": {
+                "id": student.calendar.id_calendar if student.calendar else None,
+                "title": student.calendar.__str__() if student.calendar else None,
+            },
+            "subjects": [
+                {
+                    "name": subject.subject_name,
+                    "state": subject.state,
+                }
+                for subject in student.subjects.all()
+            ],
             "curriculum": student.curriculum.url if student.curriculum else None,
-            "active": student.active
         }
 
         return Response(data, status=status.HTTP_200_OK)
@@ -74,6 +77,7 @@ def getStudent(request, pk):
     except Student.DoesNotExist:
         return Response({"message": "Aluno não foi encontrado"},status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        traceback.print_exc()
         return Response({"message": "Erro interno do servidor", "details": str(e)},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -208,6 +212,7 @@ def createStudent(request):
             contact=data.get("contact"),
             current_year=data.get("year"),
             average=data.get("average"),
+            subjects_done=data.get("subjects_done"),
             student_course=course,
             student_branch=branch,
             student_ects=data.get("student_ects"),
@@ -227,6 +232,7 @@ def createStudent(request):
 def editStudent(request, pk):
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
+    has_permission = False
 
     if (
             user_email == "Expired Token."
@@ -248,23 +254,69 @@ def editStudent(request, pk):
         teacher = Teacher.objects.get(user__email=user_email)
         student_module = Module.objects.get(module_name='Alunos')
         permission = Permissions.objects.get(teacher=teacher, module=student_module)
+        has_permission = True
         if not permission.can_edit:
             return Response({"detail": "Sem permissão para para editar o Aluno"}, status=HTTP_401_UNAUTHORIZED)
 
 
     try:
-        s = Student.objects.get(stundent_number=pk)
+        data = request.data
+        student = Student.objects.get(student_number=pk)
+        course = Course.objects.get(id_course=data.get("student_course"))
+        branch = Branch.objects.get(id_branch=data.get("student_branch")) if data.get("student_branch") else None
+        calendar = Calendar.objects.get(id_calendar=data.get("student_calendar"))
+
+        if Accounts.objects.filter(email=data["email"]).exclude(pk=student.user.pk).exists():
+            return Response({"message": "Este email já está em uso"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if "student_number" in data and int(data["student_number"]) != student.student_number:
+            if Student.objects.filter(student_number=data["student_number"]).exists():
+                return Response({"message": "Este número de aluno já está em uso"}, status=status.HTTP_400_BAD_REQUEST)
+            student.student_number = int(data["student_number"])
+
+
+        if user_type == "admin" or (user_type == "teacher" and has_permission):
+            student.active = data['active']
+
+        student.user.email = data["email"]
+        student.user.save()
+
+        student.student_name = data.get("student_name", student.student_name)
+        student.nationality = data.get("nationality", student.nationality)
+        student.ident_type = data.get("ident_type", student.ident_type)
+        student.ident_doc = data.get("ident_doc", student.ident_doc)
+        student.nif = data.get("nif", student.nif)
+        student.gender = data.get("gender", student.gender)
+        student.address = data.get("address", student.address)
+        student.contact = data.get("contact", student.contact)
+        student.current_year = data.get("year", student.current_year)
+        student.average = data.get("average", student.average)
+        student.subjects_done = data.get("subjects_done", student.subjects_done)
+        student.student_ects = data.get("student_ects", student.student_ects)
+        student.student_course = course
+        student.student_branch = branch
+        student.calendar = calendar
+
+        student.save()
+
+        if "subjects" in data:
+            student.subjects.all().delete()
+            for subj in data["subjects"]:
+                student.add_subject(subj["subject_name"], subj["state"])
+
+        return Response({"message": "Aluno atualizado com sucesso"}, status=status.HTTP_200_OK)
 
     except Student.DoesNotExist:
-        return Response({
-            "error": "Aluno não foi encontrado"
-        }, status=status.HTTP_404_NOT_FOUND)
-
+        return Response({"error": "Aluno não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Course.DoesNotExist:
+        return Response({"message": "Curso não foi encontrado."}, status=HTTP_404_NOT_FOUND)
+    except Branch.DoesNotExist:
+        return Response({"message": "Ramo não foi encontrado."}, status=HTTP_404_NOT_FOUND)
+    except Calendar.DoesNotExist:
+        return Response({"message": "Calendário não foi encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({
-            "error": "Erro interno do servidor",
-            "details": str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        traceback.print_exc()
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["DELETE"])

@@ -85,7 +85,7 @@ function View() {
 	const [seeC, setSeeC] = useState(true);
 
 
-	const Row = ({id, title, submissionStart, submissionEnd, divulgation, candidatures, placements, active = true}) => {
+	const Row = ({id, title, submissionStart, submissionEnd, registrations, divulgation, candidatures, placements, active = true}) => {
 		
 		const view = () => {
 			navigate("/calendar/view?id="+id);
@@ -100,6 +100,7 @@ function View() {
 				<th><p>{title}</p></th>
 				<th><p>{submissionStart}</p></th>
 				<th><p>{submissionEnd}</p></th>
+				<th><p>{registrations}</p></th>
 				<th><p>{divulgation}</p></th>
 				<th><p>{candidatures}</p></th>
 				<th><p>{placements}</p></th>
@@ -116,44 +117,62 @@ function View() {
 	
 
 	return(
-		<div id="course" className='d-flex flex-column flex-md-row'>
+		<div id="course" className='d-flex flex-column flex-md-column'>
 			
-			<div className="main col d-flex flex-column p-0">
-				<div className="title d-flex flex-column gap-2">
-					<h3>{title}</h3>
-					<h6 className='sub'>{area}</h6>
-				</div>
-				<p>{description}</p>
-
-				{branches?.length > 0 &&
-					<section className='branches d-flex flex-column p-0'>
-						<h4>Ramos:</h4>
-							{branches.map((branch, index) => (
-								<p key={index} className="branch d-flex flex-row">
-									<i className={`bi bi-circle-fill ${branch.color}`}></i>{branch.branch_acronym} - {branch.branch_name}
-								</p>
-							))}
-					</section>
-				}
+			<div className="d-flex flex-row" style={{gap: "inherit"}}>
+				<div className="main col d-flex flex-column p-0">
+					<div className="title d-flex flex-column gap-2">
+						<h3>{title}</h3>
+						<h6 className='sub'>{area}</h6>
+					</div>
+					<p>{description}</p>
+					{branches?.length > 0 &&
+						<section className='branches d-flex flex-column p-0'>
+							<h4>Ramos:</h4>
+								{branches.map((branch, index) => (
+									<p key={index} className="branch d-flex flex-row">
+										<i className={`bi bi-circle-fill ${branch.color}`}></i>{branch.branch_acronym} - {branch.branch_name}
+									</p>
+								))}
+						</section>
+					}
 				
-				{commission?.length > 0 &&
-					<section className='admins d-flex flex-column p-0'>
-						<h4>Comissão de Curso:</h4>
-						<ul className='d-flex flex-column'>
-							{commission.map((e, index) => (
-								<li key={index}>
-									{e.is_responsible ? (
-										<p><b>{e.teacher_name}</b> - <a href={`mailto:`+ e.teacher_email}>{e.teacher_email}</a></p>
-									) : (
-										<p>{e.teacher_name} - <a href={`mailto:`+ e.teacher_email}>{e.teacher_email}</a></p>
-									)}
-								</li>
-							))}
-						</ul>
-					</section>
-				}
+					{commission?.length > 0 &&
+						<section className='admins d-flex flex-column p-0'>
+							<h4>Comissão de Curso:</h4>
+							<ul className='d-flex flex-column'>
+								{commission.map((e, index) => (
+									<li key={index}>
+										{e.is_responsible ? (
+											<p><b>{e.teacher_name}</b> - <a href={`mailto:`+ e.teacher_email}>{e.teacher_email}</a></p>
+										) : (
+											<p>{e.teacher_name} - <a href={`mailto:`+ e.teacher_email}>{e.teacher_email}</a></p>
+										)}
+									</li>
+								))}
+							</ul>
+						</section>
+					}
+				</div>
+				<div className="col-md-3 p-0">
+					<div className="sidebar d-flex flex-column">
+						<h5 className='title'>Informação:</h5>
+						<div className="content d-flex flex-column">
+							<p className='d-flex flex-row align-items-center'><i className="bi bi-envelope"></i><b>Contacto: </b><a href={`mailto:`+ email}>{email}</a></p>
+							<p className='d-flex flex-row align-items-center'><i className="bi bi-people"></i><b>Alunos: </b>{nStudents}</p>
+							<p className='d-flex flex-row align-items-center'><i className="bi bi-people"></i><b>Docentes: </b>{nTeachers}</p>
+							<p className='d-flex flex-row align-items-center'><i className="bi bi-file-earmark-text"></i><b>Propostas: </b>{nProposals}</p>
+							<p className='d-flex flex-row align-items-center'><i className="bi bi-list-ul"></i><b>Ramos: </b>{branches.length}</p>
+						</div>
+						<div className="d-flex flex-column gap-3">
+							<PrimaryButtonSmall action={() => window.open(website, "_blank", "noreferrer")} className='w-100' content={<p>Mais Informação</p>} />
+							{canEdit && <PrimaryButtonSmall action={edit} className='w-100' content={<p>Editar Curso</p>} />}
+						</div>
+					</div>
+				</div>
+			</div>
 
-				<section className='calendars d-flex flex-column p-0'>
+			<section className='calendars d-flex flex-column p-0'>
 					<div className="d-flex flex-row align-content-center justify-content-between">
 						<h4 className='d-flex flex-row align-items-center gap-2 noselect' style={{cursor: "default"}} onClick={() => setSeeC(!seeC)}>
 							<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeC ? "0" : "-90deg"})` }}></i>
@@ -170,6 +189,7 @@ function View() {
 									<th><p>Ano Letivo/Semestre</p></th>
 									<th><p>Inicio Submissões</p></th>
 									<th><p>Fim Submissões</p></th>
+									<th><p>Inscrição de Alunos</p></th>
 									<th><p>Divulgação</p></th>
 									<th><p>Candidaturas</p></th>
 									<th><p>Colocações</p></th>
@@ -184,25 +204,6 @@ function View() {
 						)}
 					</div>
 				</section>
-
-			</div>
-
-			<div className="col-md-3 p-0">
-				<div className="sidebar d-flex flex-column">
-					<h5 className='title'>Informação:</h5>
-					<div className="content d-flex flex-column">
-						<p className='d-flex flex-row align-items-center'><i className="bi bi-envelope"></i><b>Contacto: </b><a href={`mailto:`+ email}>{email}</a></p>
-						<p className='d-flex flex-row align-items-center'><i className="bi bi-people"></i><b>Alunos: </b>{nStudents}</p>
-						<p className='d-flex flex-row align-items-center'><i className="bi bi-people"></i><b>Docentes: </b>{nTeachers}</p>
-						<p className='d-flex flex-row align-items-center'><i className="bi bi-file-earmark-text"></i><b>Propostas: </b>{nProposals}</p>
-						<p className='d-flex flex-row align-items-center'><i className="bi bi-list-ul"></i><b>Ramos: </b>{branches.length}</p>
-					</div>
-					<div className="d-flex flex-column gap-3">
-						<PrimaryButtonSmall action={() => window.open(website, "_blank", "noreferrer")} className='w-100' content={<p>Mais Informação</p>} />
-						{canEdit && <PrimaryButtonSmall action={edit} className='w-100' content={<p>Editar Curso</p>} />}
-					</div>
-				</div>
-			</div>
 
 		</div>
 	);

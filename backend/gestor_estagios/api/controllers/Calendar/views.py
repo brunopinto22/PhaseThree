@@ -39,6 +39,7 @@ def getCalendar(request, pk):
             "semester": c.calendar_semester,
             "submission_start": c.submission_start,
             "submission_end": c.submission_end,
+            "registrations": c.registrations,
             "divulgation": c.divulgation,
             "candidatures": c.candidatures,
             "placements": c.placements,
@@ -138,6 +139,7 @@ def createCalendar(request):
             submission_start=request.data.get("submission_start"),
             submission_end=request.data.get("submission_end"),
             divulgation=request.data.get("divulgation"),
+            registrations=request.data.get("registrations"),
             candidatures=request.data.get("candidatures"),
             placements=request.data.get("placements"),
             min_proposals=request.data.get("min"),
@@ -201,6 +203,7 @@ def editCalendar(request, pk):
         calendar.submission_end = request.data.get("submission_end", calendar.submission_end)
         calendar.divulgation = request.data.get("divulgation", calendar.divulgation)
         calendar.candidatures = request.data.get("candidatures", calendar.candidatures)
+        calendar.registrations = request.data.get("registrations", calendar.registrations)
         calendar.placements = request.data.get("placements", calendar.placements)
         calendar.min_proposals = request.data.get("min", calendar.min_proposals)
         calendar.max_proposals = request.data.get("max", calendar.max_proposals)

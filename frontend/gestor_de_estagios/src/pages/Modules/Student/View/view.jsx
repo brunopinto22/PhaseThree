@@ -2,40 +2,89 @@ import './view.css';
 import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButton, Alert } from '../../../../components';
+import { useContext, useEffect, useState } from 'react';
+import { UserContext } from '../../../../contexts';
+import { getStudent } from '../../../../helpers/students';
 
 function View() {
 
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
+	const { userInfo } = useContext(UserContext);
+	const [status, setStatus] = useState(null);
+	const [error, setError] = useState(null);
   const id = searchParams.get('id');
 
-	const profilePicture = null;
-	const fullName = "Tiago Manuel Ferreira";
+	const [studentData, setStudentData] = useState({
+		pfp: null,
+		active: true,
+		name: "",
+		student_number: null,
+		email: "",
+		nif: null,
+		gender: "",
+		nationality: "",
+		ident_type: "",
+		ident_doc: null,
+		address: "",
+		contact: "",
+		year: null,
+		ects: null,
+		average: null,
+		subjects_done: null,
+		course: {id: null, name: ""},
+		branch: {id: null, name: ""},
+		calendar: {id: null, title: ""},
+		subjects: [],
+		curriculum: null,
+	});
+	
+
+	useEffect(() => {
+		async function fetchStudent() {
+			if (!id) {
+				navigate('/pagenotfound');
+				return;
+			}
+			const data = await getStudent(userInfo.token, id, setStatus, setError);
+
+			if (status === 404) {
+				navigate('/pagenotfound');
+				return;
+			}
+			if (status === 200 && data) {
+				setStudentData(data);
+			}
+		}
+		fetchStudent();
+	}, [id, userInfo, navigate, status]);
+
+	const pfp = studentData.pfp;
+	const fullName = studentData.name;
 	const parts = fullName.trim().split(" ");
 	const shortName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : fullName;
-	const email = "a2020123456@isec.pt";
-	const nacionality = "Portuguesa";
-	const idType = "Cartao de Cidadão";
-	const idNumber = 123456789;
-	const nif = 123456789;
-	const gender = "Masculino";
-	const address = "Rua XPTO, Coimbra 123-123";
-	const contact = 912345678;
+	const email = studentData.email;
+	const nationality = studentData.nationality;
+	const idType = studentData.ident_type;
+	const idNumber = studentData.ident_doc;
+	const nif = studentData.nif;
+	const gender = studentData.gender;
+	const address = studentData.address;
+	const contact = studentData.contact;
 
-	const number = 2020123456;
-	const course = "Licenciatura em Engenharia Informática";
-	const branch = "Desenvolvimento de Aplicações";
-	const year = 3;
-	const average = 15;
-	const subjectsDone = 27;
-	const ects = 135;
+	const number = studentData.student_number;
+	const course = studentData.course?.name;
+	const branch = studentData.branch?.name;
+	const year = studentData.year;
+	const average = studentData.average;
+	const subjectsDone = studentData.subjects_done;
+	const ects = studentData.ects;
 
-	const todo = [{name: "Cadeira 1", state: 1},{name: "Cadeira 2", state: 2}];
+	const todo = studentData.subjects.map(({ name, state }) => ({ name, state }));
 
+	const canEdit = userInfo?.role === "admin" || (userInfo?.role === "student" && userInfo.id === id) || userInfo?.perms["Alunos"].edit;
 	// TODO : abrir CV
-	// TODO : getStudent(id)
-	// TODO : verificar se tem permissão / é o próprio
-	const canEdit = true;
+
 
 	return(
 		<div id='profile' className='row'>
@@ -43,7 +92,7 @@ function View() {
 			<div className="profile-card d-flex flex-column col-sm-12 col-md-4">
 
 				<div className="card d-flex flex-row">
-					<div className="profile-picture" style={{backgroundImage: 'url(' + default_pfp +')'}}></div>
+					<div className="profile-picture" style={{ backgroundImage: `url(${pfp === null ? default_pfp : pfp})` }}></div>
 					<div className="profile-title d-flex flex-column justify-content-center">
 						<h3>{shortName}</h3>
 						<h5>Nº {number}</h5>
@@ -64,7 +113,7 @@ function View() {
 					<div className="content d-flex flex-column">
 						<div className="content-row"><p><b>Nome Completo: </b>{fullName}</p></div>
 						<div className="content-row"><p><b>Email: </b>{email}</p></div>
-						<div className="content-row"><p><b>Nacionalidade: </b>{nacionality}</p></div>
+						<div className="content-row"><p><b>Nacionalidade: </b>{nationality}</p></div>
 						<div className="content-row"><p><b>Tipo de documento: </b>{idType}</p></div>
 						<div className="content-row"><p><b>Documento de identificação: </b>{idNumber}</p></div>
 						<div className="content-row"><p><b>NIF: </b>{nif}</p></div>
@@ -93,7 +142,7 @@ function View() {
 							<div className="content-list">
 								<div className="content-row header p-1"><b>Nome</b><b>Estado</b></div>
 								{todo.map(subject =>(
-									<div className="content-row p-1"><p>{subject.name}</p><b className={subject.state == 1 ? "red" : "yellow"}>{subject.state == 1 ? "Por fazer" : "A realizar em simultâneo"}</b></div>
+									<div className="content-row p-1"><p>{subject.name}</p><b className={subject.state == 2 ? "red" : "yellow"}>{subject.state == 2 ? "Por fazer" : "A realizar em simultâneo"}</b></div>
 								))}
 							</div>
 						)}

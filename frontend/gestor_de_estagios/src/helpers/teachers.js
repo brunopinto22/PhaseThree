@@ -136,7 +136,7 @@ export async function editTeacher(token, id, data, setStatus, setErrorMessage) {
 		setStatus(res.status)
 		setErrorMessage(responseData.message || "Erro ao criar curso");
 
-    if(res.status !== 200)
+    if(res.status === 200)
       return true;
 
 	} catch {
@@ -159,8 +159,8 @@ export async function deleteTeacher(token, id) {
 
 		const data = await res.json();
 
-		if(res.status !== 200)
-			return true;
+    if(res.status === 200)
+      return true;
 
 	} catch {
 		return false;

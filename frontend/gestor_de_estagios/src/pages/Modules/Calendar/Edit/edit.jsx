@@ -43,6 +43,7 @@ const Edit = () => {
 	const [submissionEnd, setSubmissionEnd] = useState("");
 	const [candidatures, setCandidatures] = useState("");
 	const [divulgation, setDivulgation] = useState("");
+	const [registrations, setRegistrations] = useState("");
 	const [placements, setPlacements] = useState("");
 	const [min, setMin] = useState(1);
 	const [max, setMax] = useState(6);
@@ -57,6 +58,7 @@ const Edit = () => {
 				setSubmissionEnd(data.submission_end);
 				setCandidatures(data.candidatures);
 				setDivulgation(data.divulgation);
+				setRegistrations(data.registrations);
 				setPlacements(data.placements);
 				setMin(data.min);
 				setMax(data.max);
@@ -73,6 +75,7 @@ const Edit = () => {
 			submission_start: submissionStart,
 			submission_end: submissionEnd,
 			divulgation: divulgation,
+			registrations: registrations,
 			candidatures: candidatures,
 			placements: placements,
 			min: min,
@@ -100,6 +103,7 @@ const Edit = () => {
 	const submissionEndDate = toDate(submissionEnd);
 	const candidaturesDate = toDate(candidatures);
 	const divulgationDate = toDate(divulgation);
+	const registrationsDate = toDate(registrations);
 	const placementsDate = toDate(placements);
 
 	const errors = {
@@ -114,6 +118,10 @@ const Edit = () => {
 		divulgation: divulgation
 			? !isDateInLectiveYear(year, divulgation) || (submissionEndDate && divulgationDate && divulgationDate < submissionEndDate)
 			: false,
+
+		registrations: registrations
+			? !isDateInLectiveYear(year, registrations) || (divulgationDate && registrationsDate && registrationsDate > divulgationDate) || (candidaturesDate && registrationsDate && registrationsDate > candidaturesDate)
+    	: false,
 
 		candidatures: candidatures
 			? !isDateInLectiveYear(year, candidatures) || (divulgationDate && candidaturesDate && candidaturesDate < divulgationDate)
@@ -154,6 +162,7 @@ const Edit = () => {
 					<div className="inputs col d-flex flex-column">
 						<TextInput type='date' text='Fim Submissões' value={submissionEnd} setValue={setSubmissionEnd} error={errors.submissionEnd} />
 						<TextInput type='date' text='Candidaturas' value={candidatures} setValue={setCandidatures} error={errors.candidatures} />
+						<TextInput type='date' text='Inscrição de Alunos' value={registrations} setValue={setRegistrations} error={errors.registrations} />
 					</div>
 				</div>
 

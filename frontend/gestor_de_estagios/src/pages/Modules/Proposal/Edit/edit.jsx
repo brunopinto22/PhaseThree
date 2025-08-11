@@ -112,7 +112,7 @@ const Edit = () =>  {
 
 
 
-	const submit = () => {
+	const submit = async () => {
 		const data = {
 			company_id: company ? Number(company) : null,
 			advisor_id: responsible !== -1 && responsible !== null ? Number(responsible) : null,
@@ -140,9 +140,10 @@ const Edit = () =>  {
 		};
 
 		if(isNew) {
-			if(createProposal(userInfo.token, data, setStatus, setError))
+			if(await createProposal(userInfo.token, data, setStatus, setError))
 				cancel();
 		}
+
 
 	}
 	
@@ -157,9 +158,9 @@ const Edit = () =>  {
 	return(
 		<div id='student' className='d-flex flex-column'>
 
-			{noCourses && <Alert type='danger' text='Não existe nenhum calendário ativo de momento' />}
+			{(noCourses && isNew)&& <Alert type='danger' text='Não existe nenhum calendário ativo de momento' />}
 
-			{!noCourses && <>
+			{(!noCourses || !isNew) && <>
 			
 			<h4>{isNew ? "Submeter Proposta" : "Editar Proposta"}</h4>
 

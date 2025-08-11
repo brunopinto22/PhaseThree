@@ -73,6 +73,7 @@ const View = () => {
 	const divulgation = formatDate(calendar.divulgation);
 	const candidatures = formatDate(calendar.candidatures);
 	const placements = formatDate(calendar.placements);
+	const registrations = formatDate(calendar.registrations);
 	const min = calendar.min;
 	const max = calendar.max;
 	const students = calendar.students;
@@ -91,7 +92,7 @@ const View = () => {
 			<div className="d-flex flex-column flex-md-row justify-content-between gap-4">
 				<div className="title-container d-flex flex-column">
 					<h4 className="title">{title}</h4>
-					<h6 className="sub-title text-link" onClick={() => navigate("/course/view?id=" + course_id)}>{course}</h6>
+					<h6 className="sub-title" onClick={() => navigate("/course/view?id=" + course_id)}><a className='text-link'>{course}</a></h6>
 				</div>
 				{canEdit && <PrimaryButtonSmall className='h-100' content={<p>Editar Calendário</p>} action={() => navigate("/calendar/edit?id=" + id)} />}
 			</div>
@@ -101,6 +102,7 @@ const View = () => {
 				<p><b>Divulgação de propostas: </b>{divulgation}</p>
 				<p><b>Candidaturas: </b>{candidatures}</p>
 				<p><b>Colocações: </b>{placements}</p>
+				<p><b>Inscrição de Alunos: </b>{registrations}</p>
 				<p><b>Limite de Candidaturas: </b>{min} a {max}</p>
 			</div>
 

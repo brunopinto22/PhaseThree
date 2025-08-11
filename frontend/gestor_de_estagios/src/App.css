@@ -78,7 +78,7 @@ a:hover {
 }
 
 .text-link {
-	color: var(--text-color-500);
+	color: inherit;
 	border: none;
 }
 .text-link::hover {

@@ -110,7 +110,7 @@ export async function editProposal(token, id, data, setStatus, setErrorMessage) 
 		setStatus(res.status)
 		setErrorMessage(responseData.message || "Erro ao criar curso");
 
-    if(res.status !== 200)
+    if(res.status === 200)
       return true;
 
 	} catch {
@@ -135,11 +135,13 @@ export async function deleteProposal(token, id) {
 
 		const data = await res.json();
 
-    if(res.status !== 200)
+    if(res.status === 200)
       return true;
 
 	} catch {
 		return false;
 	}
+
+	return false;
 	
 }
