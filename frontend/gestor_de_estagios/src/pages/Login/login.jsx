@@ -29,14 +29,14 @@ function Login({setToken}) {
 
 	const [waiting, setWaiting] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
 
 		setWaiting(true);
-		setError(!await login(navigate, email, password, setErrorMessage));
+		let res = !await login(navigate, email, password, setErrorMessage)
+		setError(res);
 		setWaiting(false);
 
-    if(!error) {
+    if(!res) {
 			setToken(localStorage.getItem("access_token"));
 			navigate("/");
 		}
@@ -52,19 +52,19 @@ function Login({setToken}) {
 					<img src={logo}/>
 				</div>
 
-				<div className='form d-flex flex-column justify-content-between col-xs-12 col-md-6 col-lg-5'>
+				<div className='form-container d-flex flex-column justify-content-between col-xs-12 col-md-6 col-lg-5'>
 					<h1>Login</h1>
 
-					<form onSubmit={handleLogin}>
+					<div className='form'>
 						<TextInput text={"Email"} setValue={setEmail} error={error} />
 						<div className="password-field">
               <PasswordInput text={"Palavra-Passe"} setValue={setPassword} error={error} />
               <a href="">Recuperar palavra-passe</a>
             </div>
 
-            <PrimaryButton type='submit' content={<h6>Login</h6>} />
+            <PrimaryButton content={<h6>Login</h6>} action={handleLogin} />
 						{error && (<p className='error-message'>{errorMessage}</p>)}
-					</form>
+					</div>
 
           <div className='create-account'>
 

@@ -87,7 +87,7 @@ const Edit = () =>  {
 		const fetchCourses = async () => {
 			const c = await listCourses(userInfo.token, setStatus, setError);
 			setCourses(c.filter(c => c.active_calendars_submission));
-			setnoCourses(c.length <= 0);
+			setnoCourses(c.filter(c => c.active_calendars_submission).length <= 0);
 		};
 		fetchCourses();
 	}, []);
@@ -159,6 +159,8 @@ const Edit = () =>  {
 
 			{noCourses && <Alert type='danger' text='Não existe nenhum calendário ativo de momento' />}
 
+			{!noCourses && <>
+			
 			<h4>{isNew ? "Submeter Proposta" : "Editar Proposta"}</h4>
 
 			<section className='inputs d-flex flex-column flex-md-row p-0'>
@@ -257,6 +259,8 @@ const Edit = () =>  {
 				</div>
 
 			</section>
+
+			</>}
 
 		</div>
 	);

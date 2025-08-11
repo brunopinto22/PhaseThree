@@ -7,12 +7,12 @@
 	transition: all 0.5s;
 }
 
-section {
+#login section {
 	padding: var(--spacing-l);
 } 
 
 
-.image-container {
+#login .image-container {
   overflow: hidden;
 
   padding: var(--spacing-xl);
@@ -22,53 +22,53 @@ section {
   background-repeat: no-repeat;
   border-radius: var(--border-xs);
 }
-.image-container img {
+#login .image-container img {
   height: 5%;
 }
 
 
-.form {
+#login .form-container {
   padding: var(--spacing-2xl) var(--spacing-2xl);
 }
-.form h1 {
+#login .form-container h1 {
   text-align: center;
   color: var(--primary-color-700);
 }
 
-form {
+#login .form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-m);
 }
 
-form button {
+#login .form button {
   margin-top: var(--spacing-l);
 }
 
-.password-field {
+#login .password-field {
   display: flex;
   flex-direction: column;
   align-items: end;
   gap: var(--spacing-xs);
 }
-.password-field .input {
+#login .password-field .input {
   width: 100%;
 }
 
-.create-account {
+#login .create-account {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-s);
   width: 100%;
   text-align: center;
 }
-.create-account .btns {
+#login .create-account .btns {
   display: flex;
   flex-direction: row;
   justify-content: center;
   gap: var(--spacing-xs);
 }
 
-.help {
+#login .help {
 	text-align: center;
 }

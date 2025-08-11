@@ -1,12 +1,14 @@
 import './settings.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, Alert, PrimaryButtonSmall, PasswordInput, PrimaryButton, SecundaryButton, TextInput } from '../../components';
 import { getScientificAreas, addScientificArea, getSupportEmail, deleteScientificArea } from '../../helpers';
+import { UserContext } from '../../contexts';
 
 const Settings = () => {
 
 	const navigate = useNavigate();
+	const { userInfo } = useContext(UserContext);
 	const [reloadAreas, setReloadAreas] = useState(false);
 
 	const [seeAccounts, setSeeAccounts] = useState(true);
@@ -68,7 +70,7 @@ const Settings = () => {
 
 					<div className="d-flex flex-column flex-md-row align-items-end gap-2">
 						<TextInput className="col" text='Email de suporte' value={email} setValue={setEmail} />
-						<PrimaryButtonSmall className='h-100' content={<p>Alterar Password</p>} />
+						<PrimaryButtonSmall className='h-100' content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email:"admin" } })} />
 					</div>
 
 				</div>

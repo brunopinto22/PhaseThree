@@ -22,8 +22,10 @@ const Edit = () =>  {
 	const id = searchParams.get("id");
   const isNew = searchParams.get("new");
 	
+	const [active, setActive] = useState(null);
 	const [profilePicture, setProfilePicture] = useState(null);
 	const [fullName, setFullName] = useState(null);
+	const [originalEmail, setOriginalEmail] = useState(null);
 	const [email, setEmail] = useState(null);
 	const [category, setCategory] = useState(null);
 
@@ -54,9 +56,11 @@ const Edit = () =>  {
 		const token = localStorage.getItem('access_token');
 		if (id && !isNew) {
 			getTeacher(token, id, setStatus, setError).then(data => {
+				setActive(data.active)
 				setProfilePicture(data.pfp || null);
 				setFullName(data.teacher_name);
 				setEmail(data.teacher_email);
+				setOriginalEmail(data.teacher_email);
 				setArea(data.scientific_area_id);
 				setCategory(data.teacher_category);
 				setPerms(data.permissions);
@@ -67,6 +71,7 @@ const Edit = () =>  {
 
 	const submit = () => {
 		const data = {
+			active: active,
 			email: email,
 			name: fullName,
 			area: area,
@@ -98,8 +103,9 @@ const Edit = () =>  {
 				<div className="profile d-flex flex-column flex-md-row p-0 col-sm-12 col-md-4">
 					<div className="profile-picture h-100" style={{backgroundImage: `url(${ profilePicture ? profilePicture : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
+						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Docentes"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
 						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} />
-						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} />
+						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
 			</section>
@@ -143,7 +149,6 @@ const Edit = () =>  {
 					<h4>Permissões</h4>
 					<table>
 						<tr className='header'>
-							<th><p>#</p></th>
 							<th><p>Módulo</p></th>
 							<th><p>Ver</p></th>
 							<th><p>Editar</p></th>
@@ -152,7 +157,6 @@ const Edit = () =>  {
 
 						{Object.entries(perms).map(([key, value], index) => (
 							<tr className='table-row' key={key}>
-								<th><p>{index + 1}</p></th>
 								<th><p>{key}</p></th>
 								<th style={{ width: 0 }}>
 									<CheckBox className='justify-content-center' value={value.view}

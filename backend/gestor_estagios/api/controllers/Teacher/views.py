@@ -219,15 +219,14 @@ def createTeacher(request):
         return Response({"message": "Docente criado com sucesso"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        return Response({
-            "error": "Erro interno do servidor",
-            "details": str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['PUT'])
 def editTeacher(request, pk):
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
+
+    has_permission = False
 
     if (
             user_email == "Expired Token."
@@ -237,7 +236,7 @@ def editTeacher(request, pk):
         return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
 
     elif user_type not in ["admin", "teacher"]:
-        return Response({"message": "Sem permissão para eliminar o Docente"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"message": "Sem permissão para editar o Docente"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
         teacher = Teacher.objects.get(user__email=user_email)
@@ -246,11 +245,17 @@ def editTeacher(request, pk):
             permission = Permissions.objects.get(teacher=teacher, module=module)
             if not permission.can_edit or teacher != Teacher.objects.get(id_teacher=id):
                 return Response({"message": "Sem permissão para editar o Docente"}, status=HTTP_401_UNAUTHORIZED)
+            has_permission = True
 
     try:
         t = Teacher.objects.get(id_teacher=pk)
         data = request.data
 
+        if Accounts.objects.filter(email=data['email']).exclude(pk=t.user.pk).exists():
+            return Response({"message": "Este email já está em uso"}, status=HTTP_400_BAD_REQUEST)
+
+        if user_type == "admin" or (user_type == "teacher" and has_permission and user_email != t.user.email):
+            t.active = data['active']
         t.teacher_name = data['name']
         t.scientific_area = ScientificArea.objects.get(id_area=data['area'])
         t.teacher_category = data['category']

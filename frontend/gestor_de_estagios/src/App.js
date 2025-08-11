@@ -4,7 +4,7 @@ import "./App.css";
 import { useContext, useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from "react-router-dom";
 import {
-	Login, Dashboard, PageNotFound, Unauthorized, Settings,
+	Login, Dashboard, PageNotFound, Unauthorized, Settings, Authenticate, SetPassword,
 	RegisterStudent, RegisterCompany, RegisterRepresentative,
 	ListStudents, ViewStudent, EditStudent,
 	ListCourses, ViewCourse, EditCourse,
@@ -135,28 +135,20 @@ function App() {
 				<Routes>
 
 					{/* Login */}
-					<Route
-						path="/login"
-						element={
-							<RequireNoAuth token={token} loading={loading}>
-								<Login setToken={setToken} />
-							</RequireNoAuth>
-						}
-					/>
+					<Route path="/login" element={<RequireNoAuth token={token} loading={loading}> <Login setToken={setToken} /> </RequireNoAuth>} />
 
 					{/* Register */}
-					<Route
-						path="/register"
-						element={
-							<RequireNoAuth token={token} loading={loading}>
-								<Outlet />
-							</RequireNoAuth>
-						}
-					>
+					<Route path="/register" element={<RequireNoAuth token={token} loading={loading}> <Outlet /> </RequireNoAuth>}>
 						<Route path="teacher" element={<RegisterTeacher />} />
 						<Route path="student" element={<RegisterStudent />} />
 						<Route path="company" element={<RegisterCompany />} />
 						<Route path="representative" element={<RegisterRepresentative />} />
+					</Route>
+
+
+					<Route path="/" element={<RequireAuth token={token} loading={loading}> <Outlet /> </RequireAuth>}>
+						<Route path="authenticate" element={<Authenticate />} />
+						<Route path="setPassword" element={<SetPassword />} />
 					</Route>
 
 

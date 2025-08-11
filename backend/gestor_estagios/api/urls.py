@@ -11,9 +11,4 @@ urlpatterns = [
     path('scientificArea/<int:pk>/edit', editArea),
     path('scientificArea/<int:pk>/delete', deleteArea),
 
-    path('user/login', login),
-    path('user/register', register),
-    path('user/password/recover', recuperar_password),
-    path('user/password/recover/confirm', recuperar_password_confirm),
-
 ]

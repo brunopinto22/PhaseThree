@@ -46,9 +46,9 @@ class Student(models.Model):
     nationality = models.CharField(max_length=50)
     ident_type = models.CharField(max_length=255, null=False, blank=False)
     ident_doc = models.IntegerField(null=False, blank=False)
-    nif = models.IntegerField(null=False, blank=False)
+    nif = models.IntegerField(null=True, blank=False)
     gender = models.CharField(max_length=12, null=True, blank=True)
-    address = models.CharField(max_length=255, null=False, blank=False)
+    address = models.CharField(max_length=255, null=True, blank=False)
     contact = models.CharField(max_length=15, null=True, blank=True)
 
     current_year = models.IntegerField(null=False)

@@ -183,13 +183,16 @@ def createStudent(request):
             return Response({"message": "Documento de identificação já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
         settings = Settings.objects.first()
+        password = settings.student_password
+        if data.get("password"):
+            password = data.get("password")
 
         user = Accounts.objects.create_user(
             username=data["email"],
             email=data["email"],
             user_type="student",
         )
-        user.set_password(settings.student_password)
+        user.set_password(password)
         user.save()
 
         student = Student.objects.create(

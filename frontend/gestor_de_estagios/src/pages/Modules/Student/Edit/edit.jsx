@@ -69,6 +69,7 @@ const Edit = () =>  {
 	const [gender, setGender] = useState(null);
 	const [nif, setNif] = useState(null);
 	const [contact, setContact] = useState(null);
+	const [originalEmail, setOriginalEmail] = useState(null);
 	const [email, setEmail] = useState(null);
 	const [address, setAddress] = useState(null);
 
@@ -170,7 +171,7 @@ const Edit = () =>  {
 					<div className="options d-flex flex-column justify-content-center w-100">
 						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} />
 						<PrimaryButtonSmall content={<p>Alterar Currículo</p>} />
-						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} />
+						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
 			</section>

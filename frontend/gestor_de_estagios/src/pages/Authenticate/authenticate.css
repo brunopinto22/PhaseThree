@@ -1,0 +1,36 @@
+#authenticate {
+  display: flex;
+  position: relative;
+  height: 100svh;
+  width: 100%;
+	background-color: var(--secundary-color-200);
+	overflow: hidden;
+	transition: all 0.5s;
+}
+
+#authenticate section {
+	padding: var(--spacing-l);
+}
+
+#authenticate .title {
+	color: var(--primary-color-800);
+}
+
+#authenticate form {
+	height: fit-content;
+	padding: var(--spacing-2xl);
+	gap: var(--spacing-xl);
+	background-color: var(--background-color-100);
+	border-radius: var(--border-m);
+	box-shadow: 0 0 var(--spacing-m) 0 rgba(0,0,0, var(--opacity-24));
+}
+
+#authenticate .password-field {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: var(--spacing-xs);
+}
+#authenticate .password-field .input {
+  width: 100%;
+}

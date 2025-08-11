@@ -46,7 +46,7 @@ const Edit = () =>  {
 					<div className="profile-picture h-100" style={{backgroundImage: `url(${ profilePicture ? profilePicture : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
 						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} />
-						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} />
+						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email } })} />
 					</div>
 				</div>
 			</section>
