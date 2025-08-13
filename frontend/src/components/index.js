@@ -16,8 +16,6 @@ export { default as CheckBox } from './CheckBox/checkBox';
 
 export { default as Alert } from './Alert/alert';
 
-export { default as Calendar } from './Calendar/calendar';
-
 export { default as ColorPicker } from './ColorPicker/colorPicker';
 
 export { default as State } from './State/state';

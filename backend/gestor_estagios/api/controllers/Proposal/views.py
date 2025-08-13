@@ -32,13 +32,13 @@ def getProposal(request, pk):
         return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
 
     try:
-        p = Proposal.objects.get(pk=pk)
+        p = Proposal.objects.get(id_proposal=pk)
 
         if user_type == "student":
             student = Student.objects.get(user__email=user_email)
             calendar = p.calendar
 
-            if not calendar.students.filter(student=student).exists():
+            if calendar != student.calendar :
                 return Response({"message":"Não pertence ao Calendário"}, status=HTTP_401_UNAUTHORIZED)
 
             if calendar.divulgation > date.today():
@@ -117,7 +117,7 @@ def listProposals(request):
 
         if user_type == "student":
             student = Student.objects.get(user__email=user_email)
-            proposals = proposals.filter(calendar__students__student=student)
+            proposals = proposals.filter(calendar=student.calendar, calendar__divulgation__lte=date.today())
 
         elif user_type == "teacher":
             teacher = Teacher.objects.get(user__email=user_email)

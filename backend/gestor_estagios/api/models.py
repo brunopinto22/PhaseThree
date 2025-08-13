@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Permission
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -318,11 +320,15 @@ class Calendar(models.Model):
     max_proposals = models.PositiveIntegerField(default=0)
 
     course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='course_calendars')
-    students = models.ManyToManyField('Student', related_name='students_calendars')
 
     def __str__(self):
         return f"{self.calendar_year}/{self.calendar_year+1} - {self.calendar_semester}º Semestre"
 
+    def is_active(self):
+        return self.submission_start <= date.today() <= self.placements
+
+    def is_submission_active(self):
+        return self.submission_start <= date.today() <= self.submission_end
 
 class Company(models.Model):
     id_company = models.AutoField(primary_key=True)

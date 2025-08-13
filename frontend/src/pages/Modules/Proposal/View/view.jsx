@@ -95,8 +95,7 @@ function View() {
 	const responsible = proposal.advisor;
 	const responsible_ISEC = proposal.isec_advisor;
 
-	const isAdmin = true;
-	const canEdit = true;
+	const canEdit = (role === "admin" || (role === "representative" && userInfo.company) || (role === "teacher" && permissions["Propostas"].edit));
 
 	return(
 		<div id="proposal" className='d-flex flex-column flex-md-row'>
@@ -218,7 +217,7 @@ function View() {
 
 					<div className="btns d-flex flex-column">
 						<PrimaryButtonSmall content={<p>Proposta</p>}/>
-						{(canEdit || isAdmin) && <PrimaryButtonSmall content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} />}
+						{(canEdit) && <PrimaryButtonSmall content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} />}
 					</div>
 				</div>
 			</div>

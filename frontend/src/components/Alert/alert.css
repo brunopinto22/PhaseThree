@@ -1,14 +1,31 @@
-.alert {
+.alert,
+.alert-small {
 	margin: 0;
+	border: 1px solid black;
+}
+
+
+.alert {
 	gap: var(--spacing-m);
 	padding: var(--spacing-m) var(--spacing-l);
 	border-radius: var(--border-s);
 	box-shadow: 0 0 var(--spacing-xs) 0 rgba(0,0,0, var(--opacity-16));
 }
-
 .alert i {
 	font-size: var(--icon-size-m);
 }
+
+
+.alert-small {
+	gap: var(--spacing-m);
+	padding: var(--spacing-m) var(--spacing-l);
+	border-radius: var(--border-s);
+	box-shadow: 0 0 var(--spacing-2xs) 0 rgba(0,0,0, var(--opacity-16));
+}
+.alert-small i {
+	font-size: var(--icon-size-s);
+}
+
 
 .alert-danger {
 	background-color: var(--error-color-200);

@@ -1,12 +1,16 @@
-.modules {
+#dashboard .modules {
 	gap: var(--spacing-xl);
 }
-.modules-btns {
+#dashboard .modules-btns {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	grid-gap: var(--spacing-l);
 }
 
-.sidebar.admin {
+#dashboard .sidebar {
 	gap: var(--spacing-l);
+}
+
+#dashboard .sidebar .title i {
+	font-size: var(--icon-size-m);
 }

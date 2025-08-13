@@ -1,11 +1,11 @@
 import './dashboard.css';
 import { useState, useEffect, useContext } from 'react';
-import { DashButton, Calendar } from '../../components';
+import { DashButton } from '../../components';
 import { useNavigate } from 'react-router-dom';
-import { getCounts } from '../../helpers';
 import { UserContext } from '../../contexts';
+import SideBar from './SideBar/sideBar';
 
-function Dashboard() {
+const Dashboard = () => {
 
 	const navigate = useNavigate();
 	const { userInfo } = useContext(UserContext);
@@ -24,29 +24,8 @@ function Dashboard() {
     if (!userInfo) return;
   }, [userInfo, permissions, role, navigate]);
 
-	const [adm, setAdm] = useState({
-		nCourses: 0,
-		nTeachers: 0,
-		nStudents: 0,
-		nCompanies: 0,
-		nRepresentatives: 0,
-	})
-	const nCourses = adm.nCourses;
-	const nTeachers = adm.nTeachers;
-	const nStudents = adm.nStudents;
-	const nCompanies = adm.nCompanies;
-	const nRepresentatives = adm.nRepresentatives;
-
-	useEffect(() => {
-		async function fetch() {
-			const data = await getCounts();
-			setAdm(data);
-		}
-		fetch();
-	}, []);
-
   return(
-    <div className='dashboard row'>
+    <div id="dashboard" className='row'>
 
 			<div className='modules d-flex flex-column col-sm-12 col-md-8'>
 				<h3>Dashboard</h3>
@@ -171,22 +150,7 @@ function Dashboard() {
 			</div>
 
 			<div className="col-sm-12 col-md-4 mt-5 m-md-0">
-				{role === 'admin' && (
-					<div className='sidebar admin d-flex flex-column'>
-						<h5>Informação:</h5>
-						<div className='content-admin d-flex flex-column gap-2'>
-							<div className='d-flex flex-row gap-2'><i className="bi bi-book"></i><b>Cursos:</b>{nCourses}</div>
-							<div className='d-flex flex-row gap-2'><i className="bi bi-person-workspace"></i><b>Docentes:</b>{nTeachers}</div>
-							<div className='d-flex flex-row gap-2'><i className="bi bi-person-fill"></i><b>Alunos:</b>{nStudents}</div>
-							<div className='d-flex flex-row gap-2'><i className="bi bi-building-fill"></i><b>Empresas:</b>{nCompanies}</div>
-							<div className='d-flex flex-row gap-2'><i className="bi bi-people-fill"></i><b>Representantes:</b>{nRepresentatives}</div>
-						</div>
-					</div>
-				)}
-
-				{role !== 'admin' && (
-					<Calendar />
-				)}
+				<SideBar />
 			</div>
 
 		</div>

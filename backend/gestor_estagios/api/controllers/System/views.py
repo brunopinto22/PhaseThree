@@ -60,14 +60,3 @@ def getSystemInfo(request):
 def getModules(request):
     modules = list(Module.objects.values())
     return JsonResponse(modules, status=200, safe=False)
-
-@api_view(["GET"])
-def getCounts(request):
-    data = {
-        "nCourses": Course.objects.count(),
-        "nTeachers": Teacher.objects.count(),
-        "nStudents": Student.objects.count(),
-        "nCompanies": Company.objects.count(),
-        "nRepresentatives": Representative.objects.count(),
-    }
-    return JsonResponse(data, status=200)

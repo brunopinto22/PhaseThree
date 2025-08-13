@@ -1,6 +1,6 @@
 import './alert.css';
 
-function Warning({text="No Warning Text Given", type="warning"}) {
+function Warning({text="No Warning Text Given", type="warning", small = false}) {
 
 	const iconMap = {
     danger: "bi-exclamation-octagon",
@@ -12,11 +12,9 @@ function Warning({text="No Warning Text Given", type="warning"}) {
 	const iconClass = iconMap[type] || iconMap["warning"];
 
 	return(
-		<div className={`d-flex align-items-center alert alert-${type}`}>
-
+		<div className={`d-flex align-items-center alert${small ? '-small' : ''} alert-${type}`}>
 			<i className={`bi ${iconClass}`}></i>
-			
-			<h6>{text}</h6>
+			{small ? (<p>{text}</p>) : (<h6>{text}</h6>)}
 		</div>
 	);
 

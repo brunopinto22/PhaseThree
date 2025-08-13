@@ -191,3 +191,124 @@ def recuperar_password_confirm(request, uidb64, token):
             return JsonResponse({"error": "Token inválido"}, status=HTTP_400_BAD_REQUEST)
     except (TypeError, ValueError, OverflowError, Accounts.DoesNotExist):
         return JsonResponse({"error": "Utilizador inválido"}, status=HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+def summary(request):
+    data = request.data.copy()
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    try:
+        data = None
+
+        if user_type == "admin":
+            data = {
+                "nCourses": Course.objects.count(),
+                "nTeachers": Teacher.objects.count(),
+                "nStudents": Student.objects.count(),
+                "nCompanies": Company.objects.count(),
+                "nRepresentatives": Representative.objects.count(),
+                "nProposals": Proposal.objects.count(),
+                "nCandidatures": Candidature.objects.count(),
+            }
+
+        elif user_type == "teacher":
+            t = Teacher.objects.get(user__email=user_email)
+
+            module_counts = {"nCourses": None,"nStudents": None,"nTeachers": None,"nCompanies": None,"nProposals": None,"nCandidatures": None,}
+            for perm in Permissions.objects.filter(teacher=t, can_view=True):
+                if perm.module.module_name == "Cursos":
+                    module_counts["nCourses"] = Course.objects.count()
+                elif perm.module.module_name == "Alunos":
+                    module_counts["nStudents"] = Student.objects.count()
+                elif perm.module.module_name == "Docentes":
+                    module_counts["nTeachers"] = Teacher.objects.count()
+                elif perm.module.module_name == "Empresas":
+                    module_counts["nCompanies"] = Company.objects.count()
+                    module_counts["nRepresentatives"] = Representative.objects.count()
+                elif perm.module.module_name == "Propostas":
+                    module_counts["nProposals"] = Proposal.objects.count()
+                elif perm.module.module_name == "Candidaturas":
+                    module_counts["nCandidatures"] = Candidature.objects.count()
+
+            calendars_list = [
+                {
+                    "id": c.id_calendar,
+                    "title": str(c)
+                }
+                for c in Calendar.objects.filter(course__scientific_area=t.scientific_area) if c.is_active()
+            ]
+
+            course_commission = Course.objects.filter(commission=t).first()
+            if course_commission:
+                data = {
+                    "permissions": module_counts,
+                    "commission": {
+                        "course": {
+                            "id": course_commission.id_course,
+                            "name": course_commission.course_name
+                        },
+                        "nStudents": Student.objects.filter(student_course=course_commission).count(),
+                        "nTeachers": course_commission.commission.count(),
+                        "nCalendars": Calendar.objects.filter(course=course_commission).count()
+                    },
+                    "calendars": calendars_list,
+                }
+            else:
+                data = {
+                    "permissions": module_counts,
+                    "commission": None,
+                    "calendars": calendars_list
+                }
+
+        elif user_type == "representative":
+            r = Representative.objects.get(user__email=user_email)
+
+            data = {
+                "company": {
+                    "id": r.company.id_company,
+                    "name": r.company.company_name,
+                },
+                "nRepresentatives": Representative.objects.filter(company=r.company).count(),
+                "nProposals": Proposal.objects.filter(company=r.company).count(),
+                "calendars": [
+                    {
+                        "id": c.id_calendar,
+                        "title": str(c)
+                    }
+                    for c in Calendar.objects.all() if c.is_submission_active()
+                ]
+            }
+
+        elif user_type == "student":
+            s = Student.objects.get(user__email=user_email)
+            c = Calendar.objects.get(id_calendar=s.calendar.id_calendar)
+
+            data = {
+                "calendar": {
+                    "id": c.id_calendar,
+                    "title": str(c),
+                    "submission_start": c.submission_start.strftime("%d/%m/%Y"),
+                    "submission_end": c.submission_end.strftime("%d/%m/%Y"),
+                    "divulgation": c.divulgation.strftime("%d/%m/%Y"),
+                    "candidatures": c.candidatures.strftime("%d/%m/%Y"),
+                    "placements": c.placements.strftime("%d/%m/%Y"),
+                }
+            }
+
+        else:
+            return Response({"message": "Tipo de utilizador não reconhecido ou não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        return JsonResponse(data, status=200)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro interno do servidor"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

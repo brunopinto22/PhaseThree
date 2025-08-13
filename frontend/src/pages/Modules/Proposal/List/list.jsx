@@ -156,7 +156,7 @@ const List = () => {
 				<div className="filters"></div>
 
 				<div className="options d-flex flex-row gap-3">
-					<SecundaryButtonSmall action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
+					<SecundaryButtonSmall content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
 					{(role === "admin" || permissions["Propostas"].edit) && <PrimaryButtonSmall action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar proposta</p></div>} />}
 				</div>
 			</div>
@@ -167,7 +167,7 @@ const List = () => {
 				<div className="d-flex flex-row align-items-center gap-1"><Pill type={"Projeto"} collapse={true} className='noselect' /><p style={{color: "var(--pink)"}}>= Projeto</p></div>
 			</div>
 
-			{list.length === 0 && <Alert text='Não existe nenhuma proposta de momento' />}
+			{list.length === 0 && <Alert text={role === "student" ? "As propostas ainda não estão disponíveis" : 'Não existe nenhuma proposta de momento'} />}
 
 			{list.length > 0 && (
 				<table>
