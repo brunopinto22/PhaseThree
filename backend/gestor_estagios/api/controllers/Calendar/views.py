@@ -47,16 +47,20 @@ def getCalendar(request, pk):
             "max": c.max_proposals,
             "course_id": c.course.id_course,
             "course_name": c.course.course_name,
-            "students_count": c.students.count(),
+            "students_count": Student.objects.filter(calendar=c).count(),
             "students": [
                 {
                     "number": s.student_number,
                     "name": s.student_name,
                     "email": s.user.email,
                     "course": s.student_course.course_name,
-                    "branch": s.student_branch.branch_name,
+                    "branch": {
+                        "name": s.student_branch.branch_name,
+                        "acronym": s.student_branch.branch_acronym,
+                        "color": s.student_branch.color,
+                    },
                 }
-                for s in c.students.all()
+                for s in Student.objects.filter(calendar=c).all()
             ],
             "proposals_count": Proposal.objects.filter(calendar=c).count(),
             "proposals":[
