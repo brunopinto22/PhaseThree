@@ -1,12 +1,12 @@
 import './setPassword.css';
 import { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { getSupportEmail } from '../../helpers';
+import { getSupportEmail, setUserPassword } from '../../services';
 import { PrimaryButton, PasswordInput } from '../../components';
 import { UserContext } from '../../contexts';
-import { setUserPassword } from '../../services/user';
 
-function SetPassword({setToken}) {
+
+const SetPassword = ({setToken}) => {
 	const navigate = useNavigate();
 	const { userInfo } = useContext(UserContext);
 	const role = userInfo?.role;

@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButton, Alert } from '../../../../components';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../../../contexts';
-import { getStudent } from '../../../../helpers/students';
+import { getStudent } from '../../../../services';
 
 function View() {
 

@@ -4,9 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from './../../../assets/imgs/logo.png';
 import bg from './.././../../assets/imgs/company.jpg';
 import { PrimaryButton, TertiaryButton, TextInput, PasswordInput } from './../../../components';
-import { getSupportEmail } from '../../../helpers';
+import { getSupportEmail, registerCompany } from '../../../services';
 import { CompanyContext } from '../../../contexts';
-import { registerCompany } from '../../../helpers';
 
 const Register = () => {
 

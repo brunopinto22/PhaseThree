@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, TextArea, CheckBox, Alert } from '../../../../components';
 import { UserContext } from '../../../../contexts';
-import { getCompany, getCourse, listCourses } from '../../../../helpers';
+import { getCompany, getCourse, listCourses } from '../../../../services';
 import { createProposal } from '../../../../services/proposals';
 
 const Edit = () =>  {

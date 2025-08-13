@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TextInput, PrimaryButton, SecundaryButton, Dropdown } from '../../../../components';
 import { UserContext } from '../../../../contexts';
-import { isDateInLectiveYear, toDate } from '../../../../helpers';
+import { isDateInLectiveYear, toDate } from '../../../../utils';
 import { createCalendar, editCalendar, getCalendar } from '../../../../services/calendars';
 
 const Edit = () => {

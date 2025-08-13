@@ -1,24 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { Alert } from "../../../components";
-import { getSummary } from "../../../services/user";
 import { UserContext } from "../../../contexts";
 
-const SideBar = () => {
-	const { userInfo } = useContext(UserContext);
-
-	const [type, setType] = useState(null);
-	const [summary, setSummary] = useState(null);
-	const [status, setStatus] = useState(null);
-	const [error, setError] = useState(null);
-
-	useEffect(() => {
-		async function fetch() {
-			const data = await getSummary(userInfo.token, setStatus, setError);
-			setSummary(data);
-		}
-		fetch();
-		setType(userInfo.role);
-	}, [userInfo]);
+const SideBar = ({type = null, summary = null, error = null}) => {
 
 	return(
 		<div className='sidebar d-flex flex-column'>

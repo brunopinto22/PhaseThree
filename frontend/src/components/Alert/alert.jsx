@@ -2,6 +2,9 @@ import './alert.css';
 
 function Warning({text="No Warning Text Given", type="warning", small = false}) {
 
+	if(text === null || text === "")
+		text = "No Warning Text Given"
+
 	const iconMap = {
     danger: "bi-exclamation-octagon",
     warning: "bi-exclamation-triangle",

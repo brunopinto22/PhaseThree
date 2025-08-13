@@ -2,7 +2,7 @@ import './list.css';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButtonSmall, Alert } from '../../../../components';
-import { listCompanies } from '../../../../helpers';
+import { listCompanies } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 const List = () => {

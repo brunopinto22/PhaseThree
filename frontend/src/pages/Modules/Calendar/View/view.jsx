@@ -6,7 +6,7 @@ import Proposals from './Lists/proposals';
 import Students from './Lists/students';
 import { UserContext } from '../../../../contexts';
 import { getCalendar } from '../../../../services/calendars';
-import { formatDate } from '../../../../helpers';
+import { formatDate } from '../../../../utils';
 
 const View = () => {
 

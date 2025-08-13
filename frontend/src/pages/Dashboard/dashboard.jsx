@@ -4,6 +4,7 @@ import { DashButton } from '../../components';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts';
 import SideBar from './SideBar/sideBar';
+import { getSummary } from "../../services/user";
 
 const Dashboard = () => {
 
@@ -23,6 +24,20 @@ const Dashboard = () => {
 	useEffect(() => {
     if (!userInfo) return;
   }, [userInfo, permissions, role, navigate]);
+
+	const [type, setType] = useState(null);
+	const [summary, setSummary] = useState(null);
+	const [status, setStatus] = useState(null);
+	const [error, setError] = useState(null);
+
+	useEffect(() => {
+		async function fetch() {
+			const data = await getSummary(userInfo.token, setStatus, setError);
+			setSummary(data);
+		}
+		fetch();
+		setType(userInfo.role);
+	}, [userInfo]);
 
   return(
     <div id="dashboard" className='row'>
@@ -74,6 +89,7 @@ const Dashboard = () => {
 								icon={<i className="bi bi-file-earmark-plus-fill"></i>}
 								text="Submeter Proposta"
 								action={() => navigate("/proposal/edit?new=true")}
+								disabled={summary?.calendars.length <= 0}
 							/>
 
 							<DashButton
@@ -150,7 +166,7 @@ const Dashboard = () => {
 			</div>
 
 			<div className="col-sm-12 col-md-4 mt-5 m-md-0">
-				<SideBar />
+				<SideBar type={userInfo.role} summary={summary} />
 			</div>
 
 		</div>

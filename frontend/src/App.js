@@ -17,7 +17,7 @@ import {
 	RegisterTeacher,
 } from './pages';
 import { Layout } from "./components";
-import { testToken } from "./helpers";
+import { testToken } from "./services";
 import { CompanyProvider, UserContext, UserProvider } from "./contexts";
 
 

@@ -2,7 +2,7 @@ import './view.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, OptionButton, PrimaryButton, ProposalCard } from '../../../../components';
-import { getCompany } from '../../../../helpers';
+import { getCompany } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 import Proposals from './Lists/proposals'
 

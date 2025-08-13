@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, CheckBox } from '../../../../components';
-import { editCompany, getCompany } from '../../../../helpers/company';
+import { editCompany, getCompany } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 const Edit = () =>  {

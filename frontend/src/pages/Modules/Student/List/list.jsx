@@ -2,7 +2,8 @@ import './list.css';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButtonSmall, SecundaryButtonSmall, Alert, Pill } from '../../../../components';
-import { listStudents, useDebounce } from '../../../../helpers';
+import { listStudents } from '../../../../services';
+import { useDebounce } from '../../../../utils';
 
 const List = () => {
 	const navigate = useNavigate();

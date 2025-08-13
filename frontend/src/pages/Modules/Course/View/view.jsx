@@ -2,7 +2,7 @@ import './view.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButtonSmall, Alert, OptionButton } from '../../../../components';
-import { getCourse } from '../../../../helpers'
+import { getCourse } from '../../../../services'
 import { UserContext } from '../../../../contexts';
 
 function View() {

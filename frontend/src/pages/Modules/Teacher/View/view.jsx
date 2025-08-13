@@ -3,7 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckBox, PrimaryButton } from '../../../../components';
-import { getTeacher } from '../../../../helpers/teachers';
+import { getTeacher } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 function View() {

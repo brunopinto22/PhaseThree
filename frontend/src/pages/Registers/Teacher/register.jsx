@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from './../../../assets/imgs/logo.png';
 import bg from './../../../assets/imgs/teacher.jpg';
 import { PrimaryButton, TertiaryButton, TextInput, PasswordInput, Dropdown } from '../../../components';
-import { getSupportEmail, getScientificAreas } from '../../../helpers';
+import { getSupportEmail, getScientificAreas } from '../../../services';
 
 
 const Register = () => {

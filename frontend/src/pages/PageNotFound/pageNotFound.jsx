@@ -2,7 +2,7 @@ import './pageNotFound.css';
 import { useState, useEffect } from 'react';
 import { PrimaryButtonSmall } from '../../components';
 import { useNavigate } from 'react-router-dom';
-import { getSupportEmail } from '../../helpers';
+import { getSupportEmail } from '../../services';
 
 function PageNotFound() {
 	const navigate = useNavigate();

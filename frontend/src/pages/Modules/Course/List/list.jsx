@@ -2,8 +2,8 @@ import './list.css';
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, OptionButton, PrimaryButtonSmall } from '../../../../components';
-import { deleteCourse, listCourses } from '../../../../helpers/courses';
-import { useDebounce } from '../../../../helpers';
+import { deleteCourse, listCourses } from '../../../../services';
+import { useDebounce } from '../../../../utils';
 import { UserContext } from '../../../../contexts';
 
 const List = () => {

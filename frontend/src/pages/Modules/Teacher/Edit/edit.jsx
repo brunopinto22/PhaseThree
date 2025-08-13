@@ -5,8 +5,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, CheckBox } from '../../../../components';
-import { getScientificAreas } from '../../../../helpers/courses';
-import { createTeacher, editTeacher, getTeacher } from '../../../../helpers/teachers';
+import { createTeacher, editTeacher, getTeacher, getScientificAreas } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 const Edit = () =>  {

@@ -2,7 +2,7 @@ import './list.css';
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OptionButton, PrimaryButtonSmall, Alert, Pill, SecundaryButtonSmall } from '../../../../components';
-import { useDebounce } from './../../../../helpers';
+import { useDebounce } from './../../../../utils';
 import { listProposals } from '../../../../services/proposals';
 import { UserContext } from '../../../../contexts';
 

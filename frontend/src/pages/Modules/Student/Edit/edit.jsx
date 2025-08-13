@@ -7,8 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox } from '../../../../components';
 
-import { getStudent, createStudent, editStudent } from '../../../../helpers';
-import { getCourse, listCourses } from '../../../../helpers/courses';
+import { getStudent, createStudent, editStudent, getCourse, listCourses } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 

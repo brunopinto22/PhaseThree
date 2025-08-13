@@ -1,7 +1,7 @@
 import './authenticate.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSupportEmail } from '../../helpers';
+import { getSupportEmail } from '../../services';
 import { PrimaryButton, PasswordInput } from '../../components';
 import logo from './../../assets/imgs/logo.png';
 import { UserContext } from '../../contexts';

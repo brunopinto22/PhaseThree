@@ -1,7 +1,7 @@
 import './login.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, getSupportEmail } from '../../helpers';
+import { login, getSupportEmail } from '../../services';
 import { PrimaryButton, TertiaryButton, TextInput, PasswordInput } from '../../components';
 import logo from './../../assets/imgs/logo.png';
 import bg from './../../assets/imgs/login.jpeg'

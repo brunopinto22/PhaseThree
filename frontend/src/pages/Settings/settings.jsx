@@ -2,7 +2,7 @@ import './settings.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, Alert, PrimaryButtonSmall, PasswordInput, PrimaryButton, SecundaryButton, TextInput } from '../../components';
-import { getScientificAreas, addScientificArea, getSupportEmail, deleteScientificArea } from '../../helpers';
+import { getScientificAreas, addScientificArea, getSupportEmail, deleteScientificArea } from '../../services';
 import { UserContext } from '../../contexts';
 
 const Settings = () => {

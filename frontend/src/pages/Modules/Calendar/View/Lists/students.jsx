@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useDebounce } from "../../../../../helpers";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
 
@@ -7,7 +7,7 @@ const Students = ({list}) => {
 	const navigate = useNavigate();
 	const spanRef = useRef(null);
 	const inputRef = useRef(null);
-	const [inputWidth, setInputWidth] = useState(20);
+	const [inputWidth, setInputWidth] = useState();
 
 	const [id, setId] = useState(null);
 	const [name, setName] = useState(null);
@@ -44,7 +44,7 @@ const Students = ({list}) => {
 	const getFilteredList = () => {
 		return list.filter((item) => {
 			return (
-				(filters.id === null || item.student_number.toString().includes(filters.id.toString())) &&
+				(filters.id === null || item.number.toString().includes(filters.id.toString())) &&
 				(filters.name === null || item.name.toLowerCase().includes(filters.name.toLowerCase())) &&
 				(filters.email === null || item.email.toLowerCase().includes(filters.email.toLowerCase())) &&
 				(filters.course === null || 
@@ -56,14 +56,24 @@ const Students = ({list}) => {
 		});
 	};
 
+	useLayoutEffect(() => {
+    const filteredList = getFilteredList();
+    if (filteredList.length === 0 && spanRef.current) {
+        const width = spanRef.current.offsetWidth;
+        setInputWidth(width);
+    }
+		else if(filteredList.length > 0 && spanRef.current)
+			setInputWidth(null)
+  }, [debouncedId, name, email, course, acronym, list]);
 
-	const Row = ({id, studentName, num, email, course, branch}) => {
+
+	const Row = ({name, number, email, course, branch}) => {
 		
 		const view = () => {
-			navigate("/student/view?id="+id);
+			navigate("/student/view?id="+number);
 		}
 		const edit = () => {
-			navigate("/student/edit?id="+id);
+			navigate("/student/edit?id="+number);
 		}
 		const handleDelete = () => {
 			// TODO : eliminar Aluno
@@ -71,11 +81,11 @@ const Students = ({list}) => {
 
 		return(
 			<tr className='table-row'>
-				<th><p>{num}</p></th>
-				<th><p>{studentName}</p></th>
+				<th><p>{number}</p></th>
+				<th><p>{name}</p></th>
 				<th><p><a href={`mailto:`+ email}>{email}</a></p></th>
 				<th><p>{course}</p></th>
-				<th style={{width: 0}}>{branch ? <Pill text={branch.acronym} color={branch.color} /> : "—"}</th>
+				<th style={{width: 0}}>{branch ? <Pill text={branch.acronym} color={branch.color} tooltip={branch.name} tooltipPosition="left" /> : "—"}</th>
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
@@ -94,12 +104,14 @@ const Students = ({list}) => {
 
 			{list.length > 0 && <table>
 				<tr className='header'>
-					<th>
-						<input type="number" value={id || ''} placeholder={'Nº aluno'} onChange={e => setId(e.target.value === '' ? null : Number(e.target.value))} style={{
-							width: inputWidth,
-							minWidth: 20,
-							textAlign: 'center'
-						}} ref={inputRef} />
+					<th className="fit-column">
+						<input type="number" value={id || ''} placeholder={'Nº aluno'} onChange={e => setId(e.target.value === '' ? null : Number(e.target.value))}
+							style={{
+								width: inputWidth ? inputWidth : '',
+								minWidth: spanRef?.current?.offsetWidth,
+								textAlign: 'center'
+							}} ref={inputRef}
+						/>
 						<span ref={spanRef} style={{
 							position: 'absolute',
 							visibility: 'hidden',
@@ -118,10 +130,10 @@ const Students = ({list}) => {
 					<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)}/></p></th>
 					<th><p><input placeholder='Curso' onChange={(e) => setCourse(e.target.value)}/></p></th>
 					<th><p><input style={{width:"100%", minWidth: "1vw"}}placeholder='Ramo' onChange={(e) => setAcronym(e.target.value)}/></p></th>
-					<th></th>
+					<th className="fit-column"></th>
 				</tr>
 
-				{getFilteredList().map(proposal => <Row key={proposal.id + "-" + proposal.type} {...proposal} />)}
+				{getFilteredList().map(student => <Row key={student.number} {...student} />)}
 
 			</table>}
 

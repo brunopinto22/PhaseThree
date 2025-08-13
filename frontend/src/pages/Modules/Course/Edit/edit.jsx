@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, SecundaryButtonSmall, TextInput, TextArea, OptionButton, ColorPicker, CheckBox, Dropdown, Alert } from '../../../../components';
-import { createCourse, editCourse, getCourse, getScientificAreas } from '../../../../helpers/courses';
-import { listTeachers } from '../../../../helpers/teachers';
+import { listTeachers, createCourse, editCourse, getCourse, getScientificAreas } from '../../../../services';
 import CommissionModal from './TeacherModal/modal'
 
 

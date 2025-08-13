@@ -62,8 +62,14 @@
 	justify-content: space-between;
 	border-bottom: 1px solid var(--secundary-color-500);
 }
-.content-list .row.header {
+.content-list .content-row:hover {
+	background-color: var(--secundary-color-300);
+}
+.content-list .header {
 	color: var(--text-color-700);
+}
+.content-list .header:hover {
+	background-color: transparent;
 }
 
 .content-row .red {

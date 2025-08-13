@@ -2,8 +2,8 @@ import './list.css';
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButtonSmall, Alert, CheckBox } from '../../../../components';
-import { deleteTeacher, listTeachers } from '../../../../helpers/teachers';
-import { useDebounce } from '../../../../helpers';
+import { deleteTeacher, listTeachers } from '../../../../services';
+import { useDebounce } from '../../../../utils';
 import { UserContext } from './../../../../contexts';
 
 const List = () => {
