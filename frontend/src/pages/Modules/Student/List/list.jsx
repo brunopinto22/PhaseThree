@@ -1,5 +1,5 @@
 import './list.css';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButtonSmall, SecundaryButtonSmall, Alert, Pill } from '../../../../components';
 import { listStudents } from '../../../../services';
@@ -65,6 +65,7 @@ const List = () => {
 		}));
 	};
 	const getFilteredList = () => {
+		if (!list) return [];
 		return list.filter((item) => {
 			return (
 				(filters.id === null || item.student_number.toString().includes(filters.id.toString())) &&
@@ -79,12 +80,15 @@ const List = () => {
 		});
 	};
 
-	useEffect(() => {
-    if (spanRef.current) {
-      const width = spanRef.current.offsetWidth;
-      setInputWidth(width);
-    }
-  }, [id]);
+	useLayoutEffect(() => {
+		const filteredList = getFilteredList();
+		if (filteredList.length === 0 && spanRef.current) {
+				const width = spanRef.current.offsetWidth;
+				setInputWidth(width);
+		}
+		else if(filteredList.length > 0 && spanRef.current)
+			setInputWidth(null)
+	}, [debouncedId, name, email, course, acronym, list]);
 
 
 	const add = () => {
@@ -110,7 +114,7 @@ const List = () => {
 				<th><p>{studentName}</p></th>
 				<th><p><a href={`mailto:`+ email}>{email}</a></p></th>
 				<th><p>{course}</p></th>
-				<th style={{width: 0}}>{branch ? <Pill text={branch.acronym} color={branch.color} /> : "—"}</th>
+				<th style={{width: 0}}>{branch ? <Pill text={branch.acronym} color={branch.color} tooltip={branch.name} tooltipPosition='left' /> : "—"}</th>
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
@@ -143,8 +147,8 @@ const List = () => {
 					<tr className='header'>
 						<th className='fit-column'>
 							<input type="number" value={id || ''} placeholder={'Nº aluno'} onChange={e => setId(e.target.value === '' ? null : Number(e.target.value))} style={{
-								width: inputWidth,
-								minWidth: 20,
+								width: inputWidth ? inputWidth : '',
+								minWidth: spanRef?.current?.offsetWidth,
 								textAlign: 'center'
 							}} ref={inputRef} />
 							<span ref={spanRef} style={{

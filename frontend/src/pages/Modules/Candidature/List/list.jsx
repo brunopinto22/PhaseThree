@@ -116,7 +116,7 @@ const List = () => {
 
 		return(
 			<tr className='table-row'>
-				<th><State state={state} hideState={true} hideText={true} /></th>
+				<th><State state={state} hideState={true} hideText={true} tooltip={true} /></th>
 				<th className='fit-column text-center'><p>{studentNumber}</p></th>
 				<th><p>{studentName}</p></th>
 				<th><p>{state > 1 ? (companyName) : '—'}</p></th>

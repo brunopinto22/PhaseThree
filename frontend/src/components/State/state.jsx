@@ -1,6 +1,6 @@
 import './state.css';
 
-const OptionButton = ({state = 0, hideState = false, hideText = false, className = ""}) => {
+const OptionButton = ({state = 0, hideState = false, hideText = false, className = "", tooltip = false, tooltipPosition = "right"}) => {
 
 	const iconMap = [
 		"bi-x",
@@ -37,10 +37,11 @@ const OptionButton = ({state = 0, hideState = false, hideText = false, className
 
 
 	return(
-		<div className={`state-text ${btnClass[state]} ${className}`}>
+		<div className={`state-text ${btnClass[state]} ${tooltip ? `tooltip tooltip-${tooltipPosition}` : ""} ${className}`}>
 			<i className={`bi ${iconMap[state]}`}></i>
 			{!hideState && <b>Estado:</b>}
 			{!hideText && <p>{text[state]}</p>}
+			{tooltip && <p className="tooltiptext">{text[state]}</p>}
 		</div>
 	);
 
