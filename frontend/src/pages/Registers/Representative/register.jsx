@@ -89,7 +89,7 @@ const Register = () => {
 						<h1 className='title'>Representante</h1>
 					</div>
 
-					<form>
+					<form className='d-flex flex-column'>
 
 						<TextInput text='Nome Completo' value={name} setValue={setName} />
 						<TextInput text='Email' value={email} setValue={setEmail} />
@@ -102,7 +102,7 @@ const Register = () => {
 						{error && (<p className='error-message'>{errorMessage}</p>)}
 					</form>
 
-          <div className='help'>
+          <div className='help text-center'>
             <p>Já tem uma conta criada? <a href="\">Faça login</a></p>
             <p>Tem dúvidas? Contacte-nos: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
           </div>

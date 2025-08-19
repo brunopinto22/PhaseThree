@@ -116,7 +116,7 @@ def listCompanies(request):
         return JsonResponse(data, status=status.HTTP_200_OK, safe=False)
 
     except Exception as e:
-        return Response({"error": "Erro interno do servidor", "details": str(e)},
+        return Response({"message": "Erro interno do servidor", "details": str(e)},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -188,7 +188,7 @@ def getCompany(request, pk):
         return Response({"message": "Empresa não foi encontrada."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
+            {"message": "Erro interno do servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -223,7 +223,7 @@ def editCompany(request, pk):
         except Exception as e:
             traceback.print_exc()
             return Response(
-                {"error": "Erro interno do servidor", "details": str(e)},
+                {"message": "Erro interno do servidor", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -247,11 +247,57 @@ def editCompany(request, pk):
         return Response({"message": "Empresa não foi encontrada."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
+            {"message": "Erro interno do servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
 @api_view(['DELETE'])
 def deleteCompany(request, pk):
     auth_header = request.headers.get("Authorization")
 
     return Response({"message": "deleteCompany"}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def invite(request):
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    elif user_type not in ["representative"]:
+        return Response({"message": "Sem permissão para convidar um Representante"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        rep = Representative.objects.get(user__email=user_email)
+        company = rep.company
+
+        if Accounts.objects.filter(email=request.data.get("email")).exists():
+            return Response({"message": "O utilizador já se encontra registado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        invite_link = (
+            f"{settings.FRONTEND_URL}/register/representative"
+            f"?invite=true&id={company.id_company}"
+        )
+
+        send_mail(
+            subject="Convite para representar empresa",
+            message=f"Foi convidado para se juntar à empresa {company.company_name} no Sistema de Gestão de Projetos e Estágios do ISEC.\nClique aqui para aceitar: {invite_link}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[request.data.get("email")],
+            fail_silently=False,
+        )
+
+    except Company.DoesNotExist:
+        return Response({"message": "Empresa não foi encontrada."}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({"message": "Convite enviado com sucesso"}, status=status.HTTP_200_OK)

@@ -120,3 +120,32 @@ export async function editCompany(token, id, data, setStatus, setErrorMessage) {
 	return false;
 	
 }
+
+export async function invite(token, email, setStatus, setErrorMessage) {
+
+	try {
+		const res = await fetch(`${apiUrl}/company/invite`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+			body: JSON.stringify({
+				email: email
+			})
+    });
+
+		const responseData = await res.json();
+		setStatus(res.status)
+		setErrorMessage(responseData.message || "Erro ao convidar o representante");
+
+    if(res.status === 200)
+      return true;
+
+	} catch {
+		return false;
+	}
+
+	return false;
+
+}

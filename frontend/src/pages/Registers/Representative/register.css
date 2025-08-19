@@ -10,8 +10,26 @@ section {
 	padding: var(--spacing-l);
 }
 
-.form {
+#register-representative .image-container {
+  overflow: hidden;
+
+  padding: var(--spacing-xl);
+
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: var(--border-xs);
+}
+#register-representative .image-container img {
+  height: 5%;
+}
+
+#register-representative .form {
 	padding: var(--spacing-m) var(--spacing-xl);
+}
+
+#register-representative form {
+	gap: var(--spacing-m)
 }
 
 #register-representative .title-container .title {

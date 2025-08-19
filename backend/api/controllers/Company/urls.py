@@ -7,5 +7,5 @@ urlpatterns = [
     path('company/<int:pk>', getCompany),
     path('company/<int:pk>/edit', editCompany),
     path('company/<int:pk>/delete', deleteCompany),
-
+    path('company/invite', invite),
 ]

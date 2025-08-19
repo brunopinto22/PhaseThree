@@ -20,6 +20,9 @@ html, body {
 .error-message {
 	color: var(--error-color-500);
 }
+.success-message {
+	color: var(--green);
+}
 
 
 .sidebar {

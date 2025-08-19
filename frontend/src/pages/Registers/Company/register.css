@@ -6,12 +6,30 @@
 	overflow: hidden;
 }
 
+#register-company .image-container {
+  overflow: hidden;
+
+  padding: var(--spacing-xl);
+
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: var(--border-xs);
+}
+#register-company .image-container img {
+  height: 5%;
+}
+
 section {
 	padding: var(--spacing-l);
 }
 
-.form {
+#register-company .form {
 	padding: var(--spacing-m) var(--spacing-xl);
+}
+
+#register-company form {
+	gap: var(--spacing-m)
 }
 
 #register-company .title-container .title {
