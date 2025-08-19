@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts';
 import SideBar from './SideBar/sideBar';
 import { getSummary } from "../../services/user";
+import InviteModal from './Invite/invite';
 
 const Dashboard = () => {
 
@@ -39,7 +40,12 @@ const Dashboard = () => {
 		setType(userInfo.role);
 	}, [userInfo]);
 
+
+	const [show, setShow] = useState(false);
+
+	
   return(
+		<>
     <div id="dashboard" className='row'>
 
 			<div className='modules d-flex flex-column col-sm-12 col-md-8'>
@@ -95,7 +101,7 @@ const Dashboard = () => {
 							<DashButton
 								icon={<i className="bi bi-person-plus-fill"></i>}
 								text="Convidar Representante"
-								action={() => navigate("/representative/invite?id=1")}
+								action={() => setShow(true)}
 							/>
 							</>
 						)
@@ -170,6 +176,10 @@ const Dashboard = () => {
 			</div>
 
 		</div>
+
+		<InviteModal show={show} setShow={setShow} />
+
+		</>
   );
 
 }

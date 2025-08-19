@@ -1,10 +1,11 @@
 import './view.css';
 import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { PrimaryButtonSmall, Pill } from '../../../../components';
+import { PrimaryButtonSmall, Pill, Favourite } from '../../../../components';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../../../contexts';
 import { getProposal } from '../../../../services/proposals';
+import { addFavourite, removeFavourite } from '../../../../services/students';
 
 function View() {
 
@@ -27,6 +28,7 @@ function View() {
   const id = searchParams.get('id');
 
 	const [proposal, setProposal] = useState({
+		favourite: false,
 		proposal_number: 0,
 		title: "",
 		description: "",
@@ -73,6 +75,7 @@ function View() {
 	const types = ["Estágio", "Projeto"];
 	const formats = ["Presencial", "Híbrido", "Remoto"];
 
+	const fav = proposal.favourite;
 	const proposal_number = proposal.proposal_number;
 	const title = proposal.title;
 	const description = proposal.description;
@@ -96,6 +99,8 @@ function View() {
 	const responsible_ISEC = proposal.isec_advisor;
 
 	const canEdit = (role === "admin" || (role === "representative" && userInfo.company) || (role === "teacher" && permissions["Propostas"].edit));
+	const canFav = userInfo.role === "student";
+
 
 	return(
 		<div id="proposal" className='d-flex flex-column flex-md-row'>
@@ -167,7 +172,18 @@ function View() {
 				<div className="sidebar d-flex flex-column">
 					<div className="content d-flex flex-column">
 
-						<h5 className='title'>Informação:</h5>
+						<div className="d-flex flex-row justify-content-between align-items-center">
+							<h5 className='title'>Informação:</h5>
+							{canFav && <Favourite value={fav} action={async () => {
+								if (proposal.favourite) {
+									await removeFavourite(userInfo.token, id);
+									setProposal(prev => ({ ...prev, favourite: false }));
+								} else {
+									await addFavourite(userInfo.token, id);
+									setProposal(prev => ({ ...prev, favourite: true }));
+								}
+							}} />}
+						</div>
 
 						<div className="pills d-flex flex-row gap-2">
 							{branches.map((branch) => (
@@ -178,11 +194,11 @@ function View() {
 						<div className="divider"><hr /></div>
 
 						<div className="d-flex flex-row align-items-center gap-1">
-							<i className="bi bi-book"></i><b>Curso: </b><p>{course.title}</p>
+							<i className="bi bi-book"></i><b>Curso: </b><p><a href={`/course/view?id=${course.id}`} className="text-link">{course.title}</a></p>
 						</div>
 
 						<div className="d-flex flex-row align-items-center gap-1">
-							<i className="bi bi-calendar"></i><b>Calendário: </b><p>{calendar.title}</p>
+							<i className="bi bi-calendar"></i><b>Calendário: </b><p><a href={`/calendar/view?id=${calendar.id}`} className="text-link">{calendar.title}</a></p>
 						</div>
 
 						<div className="divider"><hr /></div>
@@ -203,13 +219,13 @@ function View() {
 
 						{responsible && 
 							<div className="d-flex flex-row align-items-center gap-1">
-								<i className="bi bi-person-fill"></i><b>Orientador da Entidade: </b><p>{responsible.name}</p>
+								<i className="bi bi-person-fill"></i><b>Orientador da Entidade: </b><p><a href={`/representative/view?id=${responsible.id}`} className="text-link">{responsible.name}</a></p>
 							</div>
 						}
 
 						{responsible_ISEC &&
 							<div className="d-flex flex-row align-items-center gap-1">
-								<i className="bi bi-person-fill"></i><b>Orientador do ISEC: </b><p>{responsible_ISEC.name}</p>
+								<i className="bi bi-person-fill"></i><b>Orientador do ISEC: </b><p><a href={`/teacher/view?id=${responsible_ISEC.id}`} className="text-link">{responsible_ISEC.name}</a></p>
 							</div>
 						}
 

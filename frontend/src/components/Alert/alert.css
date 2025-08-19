@@ -18,7 +18,7 @@
 
 .alert-small {
 	gap: var(--spacing-m);
-	padding: var(--spacing-m) var(--spacing-l);
+	padding: var(--spacing-s) var(--spacing-m);
 	border-radius: var(--border-s);
 	box-shadow: 0 0 var(--spacing-2xs) 0 rgba(0,0,0, var(--opacity-16));
 }

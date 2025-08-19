@@ -45,6 +45,7 @@ def getProposal(request, pk):
                 return Response({"message":"Ainda não é possível ver as Propostas"}, status=HTTP_403_FORBIDDEN)
 
         data = {
+            "favourite": Student.objects.get(user__email=user_email).get_favorites().filter(proposal_id=pk).exists() if user_type == "student" else False,
             "proposal_number": p.calendar_proposal_number,
             "title": p.proposal_title,
             "description": p.proposal_description,
@@ -94,10 +95,11 @@ def getProposal(request, pk):
 
         return JsonResponse(data, status=status.HTTP_200_OK)
 
+    except (Student.DoesNotExist, Representative.DoesNotExist, Teacher.DoesNotExist):
+        return Response({"message": "O Utlizador não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Proposal.DoesNotExist:
         return Response({"message": "A Proposta não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        traceback.print_exc()
         return Response({ "error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["GET"])
@@ -114,10 +116,12 @@ def listProposals(request):
 
     try:
         proposals = Proposal.objects.all()
+        favorite_ids = set()
 
         if user_type == "student":
             student = Student.objects.get(user__email=user_email)
             proposals = proposals.filter(calendar=student.calendar, calendar__divulgation__lte=date.today())
+            favorite_ids = set(student.get_favorites().values_list("proposal_id", flat=True))
 
         elif user_type == "teacher":
             teacher = Teacher.objects.get(user__email=user_email)
@@ -137,6 +141,7 @@ def listProposals(request):
 
         data = [
             {
+                "favourite": p.id_proposal in favorite_ids,
                 "id": p.id_proposal,
                 "proposal_number": p.calendar_proposal_number,
                 "type": p.proposal_type,
@@ -161,8 +166,9 @@ def listProposals(request):
 
         return Response(data, status=status.HTTP_200_OK)
 
+    except (Student.DoesNotExist, Representative.DoesNotExist, Teacher.DoesNotExist):
+        return Response({"message": "O Utlizador não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        traceback.print_exc()
         return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

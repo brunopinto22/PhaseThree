@@ -78,7 +78,7 @@ class Student(models.Model):
 
     def remove_subject(self, subject_id):
         try:
-            subject = Subject.objects.get(id=subject_id)
+            subject = Subject.objects.get(id_proposal=subject_id)
             if subject.student == self:
                 subject.delete()
                 return True
@@ -90,16 +90,16 @@ class Student(models.Model):
         return Subject.objects.filter(student=self)
 
     def add_favorite(self, proposal_id):
-        if Proposal.objects.get(id=proposal_id) is None:
+        if Proposal.objects.get(id_proposal=proposal_id) is None:
             raise ValueError("Proposal with id {proposal_id} not found for this proposal")
 
         Favorite.objects.create(proposal_id=proposal_id, student=self)
 
     def remove_favorite(self, proposal_id):
-        if Proposal.objects.get(id=proposal_id) is None:
+        if Proposal.objects.get(id_proposal=proposal_id) is None:
             raise ValueError("Proposal with id {proposal_id} not found for this proposal")
 
-        proposal = Proposal.objects.get(id=proposal_id)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
         Favorite.objects.get(proposal=proposal, student=self).delete()
 
     def get_favorites(self):

@@ -1,7 +1,7 @@
 import './list.css';
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { OptionButton, PrimaryButtonSmall, Alert, Pill, SecundaryButtonSmall } from '../../../../components';
+import { OptionButton, PrimaryButtonSmall, Alert, Pill, SecundaryButtonSmall, Favourite } from '../../../../components';
 import { useDebounce } from './../../../../utils';
 import { listProposals } from '../../../../services/proposals';
 import { UserContext } from '../../../../contexts';
@@ -108,8 +108,10 @@ const List = () => {
     }
   }, [id]);
 
+	const canFav = userInfo.role === "student";
 
-	const Row = ({id, title, company, course, location, slots, taken, type, calendar, can_delete}) => {
+
+	const Row = ({favourite = false, id, title, company, course, location, slots, taken, type, calendar, can_delete}) => {
 		
 		const view = () => {
 			navigate("/proposal/view?id="+id);
@@ -123,6 +125,7 @@ const List = () => {
 
 		return(
 			<tr className='table-row'>
+				{canFav && <th className='fit-column text-center'><p><Favourite value={favourite} small /></p></th>}
 				<th className='fit-column text-center'><p>{id}</p></th>
 				<th><Pill type={type == 1 ? "Estágio" : "Projeto"} collapse={true} className='noselect' tooltip={type == 1 ? "Estágio" : "Projeto"} tooltipPosition='right' /></th>
 				<th><p>{title}</p></th>
@@ -172,6 +175,7 @@ const List = () => {
 			{list.length > 0 && (
 				<table>
 					<tr className='header'>
+						{canFav && <th className='fit-column'></th>}
 						<th>
 							<input
 								type="number"

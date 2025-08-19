@@ -32,9 +32,6 @@ def getTeacher(request, pk):
     ):
         return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    elif user_type not in ["admin", "teacher"]:
-        return Response({"error": "Sem permissão para para ver o Docente"}, status=status.HTTP_401_UNAUTHORIZED)
-
     elif user_type == "teacher":
         teacher = Teacher.objects.get(user__email=user_email)
         if teacher.id_teacher == pk:

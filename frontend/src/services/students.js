@@ -120,3 +120,39 @@ export async function editStudent(token, id, data, setStatus, setErrorMessage) {
 	return false;
 	
 }
+
+export async function addFavourite(token, id) {
+	
+	try {
+
+		const res = await fetch(`${apiUrl}/student/favorite/add/${id}`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": token,
+			}
+		});
+
+		const responseData = await res.json();
+
+	} catch {}
+
+}
+
+export async function removeFavourite(token, id) {
+	
+	try {
+
+		const res = await fetch(`${apiUrl}/student/favorite/remove/${id}`, {
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": token,
+			}
+		});
+
+		const responseData = await res.json();
+
+	} catch {}
+
+}

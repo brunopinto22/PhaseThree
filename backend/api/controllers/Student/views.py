@@ -316,7 +316,7 @@ def editStudent(request, pk):
         return Response({"message": "Calendário não foi encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
         traceback.print_exc()
-        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["DELETE"])
@@ -332,7 +332,7 @@ def deleteStudent(request, pk):
         return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
 
     elif user_type not in ["admin", "teacher"]:
-        return Response({"error": "Sem permissão para para eliminar o Aluno"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"message": "Sem permissão para para eliminar o Aluno"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
         teacher = Teacher.objects.get(user__email=user_email)
@@ -345,43 +345,13 @@ def deleteStudent(request, pk):
         student = Student.objects.get(pk=pk)
         student.active = False
         student.save()
-        return Response({"detail": "Aluno eliminado com sucesso"}, status=status.HTTP_200_OK)
+        return Response({"message": "Aluno eliminado com sucesso"}, status=status.HTTP_200_OK)
     except Student.DoesNotExist:
-        return Response({"error": "Aluno não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(["GET"])
-def getFavorites(request, pk):
-    auth_header = request.headers.get("Authorization")
-    user_id, user_email, user_type = decode_token(auth_header)
-
-    if (
-            user_email == "Expired Token."
-            or user_email == "Invalid Token"
-            or user_email == "Payload does not contain 'user_id'."
-    ):
-        return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
-
-    try:
-        student = Student.objects.get(pk=pk)
-        if student is None:
-            return Response({"detail": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        favorite = student.get_favorites()
-        if favorite is None:
-            return Response({"detail": "No favorites found"}, status=status.HTTP_204_NO_CONTENT)
-
-        return Response(favorite, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"message": "Aluno não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["POST"])
-def addFavorite(request, pk, proposal_id):
+def addFavorite(request, proposal_id):
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
 
@@ -390,28 +360,34 @@ def addFavorite(request, pk, proposal_id):
             or user_email == "Invalid Token"
             or user_email == "Payload does not contain 'user_id'."
     ):
-        return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type != "student":
+        return Response({"message": "Sem permissão para para adicionar aos favoritos"}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
-        student = Student.objects.get(pk=pk)
-        if student is None:
-            return Response({"detail": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+        student = Student.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
 
-        fav = Favorite.objects.get(proposal=proposal_id, student=student)
-        if fav is not None:
-            return Response({"detail": "Proposal already saved"}, status=status.HTTP_404_NOT_FOUND)
+        if proposal.calendar != student.calendar:
+            return Response({"message": "Não pertence ao Calendário"}, status=HTTP_401_UNAUTHORIZED)
 
-        Favorite.objects.create(proposal=proposal_id, student=student)
-        return Response({"detail": "Proposal saved"}, status=status.HTTP_201_CREATED)
+        if proposal.calendar.divulgation > date.today():
+            return Response({"message": "Ainda não é possível guardar as Propostas"}, status=HTTP_403_FORBIDDEN)
+
+        student.add_favorite(proposal_id)
+
+        return Response({"message": "Proposal saved"}, status=status.HTTP_200_OK)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposal not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["DELETE"])
-def removeFavorite(request, pk, proposal_id):
+def removeFavorite(request, proposal_id):
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
 
@@ -422,19 +398,25 @@ def removeFavorite(request, pk, proposal_id):
     ):
         return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
 
+    if user_type != "student":
+        return Response({"message": "Sem permissão para para remover dos favoritos"}, status=status.HTTP_401_UNAUTHORIZED)
+
     try:
-        student = Student.objects.get(pk=pk)
-        if student is None:
-            return Response({"detail": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+        student = Student.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
 
-        fav = Favorite.objects.get(proposal=proposal_id, student=student)
-        if fav is None:
-            return Response({"detail": "Proposal already removed"}, status=status.HTTP_404_NOT_FOUND)
+        if proposal.calendar != student.calendar:
+            return Response({"message": "Não pertence ao Calendário"}, status=HTTP_401_UNAUTHORIZED)
 
-        fav.delete()
-        return Response({"detail": "Proposal removed"}, status=status.HTTP_204_NO_CONTENT)
+        if proposal.calendar.divulgation > date.today():
+            return Response({"message": "Ainda não é possível guardar as Propostas"}, status=HTTP_403_FORBIDDEN)
+
+        student.remove_favorite(proposal_id)
+
+        return Response({"detail": "Proposal removed"}, status=status.HTTP_200_OK)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposal not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
