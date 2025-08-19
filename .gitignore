@@ -1,3 +1,4 @@
 *.tar
 frontend/gestor_de_estagios/.timetracker
 /.vscode
+/backend/.env
