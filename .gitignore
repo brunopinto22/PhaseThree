@@ -2,3 +2,4 @@
 frontend/gestor_de_estagios/.timetracker
 /.vscode
 /backend/.env
+backend/.env
