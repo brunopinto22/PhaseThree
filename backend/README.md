@@ -24,27 +24,52 @@ This application serves as the backend of the ISEC Internship and Project Partne
     ```
 
 3. **Activate the virtual environment**:
-- On macOS/Linux:
-    ```
-    source venv/bin/activate
-    ```
+   - On macOS/Linux:
+       ```
+       source venv/bin/activate
+       ```
     
-- On Windows (Command Prompt):
-    ```
-    venv\Scripts\activate
-    ```
+   - On Windows (Command Prompt):
+       ```
+       venv\Scripts\activate
+       ```
 
 4. **Install dependencies**:
     ```
     pip install -r requirements.txt
     ```
 
-5. **Apply database migrations**:
+5. **Create a `.env` file in the backend directory with the following content**:
+    ```
+    # Database configuration
+    DB_NAME="postgres"        # Change to your database name
+    DB_USER="postgres"        # Change to your database user
+    DB_PASSWORD="teste"       # Change to your database password
+    DB_HOST="db"              # Change to your database host (e.g., localhost)
+    DB_PORT="5432"            # Change to your database port if different
+
+    # Email configuration
+    EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"  # Usually keep this for SMTP
+    EMAIL_HOST="smtp.gmail.com"      # Change to your email provider's SMTP host
+    EMAIL_PORT=587                   # Change if your provider uses a different port
+    EMAIL_USE_TLS=True               # True if your email provider requires TLS
+    EMAIL_HOST_USER="codemeistersgp@gmail.com"  # Your email address for sending
+    EMAIL_HOST_PASSWORD="qpvfhvncffnzyypq"     # Your email password or app password
+
+    # JWT configuration
+    JWT_SECRET_KEY="my_very_very_secret"  # Change to a strong, secret key
+
+    # Frontend URL
+    FRONTEND_URL="http://localhost:3000"  # Change to your frontend deployment URL if needed
+    ```
+    > **Note:** The FRONTEND_URL should match the URL where your React client is running.
+
+6. **Apply database migrations**:
     ```
     python manage.py migrate
     ```
 
-6. **Run the development server**:
+7. **Run the development server**:
     ```
     python manage.py runserver
     ```
