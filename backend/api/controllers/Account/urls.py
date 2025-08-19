@@ -8,4 +8,5 @@ urlpatterns = [
     path('user/password/recover', recuperar_password),
     path('user/password/recover/confirm', recuperar_password_confirm),
     path('user/summary', summary),
+    path('user/changePfp', changePfp),
 ]

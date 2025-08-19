@@ -2,21 +2,27 @@
 	gap: var(--spacing-2xl);
 }
 
-.header {
+#company .header {
 	gap: var(--spacing-xl);
 }
-.header .title {
+#company .header img {
+	aspect-ratio: 1 / 1;
+	height: 6svw;
+	border: 1px solid var(--secundary-color-700);
+	border-radius: var(--border-s);
+}
+#company .header .title {
 	color: var(--text-color-800);
 }
 
-.info {
+#company .info {
 	gap: var(--spacing-2xl);
 }
-.info p {
+#company .info p {
 	color: var(--text-color-700);
 }
 
-.representatives .collapsible {
+#company .representatives .collapsible {
 	position: relative;
 }
 

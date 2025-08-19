@@ -4,7 +4,7 @@ import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, CheckBox } from '../../../../components';
+import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, CheckBox, PfpModal } from '../../../../components';
 import { createTeacher, editTeacher, getTeacher, getScientificAreas } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
@@ -17,6 +17,8 @@ const Edit = () =>  {
 	const token = localStorage.getItem("access_token");
 	const [status, setStatus] = useState([]);
 	const [error, setError] = useState([]);
+
+	const [show, setShow] = useState(false);
 
 	const id = searchParams.get("id");
   const isNew = searchParams.get("new");
@@ -65,7 +67,7 @@ const Edit = () =>  {
 				setPerms(data.permissions);
 			});
 		}
-	}, [id, isNew]);
+	}, [id, isNew, show]);
 
 
 	const submit = () => {
@@ -96,6 +98,7 @@ const Edit = () =>  {
 
 
 	return(
+		<>
 		<div id='teacher' className='d-flex flex-column'>
 			<section className='row p-0'>
 				<h4>Perfil</h4>
@@ -103,7 +106,7 @@ const Edit = () =>  {
 					<div className="profile-picture h-100" style={{backgroundImage: `url(${ profilePicture ? profilePicture : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
 						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Docentes"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
-						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} />
+						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
 						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
@@ -154,7 +157,7 @@ const Edit = () =>  {
 							<th><p>Remover</p></th>
 						</tr>
 
-						{Object.entries(perms).map(([key, value], index) => (
+						{Object.entries(perms).map(([key, value]) => (
 							<tr className='table-row' key={key}>
 								<th><p>{key}</p></th>
 								<th style={{ width: 0 }}>
@@ -189,6 +192,10 @@ const Edit = () =>  {
 
 			{error && <p className='error-message'>{error}</p>}
 		</div>
+
+		<PfpModal show={show} setShow={setShow} email={email} />
+
+		</>
 	);
 
 }

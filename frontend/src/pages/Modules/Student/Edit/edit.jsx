@@ -5,7 +5,7 @@ import React, { useContext } from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox } from '../../../../components';
+import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox, PfpModal } from '../../../../components';
 
 import { getStudent, createStudent, editStudent, getCourse, listCourses } from '../../../../services';
 import { UserContext } from '../../../../contexts';
@@ -56,6 +56,8 @@ const Edit = () =>  {
 	const [searchParams] = useSearchParams();
 	const [status, setStatus] = useState(0);
 	const [error, setError] = useState("");
+
+	const [show, setShow] = useState(false);
 
 	const id = searchParams.get("id");
   const isNew = searchParams.get("new");
@@ -180,7 +182,7 @@ const Edit = () =>  {
 				setTodo(data.subjects);
 			});
 		}
-	}, [id, isNew]);
+	}, [id, isNew, show]);
 
 
 	const handleTodoChange = React.useCallback((index, field, value) => {
@@ -197,6 +199,7 @@ const Edit = () =>  {
 
 
 	return(
+		<>
 		<div id='student' className='d-flex flex-column'>
 			<section className='row p-0'>
 				<h4>Perfil</h4>
@@ -204,7 +207,7 @@ const Edit = () =>  {
 					<div className="profile-picture h-100" style={{backgroundImage: `url(${ pfp ? pfp : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
 						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Alunos"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
-						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} />
+						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
 						<PrimaryButtonSmall content={<p>Alterar Currículo</p>} />
 						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
@@ -304,6 +307,10 @@ const Edit = () =>  {
 				<SecundaryButton action={cancel} content={<h6>Cancelar</h6>} />
 			</section>
 		</div>
+
+		<PfpModal show={show} setShow={setShow} email={email} />
+
+		</>
 	);
 
 }

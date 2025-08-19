@@ -1,7 +1,7 @@
 import './view.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
-import { Alert, OptionButton, PrimaryButton, ProposalCard } from '../../../../components';
+import { Alert, OptionButton, PrimaryButton, PrimaryButtonSmall, ProposalCard } from '../../../../components';
 import { getCompany } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 import Proposals from './Lists/proposals'
@@ -29,6 +29,7 @@ function View() {
 
 	const [company, setCompany] = useState({
 		active: false,
+		logo: null,
 		name: "",
 		email: "",
 		address: "",
@@ -65,6 +66,7 @@ function View() {
 	}, [id, userInfo.token, navigate, status]);
 
 
+	const logo = company.logo;
 	const name = company.name;
 	const nipc = company.nipc;
 	const address = company.address;
@@ -78,23 +80,26 @@ function View() {
 	const proposals = company.proposals;
 	const nProposals = company.proposals_count;
 
-
 	const [seeR, setSeeR] = useState(false);
 	const [seeP, setSeeP] = useState(false);
 
 
+	const isAdminRep = userInfo.role === "representative" && representatives.find(rep => rep.admin)?.id === userInfo.id;
+	const canEdit = userInfo.role === "admin" || permissions["Empresas"].edit || isAdminRep;
+	
+
 	const Row = ({id, name, email, role}) => {
 
-		const isAdminRep = role === "representative" && representatives.find(rep => rep.admin)?.id === userInfo.id;
+		const isAdminRep = userInfo.role === "representative" && representatives.find(rep => rep.admin)?.id === userInfo.id;
 		const isNotSelf = id !== userInfo.id;
 
 		const canEdit = 
-			role === "admin" ||
+			userInfo.role === "admin" ||
 			permissions["Empresas"].edit ||
 			(isAdminRep && isNotSelf);
 
 		const canDelete = 
-			role === "admin" ||
+			userInfo.role === "admin" ||
 			permissions["Empresas"].delete ||
 			(isAdminRep && isNotSelf);
 		
@@ -126,7 +131,15 @@ function View() {
 		<div id='company' className='d-flex flex-column'>
 
 			<div className="header d-flex flex-column">
-				<h2 className='title'>{name}</h2>
+
+				<div className="d-flex flex-row justify-content-between">
+					<div className="d-flex flex-row align-items-center gap-3">
+						{logo && <img src={logo} />}
+						<h2 className='title'>{name}</h2>
+					</div>
+				{canEdit && <PrimaryButtonSmall className='h-100' content={<p>Editar Empresa</p>} action={() => navigate("/company/edit?id=" + id)} />}
+				</div>
+
 				<div className="info d-flex flex-column flex-md-row">
 					<div className="d-flex flex-column gap-2">
 						<p className='d-flex flex-row gap-2'><b>#</b><b>NIPC:</b> {nipc}</p>

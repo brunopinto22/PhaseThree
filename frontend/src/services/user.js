@@ -32,6 +32,41 @@ export async function setUserPassword(token, data, setStatus, setErrorMessage) {
 }
 
 
+export async function changePfp(token, email, file, setStatus, setErrorMessage) {
+
+  if (!file) {
+    setErrorMessage("Nenhum ficheiro selecionado");
+    return false;
+  }
+
+  const formData = new FormData();
+  formData.append("pfp", file);
+	formData.append("email", email);
+	
+  try {
+    const res = await fetch(`${apiUrl}/user/changePfp`, {
+      method: "PATCH",
+      headers: {
+        Authorization: token,
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (!res.ok) {
+      setErrorMessage(data.message || "Erro ao alterar foto de perfil");
+    }
+
+    return data;
+  } catch (err) {
+    setStatus(500);
+    setErrorMessage("Erro de rede");
+  }
+}
+
+
 export async function getSummary(token, setStatus, setErrorMessage) {
 
 	try {

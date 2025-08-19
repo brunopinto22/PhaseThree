@@ -7,7 +7,7 @@ import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, TextArea, CheckBox, Alert } from '../../../../components';
 import { UserContext } from '../../../../contexts';
 import { getCompany, getCourse, listCourses } from '../../../../services';
-import { createProposal } from '../../../../services/proposals';
+import { createProposal, getProposal } from '../../../../services/proposals';
 
 const Edit = () =>  {
 
@@ -32,11 +32,6 @@ const Edit = () =>  {
   const isCreated = searchParams.get("create");
   const typeUrl = searchParams.get("type");
 
-	useEffect(() => {
-		if (id && !isNew) {
-			// TODO : getProposal
-		}
-	}, [id, isNew]);
 
 	const [company, setCompany] = useState(userInfo.company);
 	const [representatives, setRepresentatives] = useState([]);
@@ -69,15 +64,53 @@ const Edit = () =>  {
 
 
 	useEffect(() => {
+		if (id && !isNew) {
+			getProposal(userInfo.token, id, setStatus, setError).then(data => {
+					if (!data) return;
+					setCompany(data.company_id);
+					setTitle(data.title);
+					setDescription(data.description);
+					setTechnologies(data.technologies || "");
+					setMethodologies(data.methodologies || "");
+					setScheduling(data.scheduling || "");
+					setSelection(data.selection || "");
+					setConditions(data.conditions || "");
+					setType(data.proposal_type);
+					setCourse(data.course_id);
+					setBranch(data.branches || []);
+					setCalendar(data.calendar_id);
+					setFormat(data.work_format);
+					setLocalization(data.location);
+					setSchedule(data.schedule);
+					setSlots(data.slots);
+					setObjectives(data.objectives || null);
+					if (data.advisor_id) {
+						setResponsible(data.advisor_id);
+						const advisor = data.advisor_data || {};
+						setResponsibleName(advisor.name || "");
+						setResponsibleEmail(advisor.email || "");
+					} else if (data.advisor_data) {
+						setResponsible(-1);
+						setResponsibleName(data.advisor_data.name || "");
+						setResponsibleEmail(data.advisor_data.email || "");
+					}
+					setTec(data.technologies_active || false);
+					setMet(data.methodologies_active || false);
+					setObj(data.objectives_active || false);
+			});
+		}
+	}, [id, isNew]);
+
+
+	useEffect(() => {
 		const fecthRepresentatives = async () => {
-			console.log(company)
-			if(company === "undefined" || company === null) return;
+			if(!company) return;
 
 			const c = await getCompany(userInfo.token, company, setStatus, setError);
-			setRepresentatives(c.representatives);
+			setRepresentatives(c?.representatives || []);
 		};
 		fecthRepresentatives();
-	}, [company]);
+	}, [id, isNew, company]);
 
 	const [noCourses, setnoCourses] = useState(false);
 	const [courses, setCourses] = useState([]);
@@ -90,25 +123,25 @@ const Edit = () =>  {
 			setnoCourses(c.filter(c => c.active_calendars_submission).length <= 0);
 		};
 		fetchCourses();
-	}, []);
+	}, [id, isNew]);
 
 	useEffect(() => {
 		setBranch([]);
 		setCalendar(null);
 
 		const fetchCourse = async () => {
-			if(course === null) return;
+			if(!course) return;
 			const c = await getCourse(userInfo.token, course, setStatus, setError);
 
-			setBranches(c.branches);
-			setCalendars(c.calendars);
+			setBranches(c?.branches || []);
+			setCalendars(c?.calendars || []);
 
 			setTec(c.technologies_active)
 			setMet(c.methodologies_active);
 			setObj(c.objectives_active)
 		};
 		fetchCourse();
-	}, [course]);
+	}, [id, isNew, course]);
 
 
 

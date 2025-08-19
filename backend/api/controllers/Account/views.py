@@ -310,5 +310,58 @@ def summary(request):
         return JsonResponse(data, status=200)
 
     except Exception as e:
-        traceback.print_exc()
         return Response({"message": "Erro interno do servidor"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["PATCH"])
+def changePfp(request):
+    module_mapping = {
+        "student": "Alunos",
+        "teacher": "Docentes",
+        "representative": "Empresas"
+    }
+
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+        user_email == "Expired Token."
+        or user_email == "Invalid Token"
+        or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    try:
+        user = Accounts.objects.get(email=user_email)
+        user_to_change = Accounts.objects.get(email=request.data.get("email"))
+        pfp = request.FILES.get("pfp")
+
+        if user != user_to_change:
+            if user.user_type == "admin":
+                pass
+            elif user.user_type == "teacher":
+                module_name = module_mapping.get(user_to_change.user_type)
+                if not module_name:
+                    return Response({"message": "Tipo de utilizador inválido"}, status=HTTP_400_BAD_REQUEST)
+
+                teacher = Teacher.objects.get(user__email=user_email)
+                teacher_module = Module.objects.get(module_name=module_name)
+                permission = Permissions.objects.get(teacher=teacher, module=teacher_module)
+                if not permission.can_edit:
+                    return Response({"message": "Sem permissão para alterar este utilizador"}, status=HTTP_401_UNAUTHORIZED)
+            else:
+                return Response({"message": "Sem permissão"}, status=HTTP_401_UNAUTHORIZED)
+
+        if pfp:
+            if user_to_change.photo:
+                old_path = user_to_change.photo.path
+                if os.path.isfile(old_path):
+                    os.remove(old_path)
+            user_to_change.photo = pfp
+            user_to_change.save()
+
+        return Response({"message": "Foto de perfil alterada com sucesso"}, status=HTTP_200_OK)
+    except Accounts.DoesNotExist:
+        return Response({"message": "O Utilizador não foi encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

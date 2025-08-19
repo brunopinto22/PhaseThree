@@ -25,3 +25,5 @@ export { default as StateTracker } from './StateTracker/stateTracker';
 export { default as Pill } from './Pill/pill';
 
 export { default as Favourite } from './Favourite/favourite';
+
+export { default as PfpModal } from './PfpModal/pfpModal';

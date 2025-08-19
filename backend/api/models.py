@@ -25,7 +25,7 @@ class Accounts(AbstractUser):
         help_text='Specific permissions for this user.'
     )
     user_type = models.CharField(max_length=50, choices=USER_TYPE, default='student')
-    photo = models.ImageField(upload_to='protected/pfp/', null=True, blank=True)
+    photo = models.ImageField(upload_to='pfp/', null=True, blank=True)
 
 
 class Settings(models.Model):
@@ -343,6 +343,8 @@ class Company(models.Model):
     active = models.BooleanField(default=True)
 
     company_admin = models.ForeignKey('Representative', on_delete=models.SET_NULL, related_name='admin_company', null=True, blank=True)
+
+    logo = models.ImageField(upload_to='logo/', null=True, blank=True)
 
     def __str__(self):
         return self.company_name or f"Company {self.id_company}"

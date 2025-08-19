@@ -1,0 +1,11 @@
+#pfp-changer .preview-container {
+	padding: var(--spacing-xs);
+	border: 1px solid var(--secundary-color-600);
+	border-radius: var(--border-s);
+}
+
+#pfp-changer .preview-container img {
+	max-height: 50svh;
+	aspect-ratio: auto;
+	border-radius: var(--border-xs);
+}
