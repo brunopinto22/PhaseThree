@@ -1,6 +1,7 @@
 *.tar
 frontend/gestor_de_estagios/.timetracker
 /.vscode
+**/.vscode
 /backend/.env
 backend/.env
 backend/media/pfp/
