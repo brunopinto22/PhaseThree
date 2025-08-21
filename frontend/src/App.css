@@ -386,26 +386,3 @@ table .header .dropdown::after {
 .no-decor::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 }
-
-
-.overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100svh;
-	background-color: rgba(0, 0, 0, var(--opacity-40));
-	backdrop-filter: blur(2px);
-}
-.overlay .pop-up {
-	padding: var(--spacing-l);
-	background-color: var(--background-color-100);
-	border-radius: var(--border-m);
-	box-shadow: 0 0 var(--spacing-l) 0 rgba(0, 0, 0, var(--opacity-24));
-}
-.overlay .pop-up .view {
-	overflow-y: scroll;
-}
-.overlay .pop-up .close {
-	cursor: pointer;
-}

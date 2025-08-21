@@ -236,5 +236,3 @@ function App() {
 }
 
 export default App;
-
-// TODO : listas header filtrar / pesquisar na lista

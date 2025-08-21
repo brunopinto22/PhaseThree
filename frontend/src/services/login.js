@@ -29,9 +29,6 @@ export const login = async (navigate, email, password, setErrorMessage) => {
 			localStorage.setItem("user_perms", JSON.stringify(permissions));
 			localStorage.setItem("company_id", JSON.stringify(company_id));
 
-			// TODO : mudar depois de acordo com a BD de imagens
-			localStorage.setItem("profile_photo", "/photo_UdR5Msk.jpg");
-
 			return true;
 
     } else {

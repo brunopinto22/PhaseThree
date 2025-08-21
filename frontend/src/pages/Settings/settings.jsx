@@ -40,7 +40,7 @@ const Settings = () => {
 	}, []);
 
 	const submit = () => {
-		// TODO : submeter alterações do adim
+		// TODO : submeter alterações do admin + alterar a maneiro como as areas são geridas (passar de edição direta para enviar junto com "tudo")
 	}
 
 	const cancel = () => {
