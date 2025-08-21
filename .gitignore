@@ -2,6 +2,8 @@
 frontend/gestor_de_estagios/.timetracker
 /.vscode
 **/.vscode
+/.idea
+**/.idea
 /backend/.env
 backend/.env
 backend/media/pfp/
