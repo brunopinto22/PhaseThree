@@ -145,3 +145,40 @@ export async function deleteProposal(token, id) {
 	return false;
 	
 }
+
+export async function getPdf(token, id) {
+  try {
+    const res = await fetch(`${apiUrl}/proposal/${id}/pdf`, {
+      method: "GET",
+      headers: {
+        "Authorization": token,
+      }
+    });
+
+    if (!res.ok) throw new Error("Erro ao buscar PDF");
+
+    const disposition = res.headers.get("Content-Disposition");
+    let filename = `proposal_${id}.pdf`;
+
+    if (disposition && disposition.includes("filename=")) {
+      filename = disposition
+        .split("filename=")[1]
+        .replace(/['"]/g, "");
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error("Falha ao gerar PDF:", err);
+  }
+}

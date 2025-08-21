@@ -1,20 +1,20 @@
 import json
 import os
+import re
+import tempfile
 import traceback
+from io import BytesIO
 
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from rest_framework.decorators import api_view
+import unicodedata
+from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.mail import send_mail
 from rest_framework.status import *
+from docxtpl import DocxTemplate
+from docx2pdf import convert
 
 from api.models import *
-from api.permissions import *
 from api.token_manager import *
-from django.db import transaction
 from datetime import date
 
 
@@ -43,6 +43,18 @@ def getProposal(request, pk):
 
             if calendar.divulgation > date.today():
                 return Response({"message":"Ainda não é possível ver as Propostas"}, status=HTTP_403_FORBIDDEN)
+
+        elif user_type == "representative":
+            representative = Representative.objects.get(user__email=user_email)
+            if p.company != representative.company:
+                return Response({"message":"A Proposta não pertence à sua Empresa"}, status=HTTP_401_UNAUTHORIZED)
+
+        elif user_type == "teacher":
+            teacher = Teacher.objects.get(user__email=user_email)
+            module = Module.objects.get(module_name='Propostas')
+            permission = Permissions.objects.get(teacher=teacher, module=module)
+            if not permission.can_view or teacher.scientific_area != p.calendar.course.scientific_area:
+                return Response({"message":"Não tem permissão para ver esta proposta"}, status=HTTP_403_FORBIDDEN)
 
         data = {
             "favourite": Student.objects.get(user__email=user_email).get_favorites().filter(proposal_id=pk).exists() if user_type == "student" else False,
@@ -164,6 +176,9 @@ def listProposals(request):
             for p in proposals
         ]
 
+        if data.__len__() == 0:
+            return Response({"message": "Nenhuma Proposta encontrada"}, status=status.HTTP_204_NO_CONTENT)
+
         return Response(data, status=status.HTTP_200_OK)
 
     except (Student.DoesNotExist, Representative.DoesNotExist, Teacher.DoesNotExist):
@@ -280,10 +295,7 @@ def createProposal(request):
         return Response({"message": "Empresa não encontrada."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
         traceback.print_exc()
-        return Response({
-            "error": "Erro interno do servidor",
-            "details": str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["PUT"])
 def editProposal(request, pk):
@@ -350,3 +362,87 @@ def deleteProposal(request, pk):
             "error": "Erro interno do servidor",
             "details": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def generatePdf(request, pk):
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    try:
+        p = Proposal.objects.get(id_proposal=pk)
+    except Proposal.DoesNotExist:
+        return Response({"message": "A Proposta não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+    if user_type == "student":
+        student = Student.objects.get(user__email=user_email)
+        calendar = p.calendar
+
+        if calendar != student.calendar:
+            return Response({"message": "Não pertence ao Calendário"}, status=HTTP_401_UNAUTHORIZED)
+
+        if calendar.divulgation > date.today():
+            return Response({"message": "Ainda não é possível ver as Propostas"}, status=HTTP_403_FORBIDDEN)
+
+    elif user_type == "representative":
+        representative = Representative.objects.get(user__email=user_email)
+        if p.company != representative.company:
+            return Response({"message": "A Proposta não pertence à sua Empresa"}, status=HTTP_401_UNAUTHORIZED)
+
+    elif user_type == "teacher":
+        teacher = Teacher.objects.get(user__email=user_email)
+        module = Module.objects.get(module_name='Propostas')
+        permission = Permissions.objects.get(teacher=teacher, module=module)
+        if not permission.can_view or teacher.scientific_area != p.calendar.course.scientific_area:
+            return Response({"message": "Não tem permissão para visualizar esta proposta"}, status=HTTP_403_FORBIDDEN)
+
+
+    # Generate Document
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    template_path = os.path.join(BASE_DIR, "templates", "docs", "proposal_template.docx")
+    template_path = os.path.abspath(template_path)
+    doc = DocxTemplate(template_path)
+
+    # Populate Template
+    context = {
+        "course": p.course.course_name,
+        "year": f"{p.calendar.calendar_year}/{p.calendar.calendar_year+1}",
+        "semester": p.calendar.calendar_semester,
+        "title": p.proposal_title,
+        "description": p.proposal_description,
+        "objectives": None,
+    }
+    doc.render(context)
+
+    # Create temp files
+    with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_docx:
+        doc.save(tmp_docx.name)
+        tmp_docx_path = tmp_docx.name
+
+    tmp_pdf_fd, tmp_pdf_path = tempfile.mkstemp(suffix=".pdf")
+    os.close(tmp_pdf_fd)
+
+    # Convert to PDF
+    convert(tmp_docx_path, tmp_pdf_path)
+    with open(tmp_pdf_path, "rb") as f:
+        pdf_bytes = f.read()
+
+    # Clean temp files
+    os.remove(tmp_docx_path)
+    os.remove(tmp_pdf_path)
+
+    raw_filename = f"{p.calendar.calendar_year}-P{p.id_proposal}-{p.calendar.calendar_semester}S-{p.proposal_title}"
+
+    normalized = unicodedata.normalize('NFKD', raw_filename).encode('ASCII', 'ignore').decode('ASCII')
+    safe_filename = re.sub(r'[\\/*?:"<>|]', "_", normalized) + ".pdf"
+
+    response = FileResponse(BytesIO(pdf_bytes), as_attachment=True, filename=safe_filename, content_type="application/pdf")
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition, X-Filename'
+    return response

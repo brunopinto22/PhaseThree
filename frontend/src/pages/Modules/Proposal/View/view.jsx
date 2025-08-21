@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButtonSmall, Pill, Favourite } from '../../../../components';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../../../contexts';
-import { getProposal } from '../../../../services/proposals';
+import { getPdf, getProposal } from '../../../../services/proposals';
 import { addFavourite, removeFavourite } from '../../../../services/students';
 
 function View() {
@@ -232,7 +232,7 @@ function View() {
 					</div>
 
 					<div className="btns d-flex flex-column">
-						<PrimaryButtonSmall content={<p>Proposta</p>}/>
+						<PrimaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><p>Proposta</p><i className="bi bi-download"></i></div>} action={async () => getPdf(userInfo.token, id)} />
 						{(canEdit) && <PrimaryButtonSmall content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} />}
 					</div>
 				</div>

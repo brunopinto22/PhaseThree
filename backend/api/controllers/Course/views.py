@@ -94,10 +94,7 @@ def getCourse(request, pk):
 def listCourses(request):
     try:
         if not Course.objects.all().exists():
-            return Response(
-                {"message": "Nenhum Curso encontrado"},
-                status=status.HTTP_204_NO_CONTENT
-            )
+            return Response({"message": "Nenhum Curso encontrado"}, status=status.HTTP_204_NO_CONTENT)
 
         courses = Course.objects.prefetch_related('branches').all()
 
