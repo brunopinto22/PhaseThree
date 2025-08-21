@@ -4,3 +4,6 @@ frontend/gestor_de_estagios/.timetracker
 /backend/.env
 backend/.env
 backend/media/pfp/
+__pycache__/
+**/__pycache__/
+*.sqlite3
