@@ -3,3 +3,5 @@ djangorestframework==3.16.1
 django-cors-headers==4.4.0
 python-dotenv==1.0.0
 PyJWT==2.8.0
+docxtpl>=0.17.0
+docx2pdf==0.1.8
