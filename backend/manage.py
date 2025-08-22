@@ -20,3 +20,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# TODO : passar as permissoes de se pode editar/elmininar para dados recebidos da API

@@ -124,8 +124,8 @@ const Edit = () =>  {
 					<div className="inputs d-flex flex-column col-sm-12 col-md-6">
 						<Dropdown className='col' text='Área Científica' value={area} setValue={setArea}>
 							{areas.map((a) => (
-								<option key={a.id_area} value={a.id_area}>
-									{a.area_name}
+								<option key={a.id} value={a.id}>
+									{a.name}
 								</option>
 							))}
 						</Dropdown>

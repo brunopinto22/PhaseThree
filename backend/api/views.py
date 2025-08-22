@@ -42,7 +42,7 @@ def listScientificAreas(request):
     data = [
         {
             "id": a.id_area,
-            "area_name": a.area_name,
+            "name": a.area_name,
             "n_courses": Course.objects.filter(scientific_area=a).count(),
             "n_teachers": Teacher.objects.filter(scientific_area=a).count(),
         }

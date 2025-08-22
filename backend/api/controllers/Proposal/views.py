@@ -30,6 +30,7 @@ from datetime import date
 def getProposal(request, pk):
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
+    can_edit = False
 
     if (
             user_email == "Expired Token."
@@ -41,7 +42,10 @@ def getProposal(request, pk):
     try:
         p = Proposal.objects.get(id_proposal=pk)
 
-        if user_type == "student":
+        if user_type == "admin":
+            can_edit = True
+
+        elif user_type == "student":
             student = Student.objects.get(user__email=user_email)
             calendar = p.calendar
 
@@ -55,6 +59,7 @@ def getProposal(request, pk):
             representative = Representative.objects.get(user__email=user_email)
             if p.company != representative.company:
                 return Response({"message":"A Proposta não pertence à sua Empresa"}, status=HTTP_401_UNAUTHORIZED)
+            can_edit = representative.company.company_admin == representative or p.company_advisor == representative
 
         elif user_type == "teacher":
             teacher = Teacher.objects.get(user__email=user_email)
@@ -62,6 +67,7 @@ def getProposal(request, pk):
             permission = Permissions.objects.get(teacher=teacher, module=module)
             if not permission.can_view or teacher.scientific_area != p.calendar.course.scientific_area:
                 return Response({"message":"Não tem permissão para ver esta proposta"}, status=HTTP_403_FORBIDDEN)
+            can_edit = permission.can_edit
 
         data = {
             "favourite": Student.objects.get(user__email=user_email).get_favorites().filter(proposal_id=pk).exists() if user_type == "student" else False,
@@ -110,6 +116,7 @@ def getProposal(request, pk):
                 "name": p.isec_advisor.teacher_name,
                 "email": p.isec_advisor.user.email,
             } if p.isec_advisor else None,
+            "can_edit": p.calendar.divulgation > date.today() and can_edit,
         }
 
         return JsonResponse(data, status=status.HTTP_200_OK)
@@ -126,6 +133,9 @@ def listProposals(request):
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
 
+    can_edit = False
+    can_delete = False
+
     if (
             user_email == "Expired Token."
             or user_email == "Invalid Token"
@@ -134,10 +144,14 @@ def listProposals(request):
         return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
 
     try:
+        rep = None
         proposals = Proposal.objects.all()
         favorite_ids = set()
 
-        if user_type == "student":
+        if user_type == "admin":
+            can_edit = can_delete = True
+
+        elif user_type == "student":
             student = Student.objects.get(user__email=user_email)
             proposals = proposals.filter(calendar=student.calendar, calendar__divulgation__lte=date.today())
             favorite_ids = set(student.get_favorites().values_list("proposal_id", flat=True))
@@ -153,10 +167,15 @@ def listProposals(request):
             elif not permission.can_view:
                 proposals = proposals.filter(isec_advisor=teacher)
 
+            can_edit = permission.can_edit
+            can_delete = permission.can_delete
+
         elif user_type == "representative":
             rep = Representative.objects.get(user__email=user_email)
             proposals = proposals.filter(company=rep.company)
 
+            can_edit = rep.company.company_admin == rep
+            can_delete = rep.company.company_admin == rep
 
         data = [
             {
@@ -167,7 +186,8 @@ def listProposals(request):
                 "title": p.proposal_title,
                 "company": p.company.company_name if p.company is not None else "ISEC",
                 "location": p.location,
-                "can_delete": p.calendar.divulgation > date.today(),
+                "can_edit": p.calendar.divulgation > date.today() and (can_edit or (rep is not None and p.company_advisor == rep.company)),
+                "can_delete": p.calendar.divulgation > date.today() and can_delete,
                 "calendar": {
                     "id": p.calendar.id_calendar,
                     "title": p.calendar.__str__(),
@@ -565,7 +585,7 @@ def exportProposals(request):
     row_template = list(ws[3])
     template_row_height = ws.row_dimensions[3].height
     current_row = 3
-
+    current_calendar = None
     for p in proposals:
         if not unique_calendar and (current_calendar != p.calendar):
             ws.cell(row=current_row, column=2, value=str(p.calendar))

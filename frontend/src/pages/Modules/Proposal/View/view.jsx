@@ -49,7 +49,8 @@ function View() {
 		type: 1,
 		company: { id: null, title: "" },
 		advisor: { id: null, name: "", email: "" },
-		isec_advisor: { id: null, name: "", email: "" }
+		isec_advisor: { id: null, name: "", email: "" },
+		can_edit: false,
 	});
 
 	useEffect(() => {
@@ -97,8 +98,8 @@ function View() {
 	const company = proposal.company;
 	const responsible = proposal.advisor;
 	const responsible_ISEC = proposal.isec_advisor;
+	const canEdit = proposal.can_edit;
 
-	const canEdit = (role === "admin" || (role === "representative" && userInfo.company) || (role === "teacher" && permissions["Propostas"].edit));
 	const canFav = userInfo.role === "student";
 
 
@@ -233,7 +234,7 @@ function View() {
 
 					<div className="btns d-flex flex-column">
 						<PrimaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><p>Proposta</p><i className="bi bi-download"></i></div>} action={async () => getPdf(userInfo.token, id)} />
-						{(canEdit) && <PrimaryButtonSmall content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} />}
+						{(canEdit || role === "admin") && <PrimaryButtonSmall content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} disabled={!canEdit} />}
 					</div>
 				</div>
 			</div>

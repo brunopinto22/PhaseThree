@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OptionButton, PrimaryButtonSmall, Alert, Pill, SecundaryButtonSmall, Favourite } from '../../../../components';
 import { useDebounce } from './../../../../utils';
-import { listProposals } from '../../../../services/proposals';
+import { exportProposal, listProposals } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 const List = () => {
@@ -111,7 +111,7 @@ const List = () => {
 	const canFav = userInfo.role === "student";
 
 
-	const Row = ({favourite = false, id, title, company, course, location, slots, taken, type, calendar, can_delete}) => {
+	const Row = ({favourite = false, id, title, company, course, location, slots, taken, type, calendar, can_edit, can_delete}) => {
 		
 		const view = () => {
 			navigate("/proposal/view?id="+id);
@@ -142,8 +142,8 @@ const List = () => {
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
-						{(role === "admin" || permissions["Propostas"].edit) && <OptionButton type='edit' action={edit} />}
-						{((role === "admin" || permissions["Propostas"].delete) && can_delete) && <OptionButton type='delete' action={handleDelete} />}
+						{(can_edit || role==="admin") && <OptionButton type='edit' action={edit} disabled={!can_edit} />}
+						{(can_delete || role==="admin") && <OptionButton type='delete' action={handleDelete} disabled={!can_delete} />}
 					</div>
 				</th>
 			</tr>
@@ -159,7 +159,7 @@ const List = () => {
 				<div className="filters"></div>
 
 				<div className="options d-flex flex-row gap-3">
-					<SecundaryButtonSmall content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
+					<SecundaryButtonSmall action={() => exportProposal(userInfo.token)} content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
 					{(role === "admin" || permissions["Propostas"].edit) && <PrimaryButtonSmall action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar proposta</p></div>} />}
 				</div>
 			</div>

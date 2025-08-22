@@ -24,7 +24,7 @@
 .option-btn.disabled,
 .option-btn:disabled {
 	background-color: var(--text-color-300);
-	color: var(--background-color-400);
+	color: var(--background-color-200);
 }
 
 .option-btn.view {

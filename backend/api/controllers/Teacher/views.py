@@ -273,6 +273,7 @@ def editTeacher(request, pk):
     except Teacher.DoesNotExist:
         return Response({"message": "Docente não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        traceback.print_exc()
         return Response({"message": "Erro interno do servidor"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

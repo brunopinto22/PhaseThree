@@ -81,7 +81,7 @@ const Proposals = ({list, placements, token, calendar_id}) => {
 		return(
 			<tr className='table-row'>
 				<th className="fit-column text-center"><p>{proposal_number}</p></th>
-				<th><Pill type={type == 1 ? "Estágio" : "Projeto"} collapse={true} className='noselect' /></th>
+				<th><Pill type={type == 1 ? "Estágio" : "Projeto"} collapse={true} className='noselect' tooltip={type == 1 ? "Estágio" : "Projeto"} tooltipPosition="right" /></th>
 				<th className="overflow-column"><p>{title}</p></th>
 				<th><p>{company.name}</p></th>
 				<th><p>{course.name}</p></th>

@@ -46,7 +46,6 @@ const CommissionModal = ({show, setShow, area, teachers, comission, setComission
                 <th></th>
               </tr>
               {teachers
-                .filter(teacher => teacher.scientific_area === Number(area))
                 .map(e => (
                   <tr className='table-row' key={e.id}>
                     <th><p>{e.id_teacher}</p></th>

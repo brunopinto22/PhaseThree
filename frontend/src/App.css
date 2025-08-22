@@ -7,6 +7,12 @@ html, body {
 }
 
 
+button:disabled,
+button:disabled:hover {
+	cursor: default;
+}
+
+
 .noselect {
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -16,6 +22,12 @@ html, body {
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
+
+
+.markdown p + p {
+	margin-top: var(--fs-400);
+}
+
 
 .error-message {
 	color: var(--error-color-500);

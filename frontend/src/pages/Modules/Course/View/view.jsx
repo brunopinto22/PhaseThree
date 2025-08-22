@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButtonSmall, Alert, OptionButton } from '../../../../components';
 import { getCourse } from '../../../../services'
 import { UserContext } from '../../../../contexts';
+import Markdown from "react-markdown";
 
 function View() {
 	const navigate = useNavigate();
@@ -125,7 +126,11 @@ function View() {
 						<h3>{title}</h3>
 						<h6 className='sub'>{area}</h6>
 					</div>
-					<p>{description}</p>
+
+					<div className="markdown">
+						<Markdown>{description}</Markdown>
+					</div>
+
 					{branches?.length > 0 &&
 						<section className='branches d-flex flex-column p-0'>
 							<h4>Ramos:</h4>
@@ -165,7 +170,7 @@ function View() {
 							<p className='d-flex flex-row align-items-center'><i className="bi bi-list-ul"></i><b>Ramos: </b>{branches.length}</p>
 						</div>
 						<div className="d-flex flex-column gap-3">
-							<PrimaryButtonSmall action={() => window.open(website, "_blank", "noreferrer")} className='w-100' content={<p>Mais Informação</p>} />
+							<PrimaryButtonSmall action={() => window.open(website, "_blank", "noreferrer")} className='w-100' content={<div className='d-flex flex-row align-items-center justify-content-center w-100 gap-2'><p>Mais Informação</p><i className="bi bi-box-arrow-up-right xxs-icon"></i></div>} />
 							{canEdit && <PrimaryButtonSmall action={edit} className='w-100' content={<p>Editar Curso</p>} />}
 						</div>
 					</div>

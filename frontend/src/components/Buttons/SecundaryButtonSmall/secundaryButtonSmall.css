@@ -19,7 +19,7 @@
 }
 
 .secundary-btn-small:disabled {
-  background-color: var(--background-color-900);
-  border-color: var(--text-color-200);
-  color: var(--text-color-200);
+  background-color: var(--background-color-300);
+  border-color: var(--background-color-900);
+  color: var(--background-color-900);
 }

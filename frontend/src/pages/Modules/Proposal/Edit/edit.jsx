@@ -279,7 +279,7 @@ const Edit = () =>  {
 						</Dropdown>
 					}
 
-					{(responsible === -1 || typeUrl === null) &&
+					{(responsible === -1) &&
 						<div className="pane d-flex flex-column gap-3">
 							<TextInput value={responsibleName} setValue={setResponsibleName} text='Nome do Orientador' tooltip={"Verifique se o Orientador não se encontra já registado no sistema"} disabled={noCourses} />
 							<TextInput type='email' value={responsibleEmail} setValue={setResponsibleEmail} text='Email do Orientador' tooltip={"Verifique se o Orientador não se encontra já registado no sistema"} disabled={noCourses} />

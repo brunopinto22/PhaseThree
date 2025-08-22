@@ -217,8 +217,8 @@ const Edit = () =>  {
 						<TextInput className='w-100' text='Nome do Curso' value={title} setValue={setTitle} />
 						<Dropdown className='col' text='Área Científica' value={area} setValue={setArea}>
 							{areas.map((a) => (
-								<option key={a.id_area} value={a.id_area}>
-									{a.area_name}
+								<option key={a.id} value={a.id}>
+									{a.name}
 								</option>
 							))}
 						</Dropdown>
@@ -316,7 +316,7 @@ const Edit = () =>  {
 			show={show}
 			setShow={setShow}
 			area={area}
-			teachers={teachers}
+			teachers={teachers.filter(teacher => teacher.scientific_area === Number(area) && teacher.active)}
 			comission={comission}
 			setComission={setComission}
 		/>

@@ -84,3 +84,9 @@ body, p {
   font-weight: 400;
   letter-spacing: 0;
 }
+
+.xxs-icon { font-size: var(--icon-size-2xs); }
+.xs-icon { font-size: var(--icon-size-xs); }
+.s-icon { font-size: var(--icon-size-s); }
+.m-icon { font-size: var(--icon-size-m); }
+.l-icon { font-size: var(--icon-size-l); }
