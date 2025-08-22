@@ -181,4 +181,51 @@ export async function getPdf(token, id) {
   } catch (err) {
     console.error("Falha ao gerar PDF:", err);
   }
+
+}
+
+export async function exportProposal(token, calendar_id = null, course_id = null, company_id = null, type = null, pdf = false) {
+	
+	try {
+    const params = new URLSearchParams();
+    if (calendar_id) params.append("calendar", calendar_id);
+    if (course_id) params.append("course", course_id);
+    if (company_id) params.append("company", company_id);
+    if (type) params.append("type", type);
+    if (pdf) params.append("pdf", "true");
+
+    const res = await fetch(`${apiUrl}/proposals/export?${params.toString()}`, {
+      method: "GET",
+      headers: {
+        "Authorization": token,
+      },
+    });
+
+    if (!res.ok) throw new Error("Erro ao exportar propostas");
+
+    const disposition = res.headers.get("Content-Disposition");
+    let filename = pdf ? "propostas.pdf" : "propostas.xlsx";
+
+    if (disposition && disposition.includes("filename=")) {
+      filename = disposition
+        .split("filename=")[1]
+        .replace(/['"]/g, "");
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error("Falha ao exportar propostas:", err);
+  }
+
 }

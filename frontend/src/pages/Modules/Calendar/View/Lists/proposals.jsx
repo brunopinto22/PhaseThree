@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill, SecundaryButtonSmall } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
+import { exportProposal } from "../../../../../services";
 
-const Proposals = ({list}) => {
+const Proposals = ({list, placements, token, calendar_id}) => {
 	const navigate = useNavigate();
 	const spanRef = useRef(null);
 	const inputRef = useRef(null);
@@ -113,9 +114,9 @@ const Proposals = ({list}) => {
 					<div className="d-flex flex-row align-items-center gap-1"><Pill type={"Projeto"} collapse={true} className='noselect' /><p style={{color: "var(--pink)"}}>= Projeto</p></div>
 				</div>
 
-				<div className="captions d-flex flex-row align-items-center gap-3">
-					<SecundaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar propostas</p></div>} />
-					<SecundaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} />
+				<div className="d-flex flex-row align-items-center gap-3">
+					<SecundaryButtonSmall action={() => exportProposal(token, id, null, null, null, false)} content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar propostas</p></div>} />
+					<SecundaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} disabled={!placements || new Date() < new Date(placements)} />
 				</div>
 			</div>
 			

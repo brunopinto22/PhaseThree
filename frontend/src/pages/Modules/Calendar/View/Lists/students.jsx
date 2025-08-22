@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDebounce } from "../../../../../utils";
-import { Alert, OptionButton, Pill } from "../../../../../components";
+import { Alert, OptionButton, Pill, SecundaryButtonSmall } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
 
 const Students = ({list}) => {
@@ -102,7 +102,13 @@ const Students = ({list}) => {
 		<div className="list-container d-flex flex-column">
 			{(list === null || list.length === 0) && <Alert text='Não existe nenhum aluno de momento' />}
 
-			{list.length > 0 && <table>
+			{list.length > 0 && <>
+
+				<div className="captions d-flex flex-row justify-content-end align-items-center gap-3">
+					<SecundaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar alunos</p></div>} />
+				</div>
+
+			<table>
 				<tr className='header'>
 					<th className="fit-column">
 						<input type="number" value={id || ''} placeholder={'Nº aluno'} onChange={e => setId(e.target.value === '' ? null : Number(e.target.value))}
@@ -135,7 +141,8 @@ const Students = ({list}) => {
 
 				{getFilteredList().map(student => <Row key={student.number} {...student} />)}
 
-			</table>}
+			</table>
+			</>}
 
 			{list?.length > 0 && getFilteredList()?.length === 0 && <Alert text='Não foi encontrado nenhum aluno' />}
 

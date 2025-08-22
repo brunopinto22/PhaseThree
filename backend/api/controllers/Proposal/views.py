@@ -3,10 +3,17 @@ import os
 import re
 import tempfile
 import traceback
+from copy import copy
 from io import BytesIO
 
+import openpyxl
 import unicodedata
+import xlsx2pdf
+from django.db.models import F, Value, IntegerField, Case, When
 from django.http import FileResponse
+from openpyxl import load_workbook
+from openpyxl.styles import Side, Border
+from openpyxl.utils import get_column_letter
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import *
@@ -446,3 +453,167 @@ def generatePdf(request, pk):
     response = FileResponse(BytesIO(pdf_bytes), as_attachment=True, filename=safe_filename, content_type="application/pdf")
     response['Access-Control-Expose-Headers'] = 'Content-Disposition, X-Filename'
     return response
+
+
+# TODO : fix da formatacao
+@api_view(["GET"])
+def exportProposals(request):
+    PROPOSAL_TYPE_MAP = {1: "Estágio", 2: "Projeto"}
+    WORK_FORMAT_MAP = {"On-site": "Presencial", "Remote": "Remoto", "Hybrid": "Híbrido"}
+
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    proposals = Proposal.objects.all()
+    if proposals.count() == 0:
+        return Response({"message": "Nenhuma Proposta encontrada"}, status=status.HTTP_204_NO_CONTENT)
+
+    # Order List
+    proposals = proposals.annotate(
+        sem_order=Case(
+            When(calendar__calendar_semester=2, then=Value(0)),
+            When(calendar__calendar_semester=1, then=Value(1)),
+            output_field=IntegerField(),
+        )
+    ).order_by(
+        F("calendar__calendar_year").desc(),
+        "sem_order",
+        "calendar_proposal_number"
+    )
+
+    # Get Filters
+    calendar_id = request.GET.get("calendar")
+    course_id = request.GET.get("course")
+    company_id = request.GET.get("company")
+    type = request.GET.get("type")
+    pdf_flag = request.GET.get("pdf") == "true"
+
+    if calendar_id is not None:
+        proposals = proposals.filter(calendar__id_calendar=calendar_id)
+
+    if course_id is not None:
+        proposals = proposals.filter(course__id_course=course_id)
+
+    if company_id is not None:
+        if company_id == "ISEC":
+            proposals = proposals.filter(company__isnull=True)
+        else:
+            proposals = proposals.filter(company_id=company_id)
+
+    if type is not None:
+        proposals = proposals.filter(proposal_type=type)
+
+    courses = set(proposals.values_list("course_id", flat=True))
+    unique_course = len(courses) == 1
+
+    unique_calendar = len(set(proposals.values_list("calendar_id", flat=True))) == 1
+
+    template_path = os.path.join(settings.BASE_DIR, "templates", "docs", "proposals_template.xlsx")
+    wb = load_workbook(template_path)
+    ws = wb.active
+
+    # Header
+    header_row = 2
+    start_col = 2
+    row_template = list(ws[header_row])
+
+    current_insert_idx = start_col
+    branches_columns = []
+
+    for idx, cell in enumerate(row_template[start_col - 1:], start=start_col):
+        if cell.value == "<<branches>>":
+            if unique_course:
+                course = Course.objects.get(id_course=list(courses)[0])
+                branches = [b.branch_name for b in course.branches.all()]
+                for i, branch_name in enumerate(branches):
+                    col_idx = current_insert_idx + i
+                    ws.insert_cols(col_idx)
+                    new_cell = ws.cell(row=header_row, column=col_idx, value=branch_name)
+                    new_cell.font = copy(cell.font)
+                    new_cell.fill = copy(cell.fill)
+                    new_cell.border = copy(cell.border)
+                    new_cell.alignment = copy(cell.alignment)
+                    col_letter = get_column_letter(col_idx)
+                    ws.column_dimensions[col_letter].width = ws.column_dimensions[get_column_letter(idx)].width
+                    branches_columns.append(col_idx)
+                current_insert_idx += len(branches)
+            else:
+                col_idx = current_insert_idx
+                ws.cell(row=header_row, column=col_idx, value="Ramos")
+                new_cell = ws.cell(row=header_row, column=col_idx)
+                new_cell.font = copy(cell.font)
+                new_cell.fill = copy(cell.fill)
+                new_cell.border = copy(cell.border)
+                new_cell.alignment = copy(cell.alignment)
+                col_letter = get_column_letter(col_idx)
+                ws.column_dimensions[col_letter].width = ws.column_dimensions[get_column_letter(idx)].width
+                branches_columns.append(col_idx)
+                current_insert_idx += 1
+            ws.delete_cols(idx)
+        else:
+            current_insert_idx += 1
+
+
+    # Rows
+    row_template = list(ws[3])
+    template_row_height = ws.row_dimensions[3].height
+    current_row = 3
+
+    for p in proposals:
+        if not unique_calendar and (current_calendar != p.calendar):
+            ws.cell(row=current_row, column=2, value=str(p.calendar))
+            template_cell = row_template[1]  # coluna B
+            cell = ws.cell(row=current_row, column=2)
+            cell.font = copy(template_cell.font)
+            cell.fill = copy(template_cell.fill)
+            cell.border = copy(template_cell.border)
+            cell.alignment = copy(template_cell.alignment)
+            ws.row_dimensions[current_row].height = template_row_height
+
+            current_row += 1
+            current_calendar = p.calendar
+
+        pid = p.calendar_proposal_number if unique_calendar else p.id_proposal
+        p_type = PROPOSAL_TYPE_MAP.get(p.proposal_type, "Desconhecido")
+        p_company = p.company.company_name if p.company else "ISEC"
+        local = p.location if p.location else ("Coimbra" if not p.company else "")
+        p_format = WORK_FORMAT_MAP.get(p.work_format, "Desconhecido")
+        contact = (
+            f"{p.company_advisor.representative_name} <{p.company_advisor.user.email}>"
+            if p.company else
+            f"{p.isec_advisor.teacher_name} <{p.isec_advisor.user.email}>"
+        )
+
+        if unique_course:
+            row_branches = ["X" if r in [b.branch_name for b in p.branches.all()] else "" for r in branches]
+        else:
+            row_branches = [", ".join(b.branch_name for b in p.branches.all())]
+
+        row = [pid, p_type] + row_branches + [p_company, p.proposal_title, local, p_format, contact, p.slots]
+
+        for i, value in enumerate(row):
+            col_idx = start_col + i
+            cell = ws.cell(row=current_row, column=col_idx, value=value)
+            template_cell = row_template[i + 1]
+            cell.font = copy(template_cell.font)
+            cell.fill = copy(template_cell.fill)
+            cell.border = copy(template_cell.border)
+            cell.alignment = copy(template_cell.alignment)
+
+        ws.row_dimensions[current_row].height = template_row_height
+        current_row += 1
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    # TODO : converter para pdf
+
+    return FileResponse(output, as_attachment=True, filename="propostas.xlsx", content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

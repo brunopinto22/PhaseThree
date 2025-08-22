@@ -8,4 +8,5 @@ urlpatterns = [
     path('proposal/<int:pk>/edit', editProposal),
     path('proposal/<int:pk>/delete', deleteProposal),
     path('proposal/<int:pk>/pdf', generatePdf),
+    path('proposals/export', exportProposals),
 ]

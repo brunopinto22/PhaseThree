@@ -5,3 +5,5 @@ python-dotenv==1.0.0
 PyJWT==2.8.0
 docxtpl>=0.17.0
 docx2pdf==0.1.8
+openpyxl>=3.1.2
+xlsx2pdf>=0.2.5
