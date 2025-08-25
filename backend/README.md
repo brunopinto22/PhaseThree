@@ -43,7 +43,7 @@ This application serves as the backend of the ISEC Internship and Project Partne
     ```
 
 5. **Create a `.env` file in the backend directory with the following content**:
-    ```env
+    ```python
     # Database configuration
     DB_NAME="postgres"        # Change to your database name
     DB_USER="postgres"        # Change to your database user

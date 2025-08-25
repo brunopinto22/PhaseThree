@@ -31,7 +31,7 @@ The frontend communicates with the backend API to display data, handle user inte
 3. **Configure environment variables**:  
     Create a `.env` file in the project root and define the necessary environment variables.  
     Example:
-    ```env
+    ```python
     REACT_APP_API_URL=http://localhost:8000/api
     ```
     > **Note:** The URL should match the one displayed when you run the Django backend server, with `/api` appended. For example, if the backend runs at `http://127.0.0.1:8000/`, the frontend API URL should be `http://127.0.0.1:8000/api`.
