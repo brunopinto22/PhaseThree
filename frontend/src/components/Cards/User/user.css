@@ -1,0 +1,24 @@
+.user-card {
+	cursor: pointer;
+	gap: var(--spacing-l);
+	padding: var(--spacing-m);
+	background-color: var(--secundary-color-200);
+	border: 1px solid var(--secundary-color-600);
+	border-radius: var(--border-xs);
+	color: var(--text-color-800);
+
+}
+
+.user-card .profile-picture {
+	height: var(--spacing-2xl);
+	border-width: 3px;
+}
+
+
+.user-card.empty-card {
+	cursor: default;
+	text-align: center;
+	background-color: transparent;
+	color: var(--background-color-800);
+	border: 2px dashed var(--background-color-800);
+}

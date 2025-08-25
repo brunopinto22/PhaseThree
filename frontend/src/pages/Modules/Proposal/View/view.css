@@ -15,40 +15,48 @@
 	color: var(--text-color-700)
 }
 
-.main {
+#proposal .main {
 	gap: var(--spacing-2xl);
 }
 
-.title-container {
+#proposal .title-container {
 	gap: var(--spacing-xs);
 }
-.title-container .number {
+#proposal .title-container .number {
 	color: var(--text-color-300);
 }
-.title-container .title {
+#proposal .title-container .title {
 	color: var(--text-color-900);
 }
-.title-container .company {
+#proposal .title-container .company {
 	color: var(--text-color-500);
 }
 
-.sidebar {
+#proposal .side {
+	gap: var(--spacing-2xl);
+}
+
+#proposal .sidebar {
 	gap: var(--spacing-xl);
 }
 
-.sidebar .content {
+#proposal .sidebar .content {
 	gap: var(--spacing-m);
 }
 
-.sidebar .content .divider {
+#proposal .sidebar .content .divider {
 	padding: 0 var(--spacing-xs);
 }
-.sidebar .content .divider hr {
+#proposal .sidebar .content .divider hr {
 	margin: 0;
 	color: var(--secundary-color-500);
 	opacity: 1;
 }
 
-.sidebar .btns {
+#proposal .sidebar .btns {
+	gap: var(--spacing-m);
+}
+
+#proposal .side .slots {
 	gap: var(--spacing-m);
 }

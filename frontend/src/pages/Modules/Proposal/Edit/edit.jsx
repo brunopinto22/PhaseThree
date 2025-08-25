@@ -1,10 +1,9 @@
 import './edit.css';
-import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, TextArea, CheckBox, Alert } from '../../../../components';
+import { PrimaryButton, SecundaryButton, TextInput, Dropdown, TextArea, CheckBox, Alert } from '../../../../components';
 import { UserContext } from '../../../../contexts';
 import { getCompany, getCourse, listCourses } from '../../../../services';
 import { createProposal, getProposal } from '../../../../services/proposals';
@@ -62,6 +61,8 @@ const Edit = () =>  {
   const [met, setMet] = useState(false);
   const [obj, setObj] = useState(false);
 
+  const [canEdit, setCanEdit] = useState(false);
+
 
 	useEffect(() => {
 		if (id && !isNew) {
@@ -75,10 +76,10 @@ const Edit = () =>  {
 					setScheduling(data.scheduling || "");
 					setSelection(data.selection || "");
 					setConditions(data.conditions || "");
-					setType(data.proposal_type);
-					setCourse(data.course_id);
+					setType(data.type);
+					setCourse(data.course.id);
 					setBranch(data.branches || []);
-					setCalendar(data.calendar_id);
+					setCalendar(data.calendar.id);
 					setFormat(data.work_format);
 					setLocalization(data.location);
 					setSchedule(data.schedule);
@@ -97,6 +98,7 @@ const Edit = () =>  {
 					setTec(data.technologies_active || false);
 					setMet(data.methodologies_active || false);
 					setObj(data.objectives_active || false);
+					setCanEdit(!data.can_edit || false);
 			});
 		}
 	}, [id, isNew]);
@@ -176,7 +178,7 @@ const Edit = () =>  {
 			if(await createProposal(userInfo.token, data, setStatus, setError))
 				cancel();
 		}
-
+		// TODO : editProposal
 
 	}
 	
@@ -200,24 +202,24 @@ const Edit = () =>  {
 			<section className='inputs d-flex flex-column flex-md-row p-0'>
 
 				<div className="inputs d-flex flex-column w-100">
-					<TextInput text='Título' value={title} setValue={setTitle} disabled={noCourses} />
-					<TextArea text='Descrição' value={description} setValue={setDescription} disabled={noCourses} />
-					{tec && <TextArea text='Tecnologias' value={technologies} setValue={setTechnologies} disabled={noCourses} />}
-					{met && <TextArea text='Metodologias' value={methodologies} setValue={setMethodologies} disabled={noCourses} />}
-					<TextArea text='Calendarização' value={scheduling} setValue={setScheduling} disabled={noCourses} />
-					<TextArea text='Processo de Seleção' value={selection} setValue={setSelection} disabled={noCourses} />
-					<TextArea text='Condições oferecidas' value={conditions} setValue={setConditions} disabled={noCourses} />
+					<TextInput text='Título' value={title} setValue={setTitle} disabled={canEdit} />
+					<TextArea text='Descrição' value={description} setValue={setDescription} disabled={canEdit} />
+					{tec && <TextArea text='Tecnologias' value={technologies} setValue={setTechnologies} disabled={canEdit} />}
+					{met && <TextArea text='Metodologias' value={methodologies} setValue={setMethodologies} disabled={canEdit} />}
+					<TextArea text='Calendarização' value={scheduling} setValue={setScheduling} disabled={canEdit} />
+					<TextArea text='Processo de Seleção' value={selection} setValue={setSelection} disabled={canEdit} />
+					<TextArea text='Condições oferecidas' value={conditions} setValue={setConditions} disabled={canEdit} />
 				</div>
 
 				<div className="inputs d-flex flex-column w-100">
 					{isCreated && <Dropdown text='Empresa' placeholder='Selecione uma Empresa'/>}
 
-					<Dropdown text='Tipo de Proposta' value={type} setValue={(e) => setType(Number(e))} disabled={typeUrl != null || noCourses} >
+					<Dropdown text='Tipo de Proposta' value={type} setValue={(e) => setType(Number(e))} disabled={typeUrl != null || canEdit} >
 						<option value={1}>Estágio</option>
 						<option value={2}>Projeto</option>
 					</Dropdown>
 
-					<Dropdown text='Curso' value={course} setValue={(v) => setCourse(Number(v))} disabled={noCourses} >
+					<Dropdown text='Curso' value={course} setValue={(v) => setCourse(Number(v))} disabled={canEdit} >
 						{courses?.map((c, index) => (
 							<option key={index} value={c.id}>{c.name}</option>
 						))}
@@ -248,30 +250,30 @@ const Edit = () =>  {
 						</div>
 					}
 
-					<Dropdown text='Calendário' value={calendar} setValue={(e) => setCalendar(Number(e))} disabled={course === null || noCourses} >
+					<Dropdown text='Calendário' value={calendar} setValue={(e) => setCalendar(Number(e))} disabled={course === null || canEdit} >
 						{calendars.filter(cl => cl.active).map((cl) => (
 							<option key={cl.id} value={cl.id}>{cl.title}</option>
 						))}
 					</Dropdown>
 
 					<div className="inputs d-flex flex-row">
-						<Dropdown className='w-100' text='Regime' value={format} setValue={setFormat} disabled={noCourses} >
+						<Dropdown className='w-100' text='Regime' value={format} setValue={setFormat} disabled={canEdit} >
 							<option value={1}>Presencial</option>
 							<option value={2}>Híbrido</option>
 							<option value={3}>Remoto</option>
 						</Dropdown>
-						<TextInput className='w-100' text='Local' value={localization} setValue={setLocalization} disabled={noCourses} />
+						<TextInput className='w-100' text='Local' value={localization} setValue={setLocalization} disabled={canEdit} />
 					</div>
 
 					<div className="inputs d-flex flex-row">
-						<TextInput className='w-100' text='Horário' value={schedule} setValue={setSchedule} disabled={noCourses} />
-						<TextInput className='w-100' type='number' text='Nº de vagas' value={slots} setValue={(e) => setSlots(Number(e))} disabled={noCourses} />
+						<TextInput className='w-100' text='Horário' value={schedule} setValue={setSchedule} disabled={canEdit} />
+						<TextInput className='w-100' type='number' text='Nº de vagas' value={slots} setValue={(e) => setSlots(Number(e))} disabled={canEdit} />
 					</div>
 
-					{obj && <TextArea text='Objetivos' value={objectives} setValue={setObjectives} disabled={noCourses} />}
+					{obj && <TextArea text='Objetivos' value={objectives} setValue={setObjectives} disabled={canEdit} />}
 
 					{typeUrl === null && 
-						<Dropdown text='Orientador' value={responsible} setValue={(e) => setResponsible(Number(e))} disabled={company === null || noCourses}>
+						<Dropdown text='Orientador' value={responsible} setValue={(e) => setResponsible(Number(e))} disabled={company === null || canEdit}>
 							<option value={-1}>Novo Representante</option>
 							{representatives?.map((r) => (
 								<option key={r.id} value={r.id}>{r.name}</option>
@@ -281,13 +283,13 @@ const Edit = () =>  {
 
 					{(responsible === -1) &&
 						<div className="pane d-flex flex-column gap-3">
-							<TextInput value={responsibleName} setValue={setResponsibleName} text='Nome do Orientador' tooltip={"Verifique se o Orientador não se encontra já registado no sistema"} disabled={noCourses} />
-							<TextInput type='email' value={responsibleEmail} setValue={setResponsibleEmail} text='Email do Orientador' tooltip={"Verifique se o Orientador não se encontra já registado no sistema"} disabled={noCourses} />
+							<TextInput value={responsibleName} setValue={setResponsibleName} text='Nome do Orientador' tooltip={"Verifique se o Orientador não se encontra já registado no sistema"} disabled={canEdit} />
+							<TextInput type='email' value={responsibleEmail} setValue={setResponsibleEmail} text='Email do Orientador' tooltip={"Verifique se o Orientador não se encontra já registado no sistema"} disabled={canEdit} />
 						</div>
 					}
 
 					<section className="buttons d-flex flex-row gap-3 mt-5 p-0">
-						<PrimaryButton className='col' action={submit} content={<h6>{(isNew) ? "Submeter" : "Guardar"}</h6>} disabled={noCourses} />
+						<PrimaryButton className='col' action={submit} content={<h6>{(isNew) ? "Submeter" : "Guardar"}</h6>} disabled={canEdit} />
 						<SecundaryButton className='col' action={cancel} content={<h6>Cancelar</h6>} />
 					</section>
 				</div>

@@ -223,8 +223,11 @@ const Edit = () =>  {
 							))}
 						</Dropdown>
 					</div>
+
 					<TextArea className='col-12' text='Descrição' value={description} setValue={setDescription} />
-						<TextInput className='w-100' text='Website' value={website} setValue={setWebsite} />
+					
+					<TextInput className='w-100' text='Website' value={website} setValue={setWebsite} />
+
 				</div>
 			</section>
 

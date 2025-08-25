@@ -1,10 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap');
 
 :root {
 
   --title-font: "Montserrat", sans-serif;
   --body-font: "Inter", sans-serif;
+	--code-font: "Google Sans Code", monospace;
 
 	--fs-950: 4.299rem;
 	--fs-900: 2.986rem;
@@ -72,7 +74,7 @@ h6 {
   letter-spacing: 0.5%;
 }
 
-b {
+b, strong {
   font-family: inherit;
   font-size: inherit;
   font-weight: 800;
@@ -90,3 +92,60 @@ body, p {
 .s-icon { font-size: var(--icon-size-s); }
 .m-icon { font-size: var(--icon-size-m); }
 .l-icon { font-size: var(--icon-size-l); }
+
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+	margin-bottom: var(--fs-400);
+}
+
+.markdown h1 { font-size: var(--fs-700); font-weight: 700; }
+.markdown h2 { font-size: var(--fs-600); font-weight: 700; }
+.markdown h3 { font-size: var(--fs-500); font-weight: 700; }
+.markdown h4 { font-size: var(--fs-400); font-weight: 700; }
+.markdown h5 { font-size: var(--fs-300); font-weight: 600; }
+.markdown h6 { font-size: var(--fs-300); font-weight: 500; }
+
+.markdown p + p {
+	margin-top: var(--fs-200);
+}
+
+.markdown blockquote {
+	padding-left: var(--fs-100);
+	color: var(--secundary-color-800);
+	border-left: 3px solid var(--secundary-color-600);
+}
+.markdown blockquote + blockquote:first-child,
+.markdown blockquote:has(+ blockquote) {
+  margin: 0;
+}
+
+.markdown hr {
+	color: var(--secundary-color-800);
+}
+
+.markdown code {
+	font-family: var(--code-font);
+	font-size: var(--fs-300);
+	padding: 0.5rem;
+	background-color: var(--secundary-color-200);
+	color: inherit;
+	border-radius: var(--border-s);
+}
+
+.markdown pre {
+	margin: var(--fs-200) 0;
+	padding: 1rem;
+	background-color: var(--secundary-color-200);
+	color: inherit;
+	border-radius: var(--border-xs);
+}
+
+.markdown pre code {
+	background-color: transparent;
+	padding: 0;
+}

@@ -1,11 +1,12 @@
 import './view.css';
 import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { PrimaryButtonSmall, Pill, Favourite } from '../../../../components';
+import { PrimaryButtonSmall, Pill, Favourite, UserCard } from '../../../../components';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../../../contexts';
 import { getPdf, getProposal } from '../../../../services/proposals';
 import { addFavourite, removeFavourite } from '../../../../services/students';
+import Markdown from 'react-markdown';
 
 function View() {
 
@@ -51,6 +52,7 @@ function View() {
 		advisor: { id: null, name: "", email: "" },
 		isec_advisor: { id: null, name: "", email: "" },
 		can_edit: false,
+		students: [],
 	});
 
 	useEffect(() => {
@@ -99,6 +101,7 @@ function View() {
 	const responsible = proposal.advisor;
 	const responsible_ISEC = proposal.isec_advisor;
 	const canEdit = proposal.can_edit;
+	const students = proposal.students;
 
 	const canFav = userInfo.role === "student";
 
@@ -120,56 +123,56 @@ function View() {
 				{description && (
 					<section>
 						<h6 className='title'>Descrição:</h6>
-						<p>{description}</p>
+						<div className='markdown'><Markdown>{description}</Markdown></div>
 					</section>
 				)}
 
 				{objective && (
 					<section>
 						<h6 className='title'>Objetivos:</h6>
-						<p>{objective}</p>
+						<div className='markdown'><Markdown>{objective}</Markdown></div>
 					</section>
 				)}
 
 				{technologies && (
 					<section>
 						<h6 className='title'>Tecnologias:</h6>
-						<p>{technologies}</p>
+						<div className='markdown'><Markdown>{technologies}</Markdown></div>
 					</section>
 				)}
 
 				{methodologies && (
 					<section>
 						<h6 className='title'>Metodologia:</h6>
-						<p>{methodologies}</p>
+						<div className='markdown'><Markdown>{methodologies}</Markdown></div>
 					</section>
 				)}
 
 				{scheduling && (
 					<section>
 						<h6 className='title'>Calendarização:</h6>
-						<p>{scheduling}</p>
+						<div className='markdown'><Markdown>{scheduling}</Markdown></div>
 					</section>
 				)}
 
 				{selection_method && (
 					<section>
 						<h6 className='title'>Processo de Seleção:</h6>
-						<p>{selection_method}</p>
+						<div className='markdown'><Markdown>{selection_method}</Markdown></div>
 					</section>
 				)}
 
 				{conditions && (
 					<section>
 						<h6 className='title'>Condições oferecidas:</h6>
-						<p>{conditions}</p>
+						<div className='markdown'><Markdown>{conditions}</Markdown></div>
 					</section>
 				)}
 
 
 			</div>
 
-			<div className="p-0">
+			<div className="side p-0 d-flex flex-column">
 				<div className="sidebar d-flex flex-column">
 					<div className="content d-flex flex-column">
 
@@ -237,6 +240,19 @@ function View() {
 						{(canEdit || role === "admin") && <PrimaryButtonSmall content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} disabled={!canEdit} />}
 					</div>
 				</div>
+
+				<div className="slots d-flex flex-column">
+					<h5 className='title'>Colocações:</h5>
+					{Array.from({ length: slots }).map((_, idx) => {
+						const s = students[idx];
+						return s ? (
+							<UserCard key={s.number} pfp={s.pfp} name={s.name} action={() => navigate("/student/view?id="+s.number)} />
+						) : (
+							<UserCard key={`empty-${idx}`} empty message="Vaga por preencher" />
+						);
+					})}
+				</div>
+
 			</div>
 		</div>
 	);

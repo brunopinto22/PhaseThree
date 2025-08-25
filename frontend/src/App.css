@@ -24,11 +24,6 @@ button:disabled:hover {
 }
 
 
-.markdown p + p {
-	margin-top: var(--fs-400);
-}
-
-
 .error-message {
 	color: var(--error-color-500);
 }

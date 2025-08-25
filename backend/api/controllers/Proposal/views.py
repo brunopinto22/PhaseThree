@@ -117,6 +117,14 @@ def getProposal(request, pk):
                 "email": p.isec_advisor.user.email,
             } if p.isec_advisor else None,
             "can_edit": p.calendar.divulgation > date.today() and can_edit,
+            "students": [
+                {
+                    "number": s.student_number,
+                    "pfp": request.build_absolute_uri(s.user.photo.url) if s.user.photo else None,
+                    "name": s.student_name,
+                    "email": s.user.email,
+                } for s in p.students.all()
+            ]
         }
 
         return JsonResponse(data, status=status.HTTP_200_OK)
@@ -336,9 +344,74 @@ def editProposal(request, pk):
     ):
         return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    # TODO : as vagas só podem ser mudadas enquanto não for divulgado ?
+    elif user_type not in ["admin", "teacher", "representative"]:
+        return Response({"message": "Sem permissão para editar a Proposta"}, status=HTTP_401_UNAUTHORIZED)
 
-    return Response({"message": "editProposal"}, status=status.HTTP_200_OK)
+    # TODO : as vagas só podem ser mudadas enquanto não for divulgado ?
+    # TODO : verificar permissoes do user + testar
+
+    try:
+        proposal = Proposal.objects.get(id_proposal=pk)
+        data = request.data
+
+        if proposal.calendar.divulgation >= date.today():
+            return Response({"message": "Não tem permissão para editar esta proposta"}, status=HTTP_403_FORBIDDEN)
+
+        if "title" in data:
+            proposal.proposal_title = data.get("title")
+        if "description" in data:
+            proposal.proposal_description = data.get("description")
+        if "selection" in data:
+            proposal.proposal_selection_method = data.get("selection")
+        if "conditions" in data:
+            proposal.proposal_conditions = data.get("conditions")
+        if "scheduling" in data:
+            proposal.proposal_scheduling = data.get("scheduling")
+        if "technologies" in data:
+            proposal.proposal_technologies = data.get("technologies")
+        if "methodologies" in data:
+            proposal.proposal_methodologies = data.get("methodologies")
+        if "objectives" in data:
+            proposal.proposal_objectives = data.get("objectives")
+        if "proposal_type" in data:
+            proposal.proposal_type = data.get("proposal_type")
+        if "course_id" in data:
+            proposal.course = Course.objects.get(id_course=data.get("course_id"))
+        if "work_format" in data:
+            proposal.work_format = data.get("work_format")
+        if "location" in data:
+            proposal.location = data.get("location")
+        if "schedule" in data:
+            proposal.schedule = data.get("schedule")
+
+        if "company_id" in data:
+            proposal.company = Company.objects.get(id_company=data.get("company_id"))
+
+        if "advisor_id" in data:
+            advisor = Representative.objects.get(id_representative=data.get("advisor_id"))
+            if advisor.company.id_company != proposal.company.id_company:
+                return Response({"message": "O Orientador não pertence à Empresa"}, status=HTTP_400_BAD_REQUEST)
+            proposal.company_advisor = advisor
+
+        if "advisor_isec_id" in data:
+            if data.get("proposal_type") != 2:
+                return Response({"message": "Tipo de Proposta errada, deve ser do tipo Projeto"})
+            proposal.isec_advisor = Teacher.objects.get(id_teacher=data.get("advisor_isec_id"))
+
+        if "branches" in data:
+            branches = Branch.objects.filter(id_branch__in=data.get("branches", []))
+            proposal.branches.set(branches)
+
+        return Response({"message": "Proposta editada com sucesso"}, status=status.HTTP_200_OK)
+
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposta não encontrada."}, status=HTTP_404_NOT_FOUND)
+    except Course.DoesNotExist:
+        return Response({"message": "Curso não encontrado."}, status=HTTP_404_NOT_FOUND)
+    except Company.DoesNotExist:
+        return Response({"message": "Empresa não encontrada."}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["DELETE"])
