@@ -30,6 +30,7 @@ This separation allows for a clear division between data handling and user inter
 ## 📚 Documentation
 
 The complete and detailed project report, covering all aspects of the development process, architecture, and conclusions, is available in the `assets/docs` directory.
+> **Note:** The final files are provided in PDF format. Any `.docx` files in the directory are works in progress and not yet finalized.
 
 
 ## 🚀 How to Run
