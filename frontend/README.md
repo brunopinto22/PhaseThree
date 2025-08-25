@@ -16,7 +16,7 @@ The frontend communicates with the backend API to display data, handle user inte
 ## 🚀 How to Run
 
 1. **Clone the repository** (or navigate to the `frontend` directory if you already have the project):
-    ```
+    ```bash
     git clone <your-repo-url> # only if you haven't already
     cd <repo-root>/frontend
     ```

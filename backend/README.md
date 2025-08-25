@@ -16,34 +16,34 @@ This application serves as the backend of the ISEC Internship and Project Partne
 ## 🚀 How to Run
 
 1. **Clone the repository** (or navigate to the `backend` directory if you already have the project):
-    ```
+    ```bash
     git clone <your-repo-url> # only if you haven't already
     cd <repo-root>/backend
     ```
 
 2. **Create a virtual environment**:
-    ```
+    ```bash
     python -m venv venv
     ```
 
 3. **Activate the virtual environment**:
    - On macOS/Linux:
-       ```
+       ```bash
        source venv/bin/activate
        ```
     
    - On Windows (Command Prompt):
-       ```
+       ```bash
        venv\Scripts\activate
        ```
 
 4. **Install dependencies**:
-    ```
+    ```bash
     pip install -r requirements.txt
     ```
 
 5. **Create a `.env` file in the backend directory with the following content**:
-    ```
+    ```env
     # Database configuration
     DB_NAME="postgres"        # Change to your database name
     DB_USER="postgres"        # Change to your database user
@@ -75,7 +75,7 @@ This application serves as the backend of the ISEC Internship and Project Partne
 7. **Run the development server**:
    
    A Python script `run_all.py` is provided to start Django server, Celery worker, and Celery beat in one command:
-    ```
+    ```bash
     python run_all.py
     ```
     > **Note:** After running this command, Django will display the URL where the API is running. This URL should be used in the frontend's `.env` file **with `/api` appended** as the API base URL.
