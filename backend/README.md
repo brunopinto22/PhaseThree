@@ -6,15 +6,18 @@ This application serves as the backend of the ISEC Internship and Project Partne
 
 ## 🛠️ Technology Stack
 
-- [Django](https://www.djangoproject.com/)
 - Python
+- [Django](https://www.djangoproject.com/)
+- [Celery](https://docs.celeryq.dev/en/stable)
+- [Redis](https://redis.io)
+- [Docker](https://www.docker.com)
 
 
 ## 🚀 How to Run
 
 1. **Clone the repository** (or navigate to the `backend` directory if you already have the project):
     ```
-    git clone <your-repo-url>
+    git clone <your-repo-url> # only if you haven't already
     cd <repo-root>/backend
     ```
 
@@ -70,8 +73,10 @@ This application serves as the backend of the ISEC Internship and Project Partne
     ```
 
 7. **Run the development server**:
+   
+   A Python script `run_all.py` is provided to start Django server, Celery worker, and Celery beat in one command:
     ```
-    python manage.py runserver
+    python run_all.py
     ```
     > **Note:** After running this command, Django will display the URL where the API is running. This URL should be used in the frontend's `.env` file **with `/api` appended** as the API base URL.
     > For example:  
