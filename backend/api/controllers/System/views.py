@@ -60,3 +60,8 @@ def getSystemInfo(request):
 def getModules(request):
     modules = list(Module.objects.values())
     return JsonResponse(modules, status=200, safe=False)
+
+
+@api_view(["PUT"])
+def editSystem(request):
+    return Response({"message": "editSystem"}, status=HTTP_200_OK)

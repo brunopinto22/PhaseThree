@@ -268,13 +268,11 @@ table {
 	border-radius: var(--border-xs) var(--border-xs) 0 0;
 }
 
-
 table th:first-child,
 table td:first-child {
 	border-left: none;
   white-space: nowrap;
 }
-
 
 .fit-column {
   white-space: nowrap;

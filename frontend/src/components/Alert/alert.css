@@ -2,8 +2,8 @@
 .alert-small {
 	margin: 0;
 	border: 1px solid black;
+	font-size: var(--fs-400);
 }
-
 
 .alert {
 	gap: var(--spacing-m);
