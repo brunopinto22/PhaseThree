@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -144,3 +145,16 @@ JWT_ALGORITHM = "HS256"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Europe/Lisbon"
+CELERY_BEAT_SCHEDULE = {
+    'verify-day-events': {
+        'task': 'api.tasks.base.verify_day_events',
+        'schedule': crontab(minute='*'),  # Every day at 00:05 crontab(hour=0, minute=5)
+    },
+}
