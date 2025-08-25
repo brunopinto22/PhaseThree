@@ -13,5 +13,8 @@ __pycache__/
 **/__pycache__/
 *.sqlite3
 backend/celerybeat-schedule
+/backend/celerybeat-schedule
 backend/celerybeat-schedule-shm
+/backend/celerybeat-schedule-shm
 backend/celerybeat-schedule-wal
+/backend/celerybeat-schedule-wal
