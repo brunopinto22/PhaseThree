@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButtonSmall, Alert } from '../../../../components';
 import { listCompanies } from '../../../../services';
 import { UserContext } from '../../../../contexts';
+import { useDebounce } from '../../../../utils';
 
 const List = () => {
 
@@ -70,6 +71,47 @@ const List = () => {
 		);
 	}
 
+
+	const [name, setName] = useState(null);
+	const [email, setEmail] = useState(null);
+	const [rep, setRep] = useState(null);
+	const [repEmail, setRepEmail] = useState(null);
+	
+	const debouncedName = useDebounce(name, 300);
+	const debouncedEmail = useDebounce(email, 300);
+	const debouncedRep = useDebounce(rep, 300);
+	const debouncedRepEmail = useDebounce(repEmail, 300);
+	
+	useEffect(() => {
+		updateFilter('name', debouncedName);
+		updateFilter('email', debouncedEmail);
+		updateFilter('rep', debouncedRep);
+		updateFilter('rep_email', debouncedRepEmail);
+	}, [debouncedName, debouncedEmail, debouncedRep, debouncedRepEmail]);
+
+	const [filters, setFilters] = useState({
+		name: null,
+		email: null,
+		rep: null,
+		rep_email: null,
+	});
+	const updateFilter = (key, value) => {
+		setFilters(prev => ({
+			...prev,
+			[key]: value === 'all' ? null : value
+		}));
+	};
+	const getFilteredList = () => {
+		return list.filter((item) => {
+			return (
+				(filters.name === null || item.name.toLowerCase().includes(filters.name.toLowerCase())) &&
+				(filters.email === null || item.email.toLowerCase().includes(filters.email.toLowerCase())) &&
+				(filters.rep === null || item.admin.name.toLowerCase().includes(filters.rep.toLowerCase())) &&
+				(filters.rep_email === null || item.admin.email.toLowerCase().includes(filters.rep_email.toLowerCase()))
+			);
+		});
+	};
+
 	return(
 		<div className='companies-list d-flex flex-column'>
 
@@ -82,19 +124,21 @@ const List = () => {
 			{list.length > 0 && (
 				<table>
 					<tr className='header'>
-						<th><p>Empresa</p></th>
-						<th><p>Email</p></th>
-						<th><p>Representante</p></th>
-						<th><p>Email do Representante</p></th>
+						<th><p><input placeholder='Empresa' onChange={(e) => setName(e.target.value)}/></p></th>
+						<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)}/></p></th>
+						<th><p><input placeholder='Representante' onChange={(e) => setRep(e.target.value)}/></p></th>
+						<th><p><input placeholder='Email do Representante' onChange={(e) => setRepEmail(e.target.value)}/></p></th>
 						<th className='fit-column'></th>
 					</tr>
 
-					{list.map(company => (
+					{getFilteredList().map(company => (
 						<Row key={company.id} {...company} />
 					))}
 					
 				</table>
 			)}
+			{list.length > 0 && getFilteredList().length === 0 && <Alert text='Não foi encontrado nenhuma empresa' />}
+
 
 		</div>
 	);
