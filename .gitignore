@@ -1,7 +1,9 @@
 *.tar
-frontend/gestor_de_estagios/.timetracker
+
 /.vscode
 **/.vscode
+frontend/gestor_de_estagios/.timetracker
+
 /.idea
 **/.idea
 /backend/.env
@@ -10,3 +12,6 @@ backend/media/pfp/
 __pycache__/
 **/__pycache__/
 *.sqlite3
+backend/celerybeat-schedule
+backend/celerybeat-schedule-shm
+backend/celerybeat-schedule-wal
