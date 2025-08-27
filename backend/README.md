@@ -72,7 +72,12 @@ This application serves as the backend of the ISEC Internship and Project Partne
     python manage.py migrate
     ```
 
-7. **Run the development server**:
+7. **Run Docker**:
+
+   Make sure Docker is running on your system before starting the containers. This is required for any services that depend on Docker.
+
+
+8. **Run the development server**:
    
    A Python script `run_all.py` is provided to start Django server, Celery worker, and Celery beat in one command:
     ```bash
