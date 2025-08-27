@@ -1,20 +1,11 @@
-import json
-import os
 import traceback
-
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from rest_framework.decorators import api_view
+from django.db.models import Case, When, Value, BooleanField, IntegerField
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.mail import send_mail
 from rest_framework.status import *
 
 from api.models import *
-from api.permissions import *
 from api.token_manager import *
-from django.db import transaction
 from datetime import date
 
 
@@ -33,6 +24,19 @@ def getCourse(request, pk):
 
     try:
         c = Course.objects.get(pk=pk)
+        calendars = Calendar.objects.filter(course=c).annotate(
+            is_active_order=Case(
+                When(submission_start__lte=date.today(), placements__gte=date.today(), then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField()
+            ),
+            semester_order=Case(
+                When(calendar_semester=2, then=Value(0)),
+                When(calendar_semester=1, then=Value(1)),
+                output_field=IntegerField()
+            )
+        ).order_by('is_active_order', '-calendar_year', 'semester_order')
+
         data = {
             "course_name": c.course_name,
             "scientific_area_id": c.scientific_area.id_area,
@@ -67,17 +71,17 @@ def getCourse(request, pk):
             "calendars": [
                 {
                     "id": cl.id_calendar,
-                    "active": cl.submission_start <= date.today() <= cl.placements,
-                    "title": cl.__str__(),
+                    "active": cl.is_active(),
+                    "title": str(cl),
                     "submissionStart": cl.submission_start.strftime("%d/%m/%Y"),
                     "submissionEnd": cl.submission_end.strftime("%d/%m/%Y"),
                     "divulgation": cl.divulgation.strftime("%d/%m/%Y"),
-                    "registrations": cl.registrations.strftime("%d/%m/%Y"),
+                    "registrations": cl.registrations.strftime("%d/%m/%Y") if cl.registrations else None,
                     "candidatures": cl.candidatures.strftime("%d/%m/%Y"),
                     "placements": cl.placements.strftime("%d/%m/%Y"),
                 }
-                for cl in Calendar.objects.filter(course=c).all()
-            ],
+                for cl in calendars
+            ]
         }
 
         return JsonResponse(data, status=HTTP_200_OK, safe=False)
