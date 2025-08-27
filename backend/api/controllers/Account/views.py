@@ -244,7 +244,7 @@ def summary(request):
                     "id": c.id_calendar,
                     "title": str(c)
                 }
-                for c in Calendar.objects.filter(course__scientific_area=t.scientific_area) if c.is_active()
+                for c in Calendar.objects.filter(course__scientific_area=t.scientific_area) if c.is_submission_active()
             ]
 
             course_commission = Course.objects.filter(commission=t).first()
