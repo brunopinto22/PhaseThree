@@ -97,7 +97,7 @@ function View() {
 		}
 
 		return(
-			<tr className={`table-row ${active ? '' : 'inactive'}`}>
+			<tr className={`table-row ${active ? '' : 'disabled'}`}>
 				<th><p>{title}</p></th>
 				<th><p>{submissionStart}</p></th>
 				<th><p>{submissionEnd}</p></th>

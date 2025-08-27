@@ -54,12 +54,12 @@ const Edit = () => {
 			getCalendar(token, id, setStatus, setError).then(data => {
 				setYear(data.year);
 				setSemester(data.semester);
-				setSubmissionStart(data.submission_start);
-				setSubmissionEnd(data.submission_end);
-				setCandidatures(data.candidatures);
-				setDivulgation(data.divulgation);
-				setRegistrations(data.registrations);
-				setPlacements(data.placements);
+				setSubmissionStart(data.date_submission_start);
+				setSubmissionEnd(data.date_submission_end);
+				setCandidatures(data.date_candidatures);
+				setDivulgation(data.date_divulgation);
+				setRegistrations(data.date_registrations);
+				setPlacements(data.date_placements);
 				setMin(data.min);
 				setMax(data.max);
 			});

@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButtonSmall } from '../../../../components';
 import Proposals from './Lists/proposals';
 import Students from './Lists/students';
+import Candidatures from './Lists/candidatures';
 import { UserContext } from '../../../../contexts';
 import { getCalendar } from '../../../../services/calendars';
 import { formatDate } from '../../../../utils';
@@ -32,17 +33,19 @@ const View = () => {
 		title: "",
 		course_id: 0,
 		course_name: "",
-		submission_start: "",
-		submission_end: "",
-		divulgation: "",
-		candidatures: "",
-		placements: "",
+		date_submission_start: "",
+		date_submission_end: "",
+		date_divulgation: "",
+		date_candidatures: "",
+		date_placements: "",
 		mix: 0,
 		max: 0,
 		students: [],
 		students_count: 0,
 		proposals: [],
 		proposals_count: 0,
+		candidatures: [],
+		candidatures_count: 0,
 	});
 
 	useEffect(() => {
@@ -68,21 +71,24 @@ const View = () => {
 	const title = calendar.title;
 	const course_id = calendar.course_id;
 	const course = calendar.course_name;
-	const submissionStart = formatDate(calendar.submission_start);
-	const submissionEnd = formatDate(calendar.submission_end);
-	const divulgation = formatDate(calendar.divulgation);
-	const candidatures = formatDate(calendar.candidatures);
-	const placements = formatDate(calendar.placements);
-	const registrations = formatDate(calendar.registrations);
+	const submissionStart = formatDate(calendar.date_submission_start);
+	const submissionEnd = formatDate(calendar.date_submission_end);
+	const divulgation = formatDate(calendar.date_divulgation);
+	const candidatures = formatDate(calendar.date_candidatures);
+	const placements = formatDate(calendar.date_placements);
+	const registrations = formatDate(calendar.date_registrations);
 	const min = calendar.min;
 	const max = calendar.max;
 	const students = calendar.students;
 	const nStudents = calendar.students_count;
 	const proposals = calendar.proposals;
 	const nProposals = calendar.proposals_count;
+	const list_candidatures = calendar.candidatures;
+	const nCandidatures = calendar.candidatures_count;
 
 	const [seeP, setSeeP] = useState(false);
 	const [seeS, setSeeS] = useState(false);
+	const [seeA, setSeeA] = useState(false);
 
 	const canEdit = role === "admin" || permissions["Calendários"].edit;
 
@@ -127,6 +133,18 @@ const View = () => {
 				</div>
 				<div className={`collapsible ${seeS ? "" : "collapse"}`}>
 					<Students list={students} />
+				</div>
+			</div>
+
+			<div className='proposals d-flex flex-column gap-4'>
+				<div className="d-flex flex-row align-content-center">
+					<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeA(!seeA)}>
+						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeA ? "0" : "-90deg"})` }}></i>
+						<span>Candidaturas{nCandidatures > 0 && <span style={{fontSize: "small"}}> ({nCandidatures} {nCandidatures === 1 ? "candidatura" : "candidaturas"})</span>}</span>
+					</h4>
+				</div>
+				<div className={`collapsible ${seeA ? "" : "collapse"}`}>
+					<Candidatures list={list_candidatures} />
 				</div>
 			</div>
 

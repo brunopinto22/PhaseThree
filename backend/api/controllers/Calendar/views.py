@@ -37,12 +37,12 @@ def getCalendar(request, pk):
             "title": c.__str__(),
             "year": c.calendar_year,
             "semester": c.calendar_semester,
-            "submission_start": c.submission_start,
-            "submission_end": c.submission_end,
-            "registrations": c.registrations,
-            "divulgation": c.divulgation,
-            "candidatures": c.candidatures,
-            "placements": c.placements,
+            "date_submission_start": c.submission_start,
+            "date_submission_end": c.submission_end,
+            "date_registrations": c.registrations,
+            "date_divulgation": c.divulgation,
+            "date_candidatures": c.candidatures,
+            "date_placements": c.placements,
             "min": c.min_proposals,
             "max": c.max_proposals,
             "course_id": c.course.id_course,
@@ -82,6 +82,27 @@ def getCalendar(request, pk):
                     "type": p.proposal_type,
                 }
                 for p in Proposal.objects.filter(calendar=c)
+            ],
+            "candidatures_count": Candidature.objects.filter(student__calendar=c).count(),
+            "candidatures": [
+                {
+                    "id": cand.id_candidature,
+                    "state": cand.state,
+                    "student": {
+                        "number": cand.student.student_number,
+                        "name": cand.student.student_name,
+                    },
+                    "proposal": (
+                        lambda p: {
+                            "id": p.proposal.id if p else None,
+                            "title": p.proposal.proposal_title if p else "—",
+                            "company": {
+                                "id": p.proposal.company.id_company if p and p.proposal.company else None,
+                                "name": p.proposal.company.company_name if p and p.proposal.company else "—",
+                            },
+                        }
+                    )(cand.candidature_proposals.filter(state="accepted").select_related("proposal").first())
+                } for cand in Candidature.objects.filter(student__calendar=c)
             ]
         }
 

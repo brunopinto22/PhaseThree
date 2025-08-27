@@ -110,7 +110,7 @@ const Dashboard = () => {
 					{role === 'teacher' &&
 						(
 							<>
-								<DashButton icon={<i className="bi bi-file-earmark-plus-fill"></i>} text='Submeter Proposta' action={() => navigate("/proposal/edit?new=true&type=project")} />
+								<DashButton icon={<i className="bi bi-file-earmark-plus-fill"></i>} text='Submeter Proposta' action={() => navigate("/proposal/edit?new=true&type=project")} disabled={summary?.calendars.length <= 0} />
 								<DashButton action={() => navigate("/proposal/list?self=true")} icon={<i className="bi bi-file-earmark-text-fill"></i>} text='As Minhas Propostas' />
 								<DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
 							</>

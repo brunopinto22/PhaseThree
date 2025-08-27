@@ -12,7 +12,6 @@ from django.core.mail import send_mail
 from rest_framework.status import *
 
 from .models import *
-from .serializers import *
 from .permissions import *
 from .token_manager import *
 from django.db import transaction

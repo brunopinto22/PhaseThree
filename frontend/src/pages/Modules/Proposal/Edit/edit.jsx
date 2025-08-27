@@ -296,6 +296,8 @@ const Edit = () =>  {
 
 			</section>
 
+			{error && <p className='error-message'>{error}</p>}
+
 			</>}
 
 		</div>
