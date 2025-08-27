@@ -116,7 +116,6 @@ const Proposals = ({list, placements, token, calendar_id}) => {
 
 				<div className="d-flex flex-row align-items-center gap-3">
 					<SecundaryButtonSmall action={() => exportProposal(token, id, null, null, null, false)} content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar propostas</p></div>} />
-					<SecundaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} disabled={!placements || new Date() < new Date(placements)} />
 				</div>
 			</div>
 			
