@@ -290,7 +290,7 @@ def summary(request):
 
         elif user_type == "student":
             s = Student.objects.get(user__email=user_email)
-            c = Calendar.objects.get(id_calendar=s.calendar.id_calendar)
+            c = s.calendar
 
             data = {
                 "calendar": {
@@ -310,6 +310,7 @@ def summary(request):
         return JsonResponse(data, status=200)
 
     except Exception as e:
+        traceback.print_exc()
         return Response({"message": "Erro interno do servidor"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

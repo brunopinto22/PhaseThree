@@ -151,7 +151,7 @@ def getCompany(request, pk):
                     "id": rep.id_representative,
                     "name": rep.representative_name,
                     "email": rep.user.email,
-                    "role": rep.representative_role,
+                    "role": rep.representative_role if rep.representative_role else "—",
                     "admin": company.company_admin and rep.id_representative == company.company_admin.id_representative
                 }
                 for rep in company.representatives.all()

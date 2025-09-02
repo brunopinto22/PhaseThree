@@ -176,7 +176,7 @@ const Edit = () =>  {
 
 		if(isNew) {
 			if(await createProposal(userInfo.token, data, setStatus, setError))
-				cancel();
+				navigate("/");
 		}
 		// TODO : editProposal
 

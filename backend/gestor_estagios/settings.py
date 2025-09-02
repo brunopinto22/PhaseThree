@@ -155,6 +155,6 @@ CELERY_TIMEZONE = "Europe/Lisbon"
 CELERY_BEAT_SCHEDULE = {
     'verify-day-events': {
         'task': 'api.tasks.base.verify_day_events',
-        'schedule': crontab(minute='*'),  # Every day at 00:05 crontab(hour=0, minute=5)
+        'schedule': crontab(hour=0, minute=5),  # Every day at 00:05 crontab(hour=0, minute=5) | crontab(minute='*')
     },
 }

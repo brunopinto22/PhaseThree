@@ -112,7 +112,7 @@ function View() {
 
 		return(
 			<tr className='table-row'>
-				<th><p>{role}</p></th>
+				<th className='text-center'><p>{role}</p></th>
 				<th><p>{name}</p></th>
 				<th><p><a href={`mailto:`+ email}>{email}</a></p></th>
 				<th>
@@ -168,7 +168,7 @@ function View() {
 					{representatives.length > 0 && (
 						<table>
 							<tr className='header'>
-								<th className='fit-column'><p>Cargo</p></th>
+								<th className='fit-column text-center'><p>Cargo</p></th>
 								<th><p>Nome</p></th>
 								<th><p>Email</p></th>
 								<th className='fit-column'></th>

@@ -243,7 +243,7 @@ def editStudent(request, pk):
 
     elif user_type == "student":
         student = Student.objects.get(pk=pk)
-        self = Student.objects.get(email=user_email)
+        self = Student.objects.get(user__email=user_email)
         if student != self:
             return Response({"error":"Sem permissão para para editar o Aluno"}, status=status.HTTP_403_FORBIDDEN)
 
