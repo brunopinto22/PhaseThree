@@ -4,7 +4,7 @@ import { Alert, OptionButton, Pill, SecundaryButtonSmall, State } from "../../..
 import { useNavigate } from "react-router-dom";
 import { exportProposal } from "../../../../../services";
 
-const Candidatures = ({list, placements, token, calendar_id}) => {
+const Candidatures = ({list, placements, token, role}) => {
 	const iconMap = [
 		"bi-arrow-clockwise",
 		"bi-check2",

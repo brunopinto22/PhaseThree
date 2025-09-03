@@ -4,7 +4,7 @@ import { Alert, OptionButton, Pill, SecundaryButtonSmall } from "../../../../../
 import { useNavigate } from "react-router-dom";
 import { exportProposal } from "../../../../../services";
 
-const Proposals = ({list, placements, token, calendar_id}) => {
+const Proposals = ({list, token, role}) => {
 	const navigate = useNavigate();
 	const spanRef = useRef(null);
 	const inputRef = useRef(null);

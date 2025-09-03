@@ -120,7 +120,7 @@ const View = () => {
 					</h4>
 				</div>
 				<div className={`collapsible ${seeP ? "" : "collapse"}`}>
-					<Proposals list={proposals} placements={calendar.placements} token={userInfo.token} calendar_id={id} />
+					<Proposals list={proposals} token={userInfo.token} role={userInfo.role} />
 				</div>
 			</div>
 
@@ -132,7 +132,7 @@ const View = () => {
 					</h4>
 				</div>
 				<div className={`collapsible ${seeS ? "" : "collapse"}`}>
-					<Students list={students} />
+					<Students list={students} role={userInfo.role} />
 				</div>
 			</div>
 
@@ -144,7 +144,7 @@ const View = () => {
 					</h4>
 				</div>
 				<div className={`collapsible ${seeA ? "" : "collapse"}`}>
-					<Candidatures list={list_candidatures} />
+					<Candidatures list={list_candidatures} role={userInfo.role} />
 				</div>
 			</div>
 

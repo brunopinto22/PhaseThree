@@ -3,7 +3,7 @@ import { useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill, SecundaryButtonSmall } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
 
-const Students = ({list}) => {
+const Students = ({list, role}) => {
 	const navigate = useNavigate();
 	const spanRef = useRef(null);
 	const inputRef = useRef(null);
