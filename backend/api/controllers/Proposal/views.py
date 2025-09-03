@@ -512,12 +512,36 @@ def generatePdf(request, pk):
 
     # Populate Template
     context = {
+        "type": "Estágio" if p.proposal_type == 1 else "Projeto",
         "course": p.course.course_name,
-        "year": f"{p.calendar.calendar_year}/{p.calendar.calendar_year+1}",
+        "year": f"{p.calendar.calendar_year}/{p.calendar.calendar_year + 1}",
         "semester": p.calendar.calendar_semester,
         "title": p.proposal_title,
         "description": p.proposal_description,
-        "objectives": None,
+        "branches": [{"name": b.branch_name} for b in p.branches.all()],
+        "objectives": p.proposal_objectives,
+        "selection_method": p.proposal_selection_method,
+        "conditions": p.proposal_conditions,
+        "scheduling": p.proposal_scheduling,
+        "technologies": p.proposal_technologies,
+        "methodologies": p.proposal_methodologies,
+        "format": dict(p.WORK_FORMATS).get(p.work_format, p.work_format),
+        "location": p.location,
+        "schedule": p.schedule,
+        "slots": p.slots,
+        "company": {
+            "name": p.company.company_name,
+            "address": p.company.company_address,
+            "nif": p.company.company_nipc,
+        } if p.company else None,
+        "company_advisor": {
+            "name": p.company_advisor.representative_name,
+            "email": p.company_advisor.user.email
+        } if p.company_advisor else None,
+        "isec_advisor": {
+            "name": p.isec_advisor.teacher_name,
+            "email": p.isec_advisor.user.email
+        } if p.isec_advisor else None,
     }
     doc.render(context)
 
