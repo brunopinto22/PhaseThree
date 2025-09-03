@@ -79,16 +79,16 @@ const Dashboard = () => {
 					{role === 'representative' &&
 						(
 							<>
+              <DashButton
+								icon={<i className="bi bi-book-fill"></i>}
+								text="Ver Cursos"
+								action={() => navigate("/course/list")}
+							/>
+
 							<DashButton
 								action={() => navigate("/proposal/list")}
 								icon={<i className="bi bi-file-earmark-text-fill"></i>}
 								text="Ver Propostas"
-							/>
-
-							<DashButton
-								icon={<i className="bi bi-book-fill"></i>}
-								text="Ver Cursos"
-								action={() => navigate("/course/list")}
 							/>
 
 							<DashButton
@@ -97,6 +97,8 @@ const Dashboard = () => {
 								action={() => navigate("/proposal/edit?new=true")}
 								disabled={summary?.calendars.length <= 0}
 							/>
+
+              <DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
 
 							<DashButton
 								icon={<i className="bi bi-person-plus-fill"></i>}
