@@ -78,18 +78,18 @@ export async function createProposal(token, data, setStatus, setErrorMessage) {
 		if (res.ok) {
       setStatus(res.status);
       setErrorMessage("");
-      return true;
+      return responseData.id;
 
     } else {
       setStatus(res.status);
       setErrorMessage(responseData.message || "Erro ao criar curso");
-      return false;
+      return -1;
     }
 
 	} catch (error) {
     setStatus(500);
     setErrorMessage("Erro de rede ou servidor");
-    return false;
+    return -1;
   }
 	
 }

@@ -175,8 +175,9 @@ const Edit = () =>  {
 		};
 
 		if(isNew) {
-			if(await createProposal(userInfo.token, data, setStatus, setError))
-				navigate("/");
+			var res = await createProposal(userInfo.token, data, setStatus, setError)
+			if(res !== -1)
+				navigate("/proposal/view?id=" + res);
 		}
 		// TODO : editProposal
 
