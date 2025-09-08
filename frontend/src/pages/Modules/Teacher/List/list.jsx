@@ -1,7 +1,7 @@
 import './list.css';
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OptionButton, PrimaryButtonSmall, Alert, CheckBox } from '../../../../components';
+import { OptionButton, PrimaryButton, Alert, CheckBox } from '../../../../components';
 import { deleteTeacher, listTeachers } from '../../../../services';
 import { useDebounce } from '../../../../utils';
 import { UserContext } from './../../../../contexts';
@@ -132,7 +132,7 @@ const List = () => {
 				<div className="title"><h4>Docentes</h4></div>
 
 				<div className="options d-flex gap-3">
-					<PrimaryButtonSmall action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar docente</p></div>} />
+					<PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar docente</p></div>} />
 				</div>
 			</div>
 

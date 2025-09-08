@@ -1,7 +1,7 @@
 import './list.css';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OptionButton, PrimaryButtonSmall, Alert } from '../../../../components';
+import { OptionButton, PrimaryButton, Alert } from '../../../../components';
 import { listCompanies } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 import { useDebounce } from '../../../../utils';

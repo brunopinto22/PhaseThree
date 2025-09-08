@@ -4,7 +4,7 @@ import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, CheckBox, PfpModal } from '../../../../components';
+import { PrimaryButton, SecundaryButton, TextInput, Dropdown, CheckBox, PfpModal } from '../../../../components';
 import { createTeacher, editTeacher, getTeacher, getScientificAreas } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
@@ -106,8 +106,8 @@ const Edit = () =>  {
 					<div className="profile-picture h-100" style={{backgroundImage: `url(${ profilePicture ? profilePicture : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
 						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Docentes"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
-						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
-						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
+						<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
+						<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
 			</section>

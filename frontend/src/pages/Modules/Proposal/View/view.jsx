@@ -1,7 +1,7 @@
 import './view.css';
 import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { PrimaryButtonSmall, Pill, Favourite, UserCard } from '../../../../components';
+import { PrimaryButton, Pill, Favourite, UserCard } from '../../../../components';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../../../contexts';
 import { getPdf, getProposal } from '../../../../services/proposals';
@@ -236,8 +236,8 @@ function View() {
 					</div>
 
 					<div className="btns d-flex flex-column">
-						<PrimaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><p>Proposta</p><i className="bi bi-download"></i></div>} action={async () => getPdf(userInfo.token, id)} />
-						{(canEdit || role === "admin") && <PrimaryButtonSmall content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} disabled={!canEdit} />}
+						<PrimaryButton small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><p>Proposta</p><i className="bi bi-download"></i></div>} action={async () => getPdf(userInfo.token, id)} />
+						{(canEdit || role === "admin") && <PrimaryButton small content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} disabled={!canEdit} />}
 					</div>
 				</div>
 

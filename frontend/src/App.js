@@ -10,7 +10,7 @@ import {
 	ListCourses, ViewCourse, EditCourse,
 	ListTeachers, ViewTeacher, EditTeacher,
 	ListProposals, ViewProposal, EditProposal,
-	ListCompanies, ViewCompanie, EditCompanie,
+	ListCompanies, ViewCompany, EditCompany,
 	ViewRepresentative, EditRepresentative,
 	ListCandidatures, ViewCandidature, EditCandidature,
 	ViewCalendar, EditCalendar,
@@ -160,6 +160,7 @@ function App() {
 							</RequireAuth>
 						}
 					>
+            
 						<Route index element={<Dashboard />} />
 
 						{/* Manage Courses */}
@@ -192,8 +193,8 @@ function App() {
 						{/* Manage Companies */}
 						<Route path="/company">
 							<Route path="list" element={<ListCompanies />} />
-							<Route path="view" element={<ViewCompanie />} />
-							<Route path="edit" element={<EditCompanie />} />
+							<Route path="view" element={<ViewCompany />} />
+							<Route path="edit" element={<EditCompany />} />
 						</Route>
 
 						{/* Manage Representatives */}

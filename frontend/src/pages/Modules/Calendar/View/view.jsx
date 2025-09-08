@@ -1,7 +1,7 @@
 import './view.css';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { PrimaryButtonSmall } from '../../../../components';
+import { PrimaryButton } from '../../../../components';
 import Proposals from './Lists/proposals';
 import Students from './Lists/students';
 import Candidatures from './Lists/candidatures';
@@ -100,7 +100,7 @@ const View = () => {
 					<h4 className="title">{title}</h4>
 					<h6 className="sub-title" onClick={() => navigate("/course/view?id=" + course_id)}><a className='text-link'>{course}</a></h6>
 				</div>
-				{canEdit && <PrimaryButtonSmall className='h-100' content={<p>Editar Calendário</p>} action={() => navigate("/calendar/edit?id=" + id)} />}
+				{canEdit && <PrimaryButton small className='h-100' content={<p>Editar Calendário</p>} action={() => navigate("/calendar/edit?id=" + id)} />}
 			</div>
 
 			<div className="dates d-flex flex-column flex-md-row justify-content-between gap-4">

@@ -1,6 +1,6 @@
 import './pageNotFound.css';
 import { useState, useEffect } from 'react';
-import { PrimaryButtonSmall } from '../../components';
+import { PrimaryButton } from '../../components';
 import { useNavigate } from 'react-router-dom';
 import { getSupportEmail } from '../../services';
 
@@ -25,7 +25,7 @@ function PageNotFound() {
 						<h1 className='title'>404</h1>
 						<h2 className='sub-title'>Página não encontrada</h2>
 					</div>
-					<PrimaryButtonSmall action={() => navigate("/")} content={<p>Voltar para a Página Inicial</p>} />
+					<PrimaryButton small action={() => navigate("/")} content={<p>Voltar para a Página Inicial</p>} />
 					<p>Tem dúvidas? Contacte-nos: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
 				</div>
 

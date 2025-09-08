@@ -1,6 +1,6 @@
 import './unauthorized.css';
 import { useState, useEffect } from 'react';
-import { PrimaryButtonSmall } from '../../components';
+import { PrimaryButton } from '../../components';
 import { useNavigate } from 'react-router-dom';
 import { getSupportEmail } from '../../services';
 
@@ -26,7 +26,7 @@ function Unauthorized() {
 						<h2 className='sub-title'>Não tem autorização para aceder a esta página</h2>
 						<h6>É necessária autenticação para aceder a esta página.</h6>
 					</div>
-					<PrimaryButtonSmall action={() => navigate("/login")} content={<p>Fazer Login</p>} />
+					<PrimaryButton small action={() => navigate("/login")} content={<p>Fazer Login</p>} />
 					<p>Tem dúvidas? Contacte-nos: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
 				</div>
 

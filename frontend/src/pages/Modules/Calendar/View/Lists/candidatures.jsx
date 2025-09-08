@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "../../../../../utils";
-import { Alert, OptionButton, Pill, SecundaryButtonSmall, State } from "../../../../../components";
+import { Alert, OptionButton, Pill, SecundaryButton, State } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
 import { exportProposal } from "../../../../../services";
 
@@ -139,7 +139,7 @@ const Candidatures = ({list, placements, token, role}) => {
 				</div>
 
 				<div className="d-flex flex-row align-items-center gap-3">
-					<SecundaryButtonSmall content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} disabled={!placements || new Date() < new Date(placements)} />
+					<SecundaryButton small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} disabled={!placements || new Date() < new Date(placements)} />
 				</div>
 			</div>
 			

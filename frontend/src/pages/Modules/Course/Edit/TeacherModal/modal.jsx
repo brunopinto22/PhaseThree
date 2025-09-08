@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Alert, CheckBox, PrimaryButtonSmall, SecundaryButtonSmall } from "../../../../../components";
+import { Alert, CheckBox, PrimaryButton, SecundaryButton } from "../../../../../components";
 
 const CommissionModal = ({show, setShow, area, teachers, comission, setComission}) => {
 
@@ -64,7 +64,7 @@ const CommissionModal = ({show, setShow, area, teachers, comission, setComission
         )}
 
         <div className="d-flex flex-row gap-2 align-items-end justify-content-end">
-          <PrimaryButtonSmall
+          <PrimaryButton small
             action={() => {
 							const updatedComission = tempComission.map((member, index) => ({
 								...member,
@@ -75,7 +75,7 @@ const CommissionModal = ({show, setShow, area, teachers, comission, setComission
 						}}
             content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar</p></div>}
           />
-          <SecundaryButtonSmall
+          <SecundaryButton small
             action={() => {
               setTempComission([]);
               setShow(false);

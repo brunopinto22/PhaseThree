@@ -1,7 +1,7 @@
 import './list.css';
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { OptionButton, PrimaryButtonSmall, Alert, Pill, SecundaryButtonSmall, Favourite } from '../../../../components';
+import { OptionButton, PrimaryButton, Alert, Pill, SecundaryButton, Favourite } from '../../../../components';
 import { useDebounce } from './../../../../utils';
 import { exportProposal, listProposals } from '../../../../services';
 import { UserContext } from '../../../../contexts';
@@ -159,8 +159,8 @@ const List = () => {
 				<div className="filters"></div>
 
 				<div className="options d-flex flex-row gap-3">
-					<SecundaryButtonSmall action={() => exportProposal(userInfo.token)} content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
-					{(role === "admin" || permissions["Propostas"].edit) && <PrimaryButtonSmall action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar proposta</p></div>} />}
+					<SecundaryButton small action={() => exportProposal(userInfo.token)} content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
+					{(role === "admin" || permissions["Propostas"].edit) && <PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar proposta</p></div>} />}
 				</div>
 			</div>
 
@@ -204,7 +204,7 @@ const List = () => {
 						</th>
 						<th className='fit-column'>
 							<p className='dropdown'>
-								<select name="Tipo" id="type" onChange={(e) => updateFilter("type", e.target.value === "all" ? "all" : Number(e.target.value))}>
+								<select name="Tipo" id="type" onChange={(e) => updateFilter("type", e.target.value === "all" ? "all" : Number(e.target.value))} style={{minWidth: 50}}>
 									<option value={"all"}>Tipo</option>
 									<option value={1}>Estágio</option>
 									<option value={2}>Projeto</option>

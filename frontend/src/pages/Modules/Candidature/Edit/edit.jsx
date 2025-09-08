@@ -4,7 +4,7 @@ import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, CheckBox, Alert, OptionButton } from '../../../../components';
+import { PrimaryButton, SecundaryButton, TextInput, Dropdown, CheckBox, Alert, OptionButton } from '../../../../components';
 
 const Edit = () =>  {
 

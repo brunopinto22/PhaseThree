@@ -1,7 +1,7 @@
 import './view.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
-import { Alert, OptionButton, PrimaryButton, PrimaryButtonSmall, ProposalCard } from '../../../../components';
+import { Alert, OptionButton, PrimaryButton, ProposalCard } from '../../../../components';
 import { getCompany } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 import Proposals from './Lists/proposals'
@@ -137,7 +137,7 @@ function View() {
 						{logo && <img src={logo} />}
 						<h2 className='title'>{name}</h2>
 					</div>
-				{canEdit && <PrimaryButtonSmall className='h-100' content={<p>Editar Empresa</p>} action={() => navigate("/company/edit?id=" + id)} />}
+				{canEdit && <PrimaryButton small className='h-100' content={<p>Editar Empresa</p>} action={() => navigate("/company/edit?id=" + id)} />}
 				</div>
 
 				<div className="info d-flex flex-column flex-md-row">

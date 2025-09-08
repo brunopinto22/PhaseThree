@@ -1,7 +1,7 @@
 import './list.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OptionButton, SecundaryButtonSmall, Alert, State } from '../../../../components';
+import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
 
 const List = () => {
 
@@ -141,7 +141,7 @@ const List = () => {
 				<div className="filters"></div>
 
 				<div className="options d-flex gap-3">
-					<SecundaryButtonSmall action={exportList} content={<div className='d-flex flex-row gap-2'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} />
+					<SecundaryButton small action={exportList} content={<div className='d-flex flex-row gap-2'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} />
 				</div>
 			</div>
 

@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 
-import { PrimaryButtonSmall, SecundaryButtonSmall, TextInput } from './../../../components'
+import { PrimaryButton, SecundaryButton, TextInput } from './../../../components'
 import { invite } from "../../../services";
 import { UserContext } from "../../../contexts";
 
@@ -37,8 +37,8 @@ const InviteModal = ({show, setShow}) => {
 				<TextInput text='Email' type='email' value={email} setValue={setEmail} error={errors.email} />
 
 				<div className="d-flex flex-row gap-4">
-					<PrimaryButtonSmall content={<p>Convidar</p>} action={submit} />
-					<SecundaryButtonSmall content={<p>Cancelar</p>} action={() => { setEmail(null); setShow(false); }} />
+					<PrimaryButton small content={<p>Convidar</p>} action={submit} />
+					<SecundaryButton small content={<p>Cancelar</p>} action={() => { setEmail(null); setShow(false); }} />
 				</div>
 
 				{error && <p className={status === 200 ? "success-message" : "error-message"}>{error}</p>}

@@ -2,7 +2,7 @@ import './pfpModal.css';
 import { useContext, useState, useEffect } from 'react';
 import { changePfp } from '../../../services/user.js';
 import { UserContext } from '../../../contexts/UserContext.jsx';
-import { PrimaryButtonSmall } from '../../Buttons/index.js';
+import { PrimaryButton } from '../../Buttons/index.js';
 import Modal from '../Modal/modal.jsx';
 
 const PfpModal = ({ show, setShow, email}) => {
@@ -43,7 +43,7 @@ const PfpModal = ({ show, setShow, email}) => {
 				onChange={(e) => setSelectedFile(e.target.files[0])}
 			/>
 
-			<PrimaryButtonSmall action={handleUpload} content={<p>Guardar</p>} />
+			<PrimaryButton small action={handleUpload} content={<p>Guardar</p>} />
 
 			{error && <p className="text-danger">{error}</p>}
 		</Modal>

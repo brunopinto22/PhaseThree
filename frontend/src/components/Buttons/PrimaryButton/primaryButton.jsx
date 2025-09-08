@@ -1,9 +1,9 @@
 import './primaryButton.css';
 
-function Button({content, type, action, disabled, className}) {
+function Button({content = null, small = false, type, action = () => {}, disabled = false, className = ""}) {
 
   return(
-    <button type={type} className={`primary-btn ${className}`} onClick={action} disabled={disabled}>
+    <button type={type} className={`primary-btn${small ? "-small" : ""} ${className}`} onClick={action} disabled={disabled}>
       {content}
     </button>
   );

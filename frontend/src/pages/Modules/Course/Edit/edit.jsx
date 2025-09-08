@@ -3,7 +3,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, SecundaryButtonSmall, TextInput, TextArea, OptionButton, ColorPicker, CheckBox, Dropdown, Alert } from '../../../../components';
+import { PrimaryButton, SecundaryButton, TextInput, TextArea, OptionButton, ColorPicker, CheckBox, Dropdown, Alert } from '../../../../components';
 import { listTeachers, createCourse, editCourse, getCourse, getScientificAreas } from '../../../../services';
 import CommissionModal from './TeacherModal/modal'
 
@@ -234,7 +234,7 @@ const Edit = () =>  {
 			<section className='row p-0'>
 				<div className="d-flex flex-row justify-content-between align-items-center p-0">
 					<h4>Ramos</h4>
-					<PrimaryButtonSmall action={() => {setBranches(prev => [...prev, {id_branch: `temp_${Date.now()}` ,branch_name: '', branch_acronym: '', color: 'red'} ]);}} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar ramo</p></div>} />
+					<PrimaryButton small action={() => {setBranches(prev => [...prev, {id_branch: `temp_${Date.now()}` ,branch_name: '', branch_acronym: '', color: 'red'} ]);}} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar ramo</p></div>} />
 				</div>
 				{branches?.length === 0 && <Alert text='Não existe nenhum ramo registado' />}
 				{branches?.length > 0 &&
@@ -255,7 +255,7 @@ const Edit = () =>  {
 			<section className='row p-0'>
 				<div className="d-flex flex-row justify-content-between align-items-center p-0">
 					<h4>Comissão de Curso</h4>
-					<PrimaryButtonSmall action={() => setShow(true)} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar membro</p></div>} />
+					<PrimaryButton small action={() => setShow(true)} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar membro</p></div>} />
 				</div>
 				<TextInput className='p-0' text='Email da Comissão' value={email} setValue={setEmail} />
 				{comission?.length === 0 && <Alert text='Não existe nenhum membro registado' />}

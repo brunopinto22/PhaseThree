@@ -1,7 +1,7 @@
 import './list.css';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OptionButton, PrimaryButtonSmall, SecundaryButtonSmall, Alert, Pill } from '../../../../components';
+import { OptionButton, PrimaryButton, SecundaryButton, Alert, Pill } from '../../../../components';
 import { listStudents } from '../../../../services';
 import { useDebounce } from '../../../../utils';
 
@@ -135,8 +135,8 @@ const List = () => {
 				<div className="filters"></div>
 
 				<div className="options d-flex flex-row gap-3">
-					<SecundaryButtonSmall content={<div className='d-flex flex-row gap-2'><i className="bi bi-cloud-upload"></i><p>Importar alunos</p></div>} />
-					<PrimaryButtonSmall action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar aluno</p></div>} />
+					<SecundaryButton small content={<div className='d-flex flex-row gap-2'><i className="bi bi-cloud-upload"></i><p>Importar alunos</p></div>} />
+					<PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar aluno</p></div>} />
 				</div>
 			</div>
 

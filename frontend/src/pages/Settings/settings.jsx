@@ -1,7 +1,7 @@
 import './settings.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OptionButton, Alert, PrimaryButtonSmall, PasswordInput, PrimaryButton, SecundaryButton, TextInput } from '../../components';
+import { OptionButton, Alert, PrimaryButton, PasswordInput, SecundaryButton, TextInput } from '../../components';
 import { getScientificAreas, addScientificArea, getSupportEmail, deleteScientificArea } from '../../services';
 import { UserContext } from '../../contexts';
 
@@ -70,7 +70,7 @@ const Settings = () => {
 
 					<div className="d-flex flex-column flex-md-row align-items-end gap-2">
 						<TextInput className="col" text='Email de suporte' value={email} setValue={setEmail} />
-						<PrimaryButtonSmall className='h-100' content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email:"admin" } })} />
+						<PrimaryButton small className='h-100' content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email:"admin" } })} />
 					</div>
 
 				</div>
@@ -106,7 +106,7 @@ const Settings = () => {
 							<span>Áreas Científicas</span>
 						</h4>
 					</div>
-					<PrimaryButtonSmall
+					<PrimaryButton small
 						action={() => setShow(true)}
 					 content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar área</p></div>}
 					 />
@@ -151,7 +151,7 @@ const Settings = () => {
 					<TextInput className='col' text='Nome da Nova Área' value={newName} setValue={setNewName} />
 					<i className="bi bi-x-lg close" onClick={() => setShow(false)}></i>
 				</div>
-				<PrimaryButtonSmall
+				<PrimaryButton small
 					disabled={newName === null || newName === ""}
 					action={async () => { await addScientificArea(localStorage.getItem("access_token"), newName); setNewName(""); setShow(false); setReloadAreas(prev => !prev); }}
 					style={{width: 'fit-content'}} content={<p>Submeter</p>}

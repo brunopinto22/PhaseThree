@@ -1,6 +1,6 @@
 import './alert.css';
 
-function Warning({text="No Warning Text Given", type="warning", small = false}) {
+function Alert({text="No Warning Text Given", type="warning", small = false}) {
 
 	if(text === null || text === "")
 		text = "No Warning Text Given"
@@ -23,4 +23,4 @@ function Warning({text="No Warning Text Given", type="warning", small = false}) 
 
 }
 
-export default Warning;
+export default Alert;

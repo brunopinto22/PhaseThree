@@ -4,7 +4,7 @@ import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton } from '../../../../components';
+import { PrimaryButton, SecundaryButton, TextInput, Dropdown, OptionButton } from '../../../../components';
 
 const Edit = () =>  {
 
@@ -45,8 +45,8 @@ const Edit = () =>  {
 				<div className="profile d-flex flex-column flex-md-row p-0 col-sm-12 col-md-4">
 					<div className="profile-picture h-100" style={{backgroundImage: `url(${ profilePicture ? profilePicture : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
-						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} />
-						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email } })} />
+						<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} />
+						<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email } })} />
 					</div>
 				</div>
 			</section>

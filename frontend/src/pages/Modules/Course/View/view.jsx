@@ -1,7 +1,7 @@
 import './view.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { PrimaryButtonSmall, Alert, OptionButton } from '../../../../components';
+import { PrimaryButton, Alert, OptionButton } from '../../../../components';
 import { getCourse } from '../../../../services'
 import { UserContext } from '../../../../contexts';
 import Markdown from "react-markdown";
@@ -170,8 +170,8 @@ function View() {
 							<p className='d-flex flex-row align-items-center'><i className="bi bi-list-ul"></i><b>Ramos: </b>{branches.length}</p>
 						</div>
 						<div className="d-flex flex-column gap-3">
-							<PrimaryButtonSmall action={() => window.open(website, "_blank", "noreferrer")} className='w-100' content={<div className='d-flex flex-row align-items-center justify-content-center w-100 gap-2'><p>Mais Informação</p><i className="bi bi-box-arrow-up-right xxs-icon"></i></div>} />
-							{canEdit && <PrimaryButtonSmall action={edit} className='w-100' content={<p>Editar Curso</p>} />}
+							<PrimaryButton small action={() => window.open(website, "_blank", "noreferrer")} className='w-100' content={<div className='d-flex flex-row align-items-center justify-content-center w-100 gap-2'><p>Mais Informação</p><i className="bi bi-box-arrow-up-right xxs-icon"></i></div>} />
+							{canEdit && <PrimaryButton small action={edit} className='w-100' content={<p>Editar Curso</p>} />}
 						</div>
 					</div>
 				</div>
@@ -183,7 +183,7 @@ function View() {
 							<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeC ? "0" : "-90deg"})` }}></i>
 							<span>Calendários</span>
 						</h4>
-						{canEdit && (<PrimaryButtonSmall action={() => navigate("/calendar/edit?new=true&course="+id)} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar calendário</p></div>} />)}
+						{canEdit && (<PrimaryButton small action={() => navigate("/calendar/edit?new=true&course="+id)} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar calendário</p></div>} />)}
 					</div>
 					<div className={`collapsible ${seeC ? "" : "collapse"}`}>
 						{calendars.length === 0 && <Alert text='Não existe nenhum calendário de momento' />}

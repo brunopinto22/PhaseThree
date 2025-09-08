@@ -1,9 +1,9 @@
 import './secundaryButton.css';
 
-function SecundaryButton({content, action, disabled, className}) {
+function SecundaryButton({content = null, small = false, type, action = () => {}, disabled = false, className = ""}) {
 
   return(
-    <button className={`secundary-btn ${className}`} onClick={action} disabled={disabled}>
+    <button className={`secundary-btn${small ? "-small" : ""} ${className}`} onClick={action} disabled={disabled}>
       {content}
     </button>
   );

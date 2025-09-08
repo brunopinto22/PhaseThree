@@ -5,7 +5,7 @@ import React, { useContext } from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, PrimaryButtonSmall, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox, PfpModal } from '../../../../components';
+import { PrimaryButton, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox, PfpModal } from '../../../../components';
 
 import { getStudent, createStudent, editStudent, getCourse, listCourses } from '../../../../services';
 import { UserContext } from '../../../../contexts';
@@ -207,9 +207,9 @@ const Edit = () =>  {
 					<div className="profile-picture h-100" style={{backgroundImage: `url(${ pfp ? pfp : default_pfp })`}}></div>
 					<div className="options d-flex flex-column justify-content-center w-100">
 						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Alunos"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
-						<PrimaryButtonSmall content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
-						<PrimaryButtonSmall content={<p>Alterar Currículo</p>} />
-						<PrimaryButtonSmall content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
+						<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
+						<PrimaryButton small content={<p>Alterar Currículo</p>} />
+						<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
 			</section>
@@ -283,7 +283,7 @@ const Edit = () =>  {
 			<section className='row p-0 w-100'>
 				<div className="d-flex flex-row justify-content-between align-items-center">
 					<h4>Cadeiras por fazer</h4>
-					<PrimaryButtonSmall action={() => {setTodo(prev => [...prev, {name: '', state: 2}]);}} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar cadeira</p></div>} />
+					<PrimaryButton small action={() => {setTodo(prev => [...prev, {name: '', state: 2}]);}} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar cadeira</p></div>} />
 				</div>
 				{(todo?.length === 0) && (<Alert type='info' text='Não tem nenhuma Unidade Curricular registada.' />)}
 
