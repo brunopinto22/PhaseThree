@@ -274,7 +274,7 @@ const Edit = () =>  {
 					{obj && <TextArea text='Objetivos' value={objectives} setValue={setObjectives} disabled={canEdit} />}
 
 					{typeUrl === null && 
-						<Dropdown text='Orientador' value={responsible} setValue={(e) => setResponsible(Number(e))} disabled={company === null || canEdit}>
+						<Dropdown text='Orientador da Entidade' value={responsible} setValue={(e) => setResponsible(Number(e))} disabled={company === null || canEdit}>
 							<option value={-1}>Novo Representante</option>
 							{representatives?.map((r) => (
 								<option key={r.id} value={r.id}>{r.name}</option>
