@@ -34,9 +34,14 @@ nav {
 	gap: var(--spacing-m);
 }
 
-.nav-acc p {
+.nav-acc .nav-link {
 	color: var(--text-color-400);
 	font-size: var(--fs-200);
+}
+
+.nav-acc:hover .nav-link {
+	color: var(--primary-color-700);
+	transition: all 0.1s;
 }
 
 .nav-acc-img {
