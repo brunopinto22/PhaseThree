@@ -96,6 +96,13 @@ def getCourse(request, pk):
 
 @api_view(["GET"])
 def listCourses(request):
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    u = None
+    if user_type == "teacher":
+        u = Teacher.objects.get(user__email=user_email)
+
     try:
         if not Course.objects.all().exists():
             return Response({"message": "Nenhum Curso encontrado"}, status=status.HTTP_204_NO_CONTENT)
@@ -111,7 +118,7 @@ def listCourses(request):
                 "email": c.commission_email,
                 "num_branches": c.branches.count(),
                 "active_calendars": any(cl.submission_start <= date.today() <= cl.placements for cl in Calendar.objects.filter(course=c).all()),
-                "active_calendars_submission": any(cl.submission_start <= date.today() <= cl.submission_end for cl in Calendar.objects.filter(course=c).all()),
+                "active_calendars_submission": any( cl.submission_start <= date.today() <= cl.submission_end for cl in Calendar.objects.filter(course=c).all()) and ( user_type != "teacher" or u.scientific_area == c.scientific_area ),
                 "active_calendars_registrations": any(date.today() <= cl.registrations for cl in Calendar.objects.filter(course=c).all()),
             })
 
