@@ -40,12 +40,15 @@ def login(request):
         "refresh_token": str(token),
         "type": user.user_type,
         "valid": "1",
+        "pfp": request.build_absolute_uri(user.photo.url) if user.photo else None,
+        "name": "Admin",
     }
 
     if user.user_type == "student":
         try:
             student = Student.objects.get(user=user)
             response_data["id"] = student.student_number
+            response_data["name"] = student.student_name
         except Student.DoesNotExist:
             response_data["id"] = None
 
@@ -53,6 +56,7 @@ def login(request):
         try:
             teacher = Teacher.objects.get(user=user)
             response_data["id"] = teacher.id_teacher
+            response_data["name"] = teacher.teacher_name
 
             perms = teacher.getPermissions()
             p = {
@@ -72,6 +76,8 @@ def login(request):
             rep = Representative.objects.get(user=user)
             response_data["id"] = rep.id_representative
             response_data["company_id"] = rep.company.id_company
+            response_data["name"] = rep.representative_name
+
         except Representative.DoesNotExist:
             response_data["id"] = None
             response_data["company_id"] = None

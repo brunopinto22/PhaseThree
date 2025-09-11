@@ -35,6 +35,8 @@ function App() {
 
 	const { setUserInfo } = useContext(UserContext);
 	
+  const [pfp, setPfp] = useState(null);
+  const [name, setName] = useState(null);
   const [id, setId] = useState(null);
   const [token, setToken] = useState(null);
 	const [role, setRole] = useState(null);
@@ -45,6 +47,8 @@ function App() {
 
 	useEffect(() => {
 		const test_token = async () => {
+			const storedPfp = localStorage.getItem("pfp");
+			const storedName = localStorage.getItem("name");
 			const storedId = localStorage.getItem("user_id");
 			const storedToken = localStorage.getItem("access_token");
 			const storedRole = localStorage.getItem("user_role");
@@ -60,6 +64,8 @@ function App() {
 			}
 
 			if(await testToken(storedToken)) {
+				setPfp(storedPfp);
+				setName(storedName);
 				setId(storedId);
 				setToken(storedToken);
 				setRole(storedRole);
@@ -67,6 +73,8 @@ function App() {
 				setCompany(storedComp);
 
 				setUserInfo({
+					pfp: storedPfp,
+					name: storedName,
 					id: storedId,
 					token: storedToken,
 					role: storedRole,
@@ -75,6 +83,8 @@ function App() {
 				});
 			}
 			else {
+				setPfp(null);
+				setName(null);
 				setId(null);
 				setToken(null);
 				setRole(null);
@@ -82,6 +92,8 @@ function App() {
 				setCompany(null);
 
 				setUserInfo({
+					pfp: storedPfp,
+					name: storedName,
 					id: storedId,
 					token: storedToken,
 					role: storedRole,

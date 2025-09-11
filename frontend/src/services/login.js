@@ -20,8 +20,10 @@ export const login = async (navigate, email, password, setErrorMessage) => {
     const data = await response.json();
 
     if (response.status === 200) {
-			const { access_token, refresh_token, id, type, company_id, valid, message, permissions } = data;
+			const { pfp, name, access_token, refresh_token, id, type, company_id, valid, message, permissions } = data;
 
+			localStorage.setItem("pfp", pfp);
+			localStorage.setItem("name", name);
 			localStorage.setItem("access_token", access_token);
 			localStorage.setItem("refresh_token", refresh_token);
 			localStorage.setItem("user_id", id);

@@ -16,8 +16,9 @@ nav {
 }
 
 .nav-link {
+	cursor: pointer;
 	font-family: var(--title-font);
-	font-size: 1.1rem;
+	font-size: var(--fs-400);
 	color: var(--text-color-700);
 	border-color: transparent;
 	transition: all 0.1s;
@@ -31,4 +32,19 @@ nav {
 	display: flex;
 	flex-direction: row;
 	gap: var(--spacing-m);
+}
+
+.nav-acc p {
+	color: var(--text-color-400);
+	font-size: var(--fs-200);
+}
+
+.nav-acc-img {
+	aspect-ratio: 1 / 1;
+	height: var(--fs-700);
+	border: 1px solid var(--primary-color-700);
+	border-radius: 100%;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
 }
