@@ -29,8 +29,13 @@ This separation allows for a clear division between data handling and user inter
 
 ## 📚 Documentation
 
-The complete and detailed project report, covering all aspects of the development process, architecture, and conclusions, is available in the `assets/docs` directory.
-> **Note:** The final files are provided in PDF format. Any `.docx` files in the directory are works in progress and not yet finalized.
+All project documentation is available in the `assets/docs` directory. The folder contains the following files:
+
+- **Relatório** – Final project report, covering the entire development process, architecture, results, and conclusions.  
+- **Proposta** – Formal document of the initial project proposal.  
+- **Funcionalidades** – Functional requirements using the MoSCoW notation, including their final implementation status.  
+- **Endpoints** – Complete documentation of all system endpoints and their implementation state.  
+- **Design da Interface** – Documentation of the application’s design and interface structure.  
 
 
 ## 🚀 How to Run
