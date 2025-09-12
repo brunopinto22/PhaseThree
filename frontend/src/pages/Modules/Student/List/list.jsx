@@ -1,26 +1,28 @@
 import './list.css';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OptionButton, PrimaryButton, SecundaryButton, Alert, Pill } from '../../../../components';
-import { listStudents } from '../../../../services';
+import { OptionButton, PrimaryButton, SecundaryButton, Alert, Pill, CheckBox } from '../../../../components';
+import { deleteStudent, listStudents } from '../../../../services';
 import { useDebounce } from '../../../../utils';
+import { UserContext } from '../../../../contexts';
 
 const List = () => {
 	const navigate = useNavigate();
-
+	const { userInfo } = useContext(UserContext);
 	const [status, setStatus] = useState(0);
 	const [error, setError] = useState("");
+
+	const [reload, setReload] = useState(false);
 
 	const [list, setList] = useState(null);
 	useEffect(() => {
     const fetchStudents = async () => {
-			const token = localStorage.getItem("access_token");
-			const students = await listStudents(token, setStatus, setError);
+			const students = await listStudents(userInfo.token, setStatus, setError);
 			setList(students);
     };
 
     fetchStudents();
-  }, []);
+  }, [userInfo, reload]);
 
 	useEffect(() => {
 		if (status === 401) {
@@ -53,6 +55,7 @@ const List = () => {
 	}, [debouncedId, debouncedName, debouncedEmail, debouncedCourse, debouncedAcronym]);
 
 	const [filters, setFilters] = useState({
+		active: false,
 		id: null,
 		name: null,
 		acronym: null,
@@ -67,6 +70,8 @@ const List = () => {
 	const getFilteredList = () => {
 		if (!list) return [];
 		return list.filter((item) => {
+			if (filters.active === false && !item.active) return false;
+
 			return (
 				(filters.id === null || item.student_number.toString().includes(filters.id.toString())) &&
 				(filters.name === null || item.name.toLowerCase().includes(filters.name.toLowerCase())) &&
@@ -96,7 +101,7 @@ const List = () => {
 	}
 
 
-	const Row = ({studentName, num, email, course, branch}) => {
+	const Row = ({active, studentName, num, email, course, branch}) => {
 		
 		const view = () => {
 			navigate("/student/view?id="+num);
@@ -104,12 +109,13 @@ const List = () => {
 		const edit = () => {
 			navigate("/student/edit?id="+num);
 		}
-		const handleDelete = () => {
-			// TODO : eliminar Aluno
+		const handleDelete = async () => {
+			await deleteStudent(userInfo.token, num, setStatus, setError);
+			setReload(prev => !prev);
 		}
 
 		return(
-			<tr className='table-row'>
+			<tr className={`table-row ${active ? "" : "disabled"}`}>
 				<th className='fit-column text-center'><p>{num}</p></th>
 				<th><p>{studentName}</p></th>
 				<th><p><a href={`mailto:`+ email}>{email}</a></p></th>
@@ -131,8 +137,12 @@ const List = () => {
 
 			<div className="top d-flex flex-row justify-content-between">
 				<div className="title"><h4>Alunos</h4></div>
+			</div>
 
-				<div className="filters"></div>
+			<div className="d-flex flex-row justify-content-between align-items-end">
+				<div className="filters">
+					<CheckBox label={<p>Inativos</p>} value={filters.active} setValue={(e) => updateFilter("active", e)} />
+				</div>
 
 				<div className="options d-flex flex-row gap-3">
 					<SecundaryButton small content={<div className='d-flex flex-row gap-2'><i className="bi bi-cloud-upload"></i><p>Importar alunos</p></div>} />
@@ -173,7 +183,7 @@ const List = () => {
 					</tr>
 
 					{getFilteredList().map(student => (
-						<Row key={student.student_number} studentName={student.name} num={student.student_number} email={student.email} course={student.course} branch={student.branch} />
+						<Row key={student.student_number} studentName={student.name} num={student.student_number} email={student.email} course={student.course} branch={student.branch} active={student.active} />
 					))}
 					
 				</table>

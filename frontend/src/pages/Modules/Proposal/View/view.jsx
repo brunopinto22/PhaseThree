@@ -66,10 +66,12 @@ function View() {
 
 			if (status === 404) {
 				navigate('/pagenotfound');
-				return;
 			}
-			if (status === 200 && data) {
+			else if (status === 200 && data) {
 				setProposal(data);
+			}
+			else if(status) {
+				navigate('/unauthorized');
 			}
 		}
 		fetchProposal();

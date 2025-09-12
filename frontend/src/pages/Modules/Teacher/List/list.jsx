@@ -130,14 +130,16 @@ const List = () => {
 
 			<div className="top d-flex flex-row justify-content-between">
 				<div className="title"><h4>Docentes</h4></div>
-
-				<div className="options d-flex gap-3">
-					<PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar docente</p></div>} />
-				</div>
 			</div>
 
-			<div className="filters">
-				<CheckBox label={<p>Inativos</p>} value={filters.active} setValue={(e) => updateFilter("active", e)} />
+			<div className="d-flex flex-row justify-content-between align-items-end">
+				<div className="filters">
+					<CheckBox label={<p>Inativos</p>} value={filters.active} setValue={(e) => updateFilter("active", e)} />
+				</div>
+
+				<div className="options d-flex gap-3 m-0 p-0">
+					<PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar docente</p></div>} />
+				</div>
 			</div>
 
 			{list.length === 0 && <Alert text='Não existe nenhum docente de momento' />}
@@ -158,7 +160,7 @@ const List = () => {
 				</table>
 			)}
 
-			{list?.length > 0 && getFilteredList().length === 0 && <Alert text='Não foi encontrado nenhuma curso' />}
+			{list?.length > 0 && getFilteredList().length === 0 && <Alert text='Não foi encontrado nenhuma Docente' />}
 
 		</div>
 	);

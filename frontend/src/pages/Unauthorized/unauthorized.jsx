@@ -26,7 +26,7 @@ function Unauthorized() {
 						<h2 className='sub-title'>Não tem autorização para aceder a esta página</h2>
 						<h6>É necessária autenticação para aceder a esta página.</h6>
 					</div>
-					<PrimaryButton small action={() => navigate("/login")} content={<p>Fazer Login</p>} />
+					<PrimaryButton small action={() => navigate("/")} content={<p>Página Inicial</p>} />
 					<p>Tem dúvidas? Contacte-nos: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
 				</div>
 
