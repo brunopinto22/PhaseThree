@@ -94,6 +94,10 @@ body, p {
 .l-icon { font-size: var(--icon-size-l); }
 
 
+.markdown {
+	overflow-wrap: anywhere;
+}
+
 .markdown h1,
 .markdown h2,
 .markdown h3,
