@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from './../../../assets/imgs/logo.png';
 import bg from './.././../../assets/imgs/company.jpg';
 import { PrimaryButton, TertiaryButton, TextInput, PasswordInput } from './../../../components';
-import { getSupportEmail, registerCompany } from '../../../services';
+import { getSupportEmail, registerCompany, registerRepresentantive } from '../../../services';
 import { CompanyContext } from '../../../contexts';
 
 const Register = () => {
@@ -47,14 +47,16 @@ const Register = () => {
 	const submit = () => {
 
 		const data = {
-			company_name: companyInfo.name,
-			company_email: companyInfo.email,
-			company_address: companyInfo.address,
-			company_postal_code: companyInfo.code,
-			company_nipc: companyInfo.nipc,
-			company_website: companyInfo.website,
-			company_linkedin: companyInfo.linkedin,
-			company_contact: companyInfo.contact,
+			company_id: id,
+
+			company_name: companyInfo?.name,
+			company_email: companyInfo?.email,
+			company_address: companyInfo?.address,
+			company_postal_code: companyInfo?.code,
+			company_nipc: companyInfo?.nipc,
+			company_website: companyInfo?.website,
+			company_linkedin: companyInfo?.linkedin,
+			company_contact: companyInfo?.contact,
 
 			representative_email: email,
 			representative_name: name,
@@ -70,7 +72,9 @@ const Register = () => {
 				navigate("/");
 			}
 		} else {
-			
+			if(registerRepresentantive(data, setStatus, setErrorM)) {
+				navigate("/");
+			}
 		}
 	}
 
@@ -89,7 +93,7 @@ const Register = () => {
 						<h1 className='title'>Representante</h1>
 					</div>
 
-					<form className='d-flex flex-column'>
+					<div className='inputs d-flex flex-column'>
 
 						<TextInput text='Nome Completo' value={name} setValue={setName} />
 						<TextInput text='Email' value={email} setValue={setEmail} />
@@ -98,13 +102,14 @@ const Register = () => {
 						<PasswordInput text='Palavra-Passe' value={password} setValue={setPassword} />
 						<PasswordInput text='Confirmar Palavra-Passe' value={repeat} setValue={setRepeat} />
 
-            <PrimaryButton type='submit' content={<h6>Registar</h6>} action={submit} />
+            <PrimaryButton content={<h6>Registar</h6>} action={submit} />
 						{error && (<p className='error-message'>{errorMessage}</p>)}
-					</form>
+					</div>
 
           <div className='help text-center'>
             <p>Já tem uma conta criada? <a href="\">Faça login</a></p>
             <p>Tem dúvidas? Contacte-nos: <a href={`mailto:${supportEmail}`}>{supportEmail}</a></p>
+						{errorM && <p className='error-message'>{errorM}</p>}
           </div>
 
 				</div>
