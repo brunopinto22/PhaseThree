@@ -109,44 +109,50 @@ const View = () => {
 				<p><b>Candidaturas: </b>{candidatures}</p>
 				<p><b>Colocações: </b>{placements}</p>
 				<p><b>Inscrição de Alunos: </b>{registrations}</p>
-				<p><b>Limite de Candidaturas: </b>{min} a {max}</p>
+				{role !== "representative" && <p><b>Limite de Candidaturas: </b>{min} a {max}</p>}
 			</div>
 
-			<div className='proposals d-flex flex-column gap-4'>
-				<div className="d-flex flex-row align-content-center">
-					<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeP(!seeP)}>
-						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeP ? "0" : "-90deg"})` }}></i>
-						<span>Propostas{nProposals > 0 && <span style={{fontSize: "small"}}> ({nProposals} {nProposals === 1 ? "proposta" : "propostas"})</span>}</span>
-					</h4>
+			{proposals &&
+				<div className='proposals d-flex flex-column gap-4'>
+					<div className="d-flex flex-row align-content-center">
+						<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeP(!seeP)}>
+							<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeP ? "0" : "-90deg"})` }}></i>
+							<span>Propostas{nProposals > 0 && <span style={{fontSize: "small"}}> ({nProposals} {nProposals === 1 ? "proposta" : "propostas"})</span>}</span>
+						</h4>
+					</div>
+					<div className={`collapsible ${seeP ? "" : "collapse"}`}>
+						<Proposals list={proposals} token={userInfo.token} role={userInfo.role} />
+					</div>
 				</div>
-				<div className={`collapsible ${seeP ? "" : "collapse"}`}>
-					<Proposals list={proposals} token={userInfo.token} role={userInfo.role} />
-				</div>
-			</div>
+			}
 
-			<div className='proposals d-flex flex-column gap-4'>
-				<div className="d-flex flex-row align-content-center">
-					<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeS(!seeS)}>
-						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeS ? "0" : "-90deg"})` }}></i>
-						<span>Alunos{nStudents > 0 && <span style={{fontSize: "small"}}> ({nStudents} {nStudents === 1 ? "aluno" : "alunos"})</span>}</span>
-					</h4>
+			{students &&
+				<div className='proposals d-flex flex-column gap-4'>
+					<div className="d-flex flex-row align-content-center">
+						<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeS(!seeS)}>
+							<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeS ? "0" : "-90deg"})` }}></i>
+							<span>Alunos{nStudents > 0 && <span style={{fontSize: "small"}}> ({nStudents} {nStudents === 1 ? "aluno" : "alunos"})</span>}</span>
+						</h4>
+					</div>
+					<div className={`collapsible ${seeS ? "" : "collapse"}`}>
+						<Students list={students} role={userInfo.role} />
+					</div>
 				</div>
-				<div className={`collapsible ${seeS ? "" : "collapse"}`}>
-					<Students list={students} role={userInfo.role} />
-				</div>
-			</div>
+			}
 
-			<div className='proposals d-flex flex-column gap-4'>
-				<div className="d-flex flex-row align-content-center">
-					<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeA(!seeA)}>
-						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeA ? "0" : "-90deg"})` }}></i>
-						<span>Candidaturas{nCandidatures > 0 && <span style={{fontSize: "small"}}> ({nCandidatures} {nCandidatures === 1 ? "candidatura" : "candidaturas"})</span>}</span>
-					</h4>
+			{list_candidatures &&
+				<div className='proposals d-flex flex-column gap-4'>
+					<div className="d-flex flex-row align-content-center">
+						<h4 className='title d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "default" }} onClick={() => setSeeA(!seeA)}>
+							<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeA ? "0" : "-90deg"})` }}></i>
+							<span>Candidaturas{nCandidatures > 0 && <span style={{fontSize: "small"}}> ({nCandidatures} {nCandidatures === 1 ? "candidatura" : "candidaturas"})</span>}</span>
+						</h4>
+					</div>
+					<div className={`collapsible ${seeA ? "" : "collapse"}`}>
+						<Candidatures list={list_candidatures} role={userInfo.role} />
+					</div>
 				</div>
-				<div className={`collapsible ${seeA ? "" : "collapse"}`}>
-					<Candidatures list={list_candidatures} role={userInfo.role} />
-				</div>
-			</div>
+			}
 
 		</div>
 	);

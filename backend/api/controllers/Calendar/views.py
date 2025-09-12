@@ -34,7 +34,7 @@ def getCalendar(request, pk):
         c = Calendar.objects.get(id_calendar=pk)
 
         data = {
-            "title": c.__str__(),
+            "title": str(c),
             "year": c.calendar_year,
             "semester": c.calendar_semester,
             "date_submission_start": c.submission_start,
@@ -47,71 +47,104 @@ def getCalendar(request, pk):
             "max": c.max_proposals,
             "course_id": c.course.id_course,
             "course_name": c.course.course_name,
-            "students_count": Student.objects.filter(calendar=c).count(),
-            "students": [
-                {
-                    "number": s.student_number,
-                    "name": s.student_name,
-                    "email": s.user.email,
-                    "course": s.student_course.course_name,
-                    "branch": {
-                        "name": s.student_branch.branch_name,
-                        "acronym": s.student_branch.branch_acronym,
-                        "color": s.student_branch.color,
-                    },
-                }
-                for s in Student.objects.filter(calendar=c).all()
-            ],
-            "proposals_count": Proposal.objects.filter(calendar=c).count(),
-            "proposals":[
-                {
-                    "id": p.id_proposal,
-                    "proposal_number": p.calendar_proposal_number,
-                    "title": p.proposal_title,
-                    "company": {
-                        "id": p.company.id_company if p.company else None,
-                        "name": p.company.company_name if p.company else "ISEC",
-                    },
-                    "course": {
-                        "id": p.course.id_course,
-                        "name": p.course.course_name
-                    },
-                    "location": p.location,
-                    "slots": p.slots,
-                    "taken": p.students.count(),
-                    "type": p.proposal_type,
-                }
-                for p in Proposal.objects.filter(calendar=c)
-            ],
-            "candidatures_count": Candidature.objects.filter(student__calendar=c).count(),
-            "candidatures": [
-                {
-                    "id": cand.id_candidature,
-                    "state": cand.state,
-                    "student": {
-                        "number": cand.student.student_number,
-                        "name": cand.student.student_name,
-                    },
-                    "proposal": (
-                        lambda p: {
-                            "id": p.proposal.id if p else None,
-                            "title": p.proposal.proposal_title if p else "—",
-                            "company": {
-                                "id": p.proposal.company.id_company if p and p.proposal.company else None,
-                                "name": p.proposal.company.company_name if p and p.proposal.company else "—",
-                            },
-                        }
-                    )(cand.candidature_proposals.filter(state="accepted").select_related("proposal").first())
-                } for cand in Candidature.objects.filter(student__calendar=c)
-            ]
         }
+
+        students_qs = Student.objects.filter(calendar=c)
+        proposals_qs = Proposal.objects.filter(calendar=c)
+        candidatures_qs = Candidature.objects.filter(student__calendar=c)
+
+        students_list = [
+            {
+                "number": s.student_number,
+                "name": s.student_name,
+                "email": s.user.email,
+                "course": s.student_course.course_name,
+                "branch": {
+                    "name": s.student_branch.branch_name,
+                    "acronym": s.student_branch.branch_acronym,
+                    "color": s.student_branch.color,
+                } if s.student_branch else None,
+            }
+            for s in students_qs
+        ]
+        n_students = students_qs.count()
+
+        proposals_list = [
+            {
+                "id": p.id_proposal,
+                "proposal_number": p.calendar_proposal_number,
+                "title": p.proposal_title,
+                "company": {
+                    "id": p.company.id_company if p.company else None,
+                    "name": p.company.company_name if p.company else "ISEC",
+                },
+                "course": {
+                    "id": p.course.id_course,
+                    "name": p.course.course_name,
+                },
+                "location": p.location,
+                "slots": p.slots,
+                "taken": p.students.count(),
+                "type": p.proposal_type,
+            }
+            for p in proposals_qs
+        ]
+        n_proposals = proposals_qs.count()
+
+        candidatures_list = [
+            {
+                "id": cand.id_candidature,
+                "state": cand.state,
+                "student": {
+                    "number": cand.student.student_number,
+                    "name": cand.student.student_name,
+                },
+                "proposal": (
+                    lambda p: {
+                        "id": p.proposal.id_proposal if p else None,
+                        "title": p.proposal.proposal_title if p else "—",
+                        "company": {
+                            "id": p.proposal.company.id_company if p and p.proposal.company else None,
+                            "name": p.proposal.company.company_name if p and p.proposal.company else "—",
+                        },
+                    }
+                )(cand.candidature_proposals.filter(state="accepted").select_related("proposal").first())
+            }
+            for cand in candidatures_qs
+        ]
+        n_candidatures = candidatures_qs.count()
+
+        if user_type == "student":
+            data["proposals_count"] = n_proposals
+            data["proposals"] = proposals_list
+
+        elif user_type == "teacher":
+            data["students_count"] = n_students
+            data["students"] = students_list
+            data["proposals_count"] = n_proposals
+            data["proposals"] = proposals_list
+
+            teacher = Teacher.objects.get(user__email=user_email)
+            perms = Permissions.objects.filter(teacher=teacher, module__module_name="Calendários", can_view=True)
+            is_comissao = c.course.commission.filter(id_teacher=teacher.id_teacher).exists()
+
+            if perms.exists() or is_comissao:
+                data["candidatures_count"] = n_candidatures
+                data["candidatures"] = candidatures_list
+
+        elif user_type == "admin":
+            data["students_count"] = n_students
+            data["students"] = students_list
+            data["proposals_count"] = n_proposals
+            data["proposals"] = proposals_list
+            data["candidatures_count"] = n_candidatures
+            data["candidatures"] = candidatures_list
 
         return JsonResponse(data, status=HTTP_200_OK, safe=False)
 
     except Calendar.DoesNotExist:
         return Response({"message": "Calendário não encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
-        traceback.print_exc()
         return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
