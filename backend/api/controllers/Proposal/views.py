@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import tempfile
@@ -6,13 +5,11 @@ import traceback
 from copy import copy
 from io import BytesIO
 
-import openpyxl
 import unicodedata
-import xlsx2pdf
+from django.core.mail import send_mail
 from django.db.models import F, Value, IntegerField, Case, When
 from django.http import FileResponse
 from openpyxl import load_workbook
-from openpyxl.styles import Side, Border
 from openpyxl.utils import get_column_letter
 from rest_framework.response import Response
 from rest_framework import status
@@ -65,8 +62,8 @@ def getProposal(request, pk):
             teacher = Teacher.objects.get(user__email=user_email)
             module = Module.objects.get(module_name='Propostas')
             permission = Permissions.objects.get(teacher=teacher, module=module)
-            if not permission.can_view or teacher.scientific_area != p.calendar.course.scientific_area:
-                return Response({"message":"Não tem permissão para ver esta proposta"}, status=HTTP_403_FORBIDDEN)
+            if not (permission.can_view or teacher.scientific_area == p.calendar.course.scientific_area or p.isec_advisor == teacher):
+                return Response({"message":f"Não tem permissão para ver esta proposta"}, status=HTTP_403_FORBIDDEN)
             can_edit = permission.can_edit
 
         data = {
@@ -264,20 +261,35 @@ def createProposal(request):
             if Accounts.objects.filter(email=email).exists():
                 return Response({"message": "O Representante já se encontra registado"}, status=status.HTTP_400_BAD_REQUEST)
 
-            settings = Settings.objects.first()
+            sett = Settings.objects.first()
 
             user = Accounts.objects.create(
                 username = email,
                 email = email,
                 user_type = 'representative'
             )
-            user.set_password(settings.representative_password)
+            user.set_password(sett.representative_password)
             user.save()
 
             advisor = Representative.objects.create(
                 user = user,
                 representative_name=name,
                 company=company,
+            )
+
+            msg = (
+                f"Foi registado como Orientador de Estágio pela empresa {company.company_name}.\n\n"
+                f"O endereço de email de registo corresponde a este onde recebeu a presente notificação. "
+                f"A palavra-passe atribuída à conta é '{sett.representative_password}'. "
+                f"Recomendamos que a altere o mais brevemente possível."
+            )
+
+            send_mail(
+                subject="Registo como Orientador",
+                message=msg,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
             )
 
         elif data.get("advisor_isec_id") is not None:
@@ -329,8 +341,8 @@ def createProposal(request):
     except Company.DoesNotExist:
         return Response({"message": "Empresa não encontrada."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
-        traceback.print_exc()
         return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(["PUT"])
 def editProposal(request, pk):
