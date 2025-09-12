@@ -34,6 +34,7 @@ def getStudent(request, pk):
         student = Student.objects.get(student_number=pk)
 
         data = {
+            "is_missing_info": student.is_missing_info(),
             "pfp": request.build_absolute_uri(student.user.photo.url) if student.user.photo else None,
             "active": student.active,
             "name": student.student_name,
@@ -111,20 +112,21 @@ def listStudents(request):
         data = []
 
         for s in students:
-            if s.active:
-                data.append({
-                    "pfp": s.user.photo.url if s.user.photo else None,
-                    "student_number": s.student_number,
-                    "name": s.student_name,
-                    "email": s.user.email,
-                    "course": s.student_course.course_name,
-                    "course_acronym": ''.join(word[0] for word in s.student_course.course_name.split() if word[0].isupper()),
-                    "branch": {
-                        "name": s.student_branch.branch_name if s.student_branch else None,
-                        "acronym": s.student_branch.branch_acronym if s.student_branch else None,
-                        "color": s.student_branch.color if s.student_branch else None
-                    },
-                })
+            data.append({
+                "is_missing_info": s.is_missing_info(),
+                "pfp": s.user.photo.url if s.user.photo else None,
+                "active": s.active,
+                "student_number": s.student_number,
+                "name": s.student_name,
+                "email": s.user.email,
+                "course": s.student_course.course_name,
+                "course_acronym": ''.join(word[0] for word in s.student_course.course_name.split() if word[0].isupper()),
+                "branch": {
+                    "name": s.student_branch.branch_name if s.student_branch else None,
+                    "acronym": s.student_branch.branch_acronym if s.student_branch else None,
+                    "color": s.student_branch.color if s.student_branch else None
+                },
+            })
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -133,6 +135,68 @@ def listStudents(request):
             {"message": "Erro interno do servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["POST"])
+def registerStudent(request):
+    try:
+        data = request.data.copy()
+
+        course = None
+        try:
+            course = Course.objects.get(id_course=data.get("student_course"))
+        except Course.DoesNotExist:
+            return Response({"message": "Curso não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        calendars = Calendar.objects.filter(course=course)
+        active_regs = [c for c in calendars if c.registrations and c.registrations <= date.today()]
+
+        if not active_regs:
+            return Response({"message": "Não existe um calendário com inscrições ativas para este curso."}, status=status.HTTP_400_BAD_REQUEST)
+
+        calendar = sorted( active_regs, key=lambda c: abs((c.divulgation - date.today()).days))[0]
+
+        branch = None
+        branch_id = data.get("student_branch")
+        if branch_id:
+            try:
+                branch = Branch.objects.get(id_branch=branch_id)
+            except Branch.DoesNotExist:
+                return Response({"message": "Ramo não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Accounts.objects.filter(email=data.get("email")).exists():
+            return Response({"message": "Email já registado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Student.objects.filter(student_number=data.get("student_number")).exists():
+            return Response({"message": "Número de aluno já registado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        settings = Settings.objects.first()
+        password = settings.student_password
+        if data.get("password"):
+            password = data.get("password")
+
+        user = Accounts.objects.create_user(
+            username=data["email"],
+            email=data["email"],
+            user_type="student",
+        )
+        user.set_password(password)
+        user.save()
+
+        student = Student.objects.create(
+            user=user,
+            student_number=data.get("student_number"),
+            student_name=data.get("student_name"),
+            student_course=course,
+            student_branch=branch,
+            calendar=calendar
+        )
+
+        return Response({"message": "Aluno registado com sucesso"}, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Internal server error",}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])
@@ -224,7 +288,6 @@ def createStudent(request):
         return Response({"message": "Aluno criado com sucesso"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        traceback.print_exc()
         return Response({"message": "Internal server error",}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
