@@ -46,14 +46,14 @@ class Student(models.Model):
 
     student_name = models.CharField(max_length=255, null=False, blank=False)
     nationality = models.CharField(max_length=50)
-    ident_type = models.CharField(max_length=255, null=False, blank=False)
-    ident_doc = models.IntegerField(null=False, blank=False)
+    ident_type = models.CharField(max_length=255, null=True, blank=True)
+    ident_doc = models.IntegerField(null=True, blank=True)
     nif = models.IntegerField(null=True, blank=False)
     gender = models.CharField(max_length=12, null=True, blank=True)
     address = models.CharField(max_length=255, null=True, blank=False)
     contact = models.CharField(max_length=15, null=True, blank=True)
 
-    current_year = models.IntegerField(null=False)
+    current_year = models.IntegerField(null=True)
     average = models.FloatField(null=True)
     subjects_done = models.IntegerField(null=True)
     student_course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='students_in_course')
@@ -104,6 +104,33 @@ class Student(models.Model):
 
     def get_favorites(self):
         return Favorite.objects.filter(student=self)
+
+    def is_missing_info(self):
+        required_fields = [
+            "student_number",
+            "student_name",
+            "nationality",
+            "ident_type",
+            "ident_doc",
+            "nif",
+            "gender",
+            "address",
+            "contact",
+            "current_year",
+            "average",
+            "subjects_done",
+            "student_course",
+            "student_branch",
+            "student_ects",
+            "calendar",
+        ]
+
+        for field in required_fields:
+            value = getattr(self, field, None)
+            if value in [None, ""]:
+                return True
+
+        return False
 
 
 class Subject(models.Model):
