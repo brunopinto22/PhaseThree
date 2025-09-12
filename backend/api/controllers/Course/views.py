@@ -97,11 +97,12 @@ def getCourse(request, pk):
 @api_view(["GET"])
 def listCourses(request):
     auth_header = request.headers.get("Authorization")
-    user_id, user_email, user_type = decode_token(auth_header)
+    u = user_type = None
 
-    u = None
-    if user_type == "teacher":
-        u = Teacher.objects.get(user__email=user_email)
+    if not auth_header:
+        user_id, user_email, user_type = decode_token(auth_header)
+        if user_type == "teacher":
+            u = Teacher.objects.get(user__email=user_email)
 
     try:
         if not Course.objects.all().exists():
@@ -117,6 +118,12 @@ def listCourses(request):
                 "acronym": ''.join(word[0] for word in c.course_name.split() if word[0].isupper()),
                 "email": c.commission_email,
                 "num_branches": c.branches.count(),
+                "branches": list(Branch.objects.filter(id_course=c).values(
+                    "id_branch",
+                    "branch_name",
+                    "branch_acronym",
+                    "color"
+                )),
                 "active_calendars": any(cl.submission_start <= date.today() <= cl.placements for cl in Calendar.objects.filter(course=c).all()),
                 "active_calendars_submission": any( cl.submission_start <= date.today() <= cl.submission_end for cl in Calendar.objects.filter(course=c).all()) and ( user_type != "teacher" or u.scientific_area == c.scientific_area ),
                 "active_calendars_registrations": any(date.today() <= cl.registrations for cl in Calendar.objects.filter(course=c).all()),
