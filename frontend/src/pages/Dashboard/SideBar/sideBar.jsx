@@ -21,13 +21,11 @@ const SideBar = ({type = null, summary = null, error = null}) => {
 						<div className='d-flex flex-row gap-2'><i className="bi bi-person-fill"></i><b>Alunos:</b>{summary?.nStudents}</div>
 						<div className='d-flex flex-row gap-2'><i className="bi bi-building-fill"></i><b>Empresas:</b>{summary?.nCompanies}</div>
 						<div className='d-flex flex-row gap-2'><i className="bi bi-people-fill"></i><b>Representantes:</b>{summary?.nRepresentatives}</div>
-						<div className='d-flex flex-row gap-2'><i className="bi bi-file-earmark-text"></i><b>Propostas:</b> {summary?.nProposals}</div>
-						<div className='d-flex flex-row gap-2'><i className="bi-clipboard2-check"></i><b>Candidaturas:</b> {summary?.nCandidatures}</div>
 					</div>
 				</>
 			}
 
-			{type === "teacher" && 
+			{(type === "teacher" && summary !== null) && 
 			<>
 				<h5>Informação:</h5>
 				
@@ -46,7 +44,7 @@ const SideBar = ({type = null, summary = null, error = null}) => {
 						</div>
 					}
 
-					{summary?.permissions && (
+					{summary?.has_perms && (
 						<div className='d-flex flex-column gap-2'>
 							<h6>Sistema</h6>
 							{summary?.permissions.nCourses !== null && (
@@ -64,12 +62,6 @@ const SideBar = ({type = null, summary = null, error = null}) => {
 							{summary?.permissions.nCompanies !== null && (
 								<div className='d-flex flex-row gap-2'><i className="bi bi-people-fill"></i><b>Representantes:</b>{summary?.permissions.nRepresentatives}</div>
 							)}
-							{summary?.permissions.nProposals !== null && (
-								<div className='d-flex flex-row gap-2'><i className="bi bi-file-earmark-text"></i><b>Propostas:</b> {summary?.permissions.nProposals}</div>
-							)}
-							{summary?.permissions.nCandidatures !== null && (
-								<div className='d-flex flex-row gap-2'><i className="bi-clipboard2-check"></i><b>Candidaturas:</b> {summary?.permissions.nCandidatures}</div>
-							)}
 						</div>
 					)}
 
@@ -86,7 +78,7 @@ const SideBar = ({type = null, summary = null, error = null}) => {
 			</>
 			}
 
-			{type === "representative" && 
+			{(type === "representative" && summary !== null) && 
 			<>
 				<h5>Informação:</h5>
 				
@@ -111,7 +103,7 @@ const SideBar = ({type = null, summary = null, error = null}) => {
 			</>
 			}
 
-			{type === "student" && 
+			{(type === "student" && summary !== null) && 
 			<>
 				<div className="title d-flex flex-row align-items-center gap-3">
 					<i className="bi bi-calendar-week"></i>

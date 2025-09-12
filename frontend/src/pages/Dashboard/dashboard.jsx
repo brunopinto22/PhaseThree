@@ -1,6 +1,6 @@
 import './dashboard.css';
 import { useState, useEffect, useContext } from 'react';
-import { DashButton } from '../../components';
+import { Alert, DashButton } from '../../components';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts';
 import SideBar from './SideBar/sideBar';
@@ -50,6 +50,8 @@ const Dashboard = () => {
 
 			<div className='modules d-flex flex-column col-sm-12 col-md-8'>
 				<h3>Dashboard</h3>
+
+				{summary?.is_missing_info && <Alert text='Informação em falta no Perfil' />}	
 				
 				<div className='modules-btns d-flex flex-column d-md-grid'>
 
@@ -59,18 +61,21 @@ const Dashboard = () => {
 							<DashButton
 								icon={<i className="bi bi-clipboard2-plus-fill"></i>} // TODO : submeter candidatura de um aluno (PÁGINAS)
 								text="Submeter Candidatura"
+								disabled={summary?.is_missing_info}
 							/>
 							
 							<DashButton
 								action={() => navigate("/proposal/list")}
 								icon={<i className="bi bi-file-earmark-text-fill"></i>}
 								text="Ver Propostas"
+								disabled={summary?.is_missing_info}
 							/>
 
 							<DashButton
 								icon={<i className="bi bi-clipboard2-pulse-fill"></i>}
 								text="Candidatura"
 								action={() => navigate("/candidature/view?id=1")}
+								disabled={summary?.is_missing_info}
 							/>
 							</>
 						)

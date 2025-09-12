@@ -229,8 +229,12 @@ def summary(request):
         elif user_type == "teacher":
             t = Teacher.objects.get(user__email=user_email)
 
+            has_perms = False
             module_counts = {"nCourses": None,"nStudents": None,"nTeachers": None,"nCompanies": None,"nProposals": None,"nCandidatures": None,}
             for perm in Permissions.objects.filter(teacher=t, can_view=True):
+                if perm.module.module_name in module_counts:
+                    has_perms = True
+
                 if perm.module.module_name == "Cursos":
                     module_counts["nCourses"] = Course.objects.count()
                 elif perm.module.module_name == "Alunos":
@@ -240,10 +244,6 @@ def summary(request):
                 elif perm.module.module_name == "Empresas":
                     module_counts["nCompanies"] = Company.objects.count()
                     module_counts["nRepresentatives"] = Representative.objects.count()
-                elif perm.module.module_name == "Propostas":
-                    module_counts["nProposals"] = Proposal.objects.count()
-                elif perm.module.module_name == "Candidaturas":
-                    module_counts["nCandidatures"] = Candidature.objects.count()
 
             calendars_list = [
                 {
@@ -257,6 +257,7 @@ def summary(request):
             if course_commission:
                 data = {
                     "permissions": module_counts,
+                    "has_perms": has_perms,
                     "commission": {
                         "course": {
                             "id": course_commission.id_course,
@@ -299,6 +300,7 @@ def summary(request):
             c = s.calendar
 
             data = {
+                "is_missing_info": s.is_missing_info(),
                 "calendar": {
                     "id": c.id_calendar,
                     "title": str(c),
