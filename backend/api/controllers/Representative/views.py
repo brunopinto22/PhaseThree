@@ -34,6 +34,7 @@ def getRepresentative(request, pk):
         r = Representative.objects.get(id_representative=pk)
 
         data = {
+            "active": r.active,
             "pfp": request.build_absolute_uri(r.user.photo.url) if r.user.photo else None,
             "name": r.representative_name,
             "role": r.representative_role,
@@ -42,6 +43,7 @@ def getRepresentative(request, pk):
             "company_id": r.company.id_company,
             "company_name": r.company.company_name,
             "can_edit_company": r.company.company_admin.id_representative == r.id_representative,
+            "can_edit": user_type == "admin" or r.user.email == user_email,
         }
 
         return JsonResponse(data, status=HTTP_200_OK, safe=False)
@@ -53,6 +55,40 @@ def getRepresentative(request, pk):
             {"error": "Erro interno do servidor", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["POST"])
+def registerRepresentative(request):
+    data = request.data.copy()
+
+
+    try:
+        company = Company.objects.get(id_company=data["company_id"])
+    except Company.DoesNotExist as e:
+        return Response({"message":"A Empresa não foi encontrada"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if Accounts.objects.filter(email=data["representative_email"]).exists():
+        return Response({"message":"O Representante já se encontra registado"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    user = Accounts.objects.create(
+        username=data["representative_email"],
+        email=data["representative_email"],
+        user_type='representative'
+    )
+    user.set_password(data["representative_password"])
+    user.save()
+
+    representative = Representative.objects.create(
+        user=user,
+        representative_name=data["representative_name"],
+        representative_role=data["representative_role"],
+        representative_contact=data["representative_contact"],
+        company=company,
+    )
+
+    return Response({"message":"Representante registado com sucesso"}, status=status.HTTP_201_CREATED)
+
 
 
 @api_view(["POST"])
