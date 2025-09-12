@@ -196,12 +196,7 @@ const Edit = () =>  {
 	};
 
 	const handleAdminDelete = async (index) => {
-		const adminToDelete = comission[index];
-
-		if (adminToDelete.teacher_id) {
-		} else {
-			setComission(prev => prev.filter((_, i) => i !== index));
-		}
+		setComission(prev => prev.filter((_, i) => i !== index));
 	};
 
 	
