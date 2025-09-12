@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from './../../../assets/imgs/logo.png';
 import bg from './.././../../assets/imgs/student.jpg';
 import { PrimaryButton, TertiaryButton, TextInput, PasswordInput, Dropdown } from './../../../components';
-import { getSupportEmail, listCourses } from '../../../services';
+import { getSupportEmail, listCourses, registerStudent } from '../../../services';
 
 
 const Register = () => {
@@ -12,7 +12,6 @@ const Register = () => {
 	const navigate = useNavigate();
 	const [supportEmail, setSupportEmail] = useState('');
 	const [status, setStatus] = useState(0);
-	const [errorM, setErrorM] = useState("");
 
 	useEffect(() => {
 		const fetchEmail = async () => {
@@ -31,23 +30,37 @@ const Register = () => {
 	const [repeat, setRepeat] = useState();
 
 	const [errorMessage, setErrorMessage] = useState("");
-	const [error, setError] = useState(false);
 
 	const [courses, setCourses] = useState([]);
 	useEffect(() => {
     const fetchCourses = async () => {
-			const token = localStorage.getItem("access_token");
-			const courses = await listCourses(token, setStatus, setErrorM);
+			const courses = await listCourses(null, setStatus, setErrorMessage);
 			setCourses(courses);
     };
     fetchCourses();
   }, []);
 	useEffect(() => {
 		const selectedCourse = courses.find(c => c.id === course);
-		if (!selectedCourse || selectedCourse.branches.length === 0) {
+		if (!selectedCourse || selectedCourse.branches?.length === 0) {
 			setBranch(null);
 		}
 	}, [course, courses]);
+
+
+		const submit = () => {
+
+		const data = {
+			student_name: name,
+			email: email,
+			student_number: number,
+			student_course: course,
+			student_branch: branch,
+			password: password,
+		};
+
+		if(registerStudent(data, setStatus, setErrorMessage)){
+		}
+	}
 
 
 	return(
@@ -64,7 +77,7 @@ const Register = () => {
 						<h1 className='title'>Aluno</h1>
 					</div>
 
-					<form className='d-flex flex-column'>
+					<div className='inputs d-flex flex-column'>
 
 						<TextInput text='Nome Completo' value={name} setValue={setName} />
 						<TextInput text='Número de Aluno' type='number' value={number} setValue={setNumber} />
@@ -76,7 +89,7 @@ const Register = () => {
 									<option key={index} value={c.id}>{c.name}</option>
 								))}
 							</Dropdown>
-							<Dropdown className='col' text='Ramo' value={branch} setValue={(v) => setBranch(Number(v))} disabled={!courses.find(c => c.id === course)?.branches.length}>
+							<Dropdown className='col' text='Ramo' value={branch} setValue={(v) => setBranch(Number(v))} disabled={!courses.find(c => c.id === course)?.branches?.length}>
 								{(courses.find(c => c.id === course)?.branches || []).map((b) => (
 									<option key={b.id_branch} value={b.id_branch}>{b.branch_name}</option>
 								))}
@@ -86,9 +99,9 @@ const Register = () => {
 						<PasswordInput text='Palavra-Passe' value={password} setValue={setPassword} />
 						<PasswordInput text='Confirmar Palavra-Passe' value={repeat} setValue={setRepeat} />
 
-            <PrimaryButton type='submit' content={<h6>Registar</h6>} action={() => navigate("/register/representative")} />
-						{error && (<p className='error-message'>{errorMessage}</p>)}
-					</form>
+            <PrimaryButton content={<h6>Registar</h6>} action={submit} />
+						{errorMessage && (<p className='error-message'>{errorMessage}</p>)}
+					</div>
 
           <div className='help text-center'>
             <p>Já tem uma conta criada? <a href="\">Faça login</a></p>

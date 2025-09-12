@@ -59,6 +59,39 @@ export async function listStudents(token, setStatus, setErrorMessage) {
 
 }
 
+export async function registerStudent(data, setStatus, setErrorMessage) {
+
+	try {
+
+		const res = await fetch(`${apiUrl}/student/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+			body: JSON.stringify(data),
+    });
+
+		const responseData = await res.json();
+
+		if (res.ok) {
+      setStatus(res.status);
+      setErrorMessage("");
+      return true;
+
+    } else {
+      setStatus(res.status);
+      setErrorMessage(responseData.message || "Erro ao criar Aluno");
+      return false;
+    }
+
+	} catch (error) {
+    setStatus(500);
+    setErrorMessage("Erro de rede ou servidor");
+    return false;
+  }
+	
+}
+
 export async function createStudent(token, data, setStatus, setErrorMessage) {
 	
 	try {
@@ -119,6 +152,28 @@ export async function editStudent(token, id, data, setStatus, setErrorMessage) {
 
 	return false;
 	
+}
+
+export async function deleteStudent(token, id, setStatus, setErrorMessage) {
+	
+	try {
+		const res = await fetch(`${apiUrl}/student/${id}/delete`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": token,
+      }
+    });
+
+		const data = await res.json();
+
+    if(res.status === 200)
+      return true;
+
+	} catch {
+		return false;
+	}
+	
+	return false;
 }
 
 export async function addFavourite(token, id) {
