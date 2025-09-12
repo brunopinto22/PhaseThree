@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useDebounce } from "../../../../../utils";
+import { exportToCSV, useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill, SecundaryButton } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
 
@@ -105,7 +105,7 @@ const Students = ({list, role}) => {
 			{list.length > 0 && <>
 
 				<div className="captions d-flex flex-row justify-content-end align-items-center gap-3">
-					<SecundaryButton small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar alunos</p></div>} />
+					<SecundaryButton disabled={getFilteredList() === 0} action={() => exportToCSV(getFilteredList(), "students")} small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar alunos</p></div>} />
 				</div>
 
 			<table>

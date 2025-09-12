@@ -82,6 +82,10 @@ def getCalendar(request, pk):
                     "id": p.course.id_course,
                     "name": p.course.course_name,
                 },
+                "calendar": {
+                    "id": p.calendar.id_calendar,
+                    "title": p.calendar.__str__(),
+                },
                 "location": p.location,
                 "slots": p.slots,
                 "taken": p.students.count(),

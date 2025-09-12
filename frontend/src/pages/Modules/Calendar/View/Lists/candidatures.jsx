@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill, SecundaryButton, State } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
-import { exportProposal } from "../../../../../services";
 
 const Candidatures = ({list, placements, token, role}) => {
 	const iconMap = [

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useDebounce } from "../../../../../utils";
+import { exportProposalsToCSV, useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill, SecundaryButton } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
-import { exportProposal } from "../../../../../services";
 
 const Proposals = ({list, token, role}) => {
 	const navigate = useNavigate();
@@ -115,7 +114,7 @@ const Proposals = ({list, token, role}) => {
 				</div>
 
 				<div className="d-flex flex-row align-items-center gap-3">
-					<SecundaryButton small action={() => exportProposal(token, id, null, null, null, false)} content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar propostas</p></div>} />
+					<SecundaryButton disabled={getFilteredList().length === 0} small action={() => exportProposalsToCSV(getFilteredList(), "proposals")} content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar propostas</p></div>} />
 				</div>
 			</div>
 			

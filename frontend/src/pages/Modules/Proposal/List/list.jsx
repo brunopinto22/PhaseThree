@@ -2,8 +2,8 @@ import './list.css';
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OptionButton, PrimaryButton, Alert, Pill, SecundaryButton, Favourite } from '../../../../components';
-import { useDebounce } from './../../../../utils';
-import { exportProposal, listProposals } from '../../../../services';
+import { useDebounce, exportProposalsToCSV } from './../../../../utils';
+import { listProposals } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 const List = () => {
@@ -129,7 +129,7 @@ const List = () => {
 				<th className='fit-column text-center'><p>{id}</p></th>
 				<th><Pill type={type == 1 ? "Estágio" : "Projeto"} collapse={true} className='noselect' tooltip={type == 1 ? "Estágio" : "Projeto"} tooltipPosition='right' /></th>
 				<th><p>{title}</p></th>
-				<th><p>{company}</p></th>
+				<th><p>{company.name}</p></th>
 				<th><p>{location}</p></th>
 				<th><p>{calendar.title}</p></th>
 				<th>
@@ -159,7 +159,7 @@ const List = () => {
 				<div className="filters"></div>
 
 				<div className="options d-flex flex-row gap-3">
-					<SecundaryButton small action={() => exportProposal(userInfo.token)} content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
+					<SecundaryButton disabled={getFilteredList().length === 0} small action={() => exportProposalsToCSV(getFilteredList(), "proposals")} content={<div className='d-flex flex-row gap-2'><i className="bi bi bi-download"></i><p>Exportar propostas</p></div>} />
 					{(role === "admin" || permissions["Propostas"].edit) && <PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar proposta</p></div>} />}
 				</div>
 			</div>
