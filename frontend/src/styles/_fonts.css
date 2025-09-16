@@ -104,7 +104,7 @@ body, p {
 .markdown h4,
 .markdown h5,
 .markdown h6 {
-	margin-bottom: var(--fs-400);
+	margin: var(--fs-400) 0;
 }
 
 .markdown h1 { font-size: var(--fs-700); font-weight: 700; }

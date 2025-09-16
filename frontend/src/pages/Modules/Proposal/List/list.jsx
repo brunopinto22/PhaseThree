@@ -89,12 +89,12 @@ const List = () => {
 			return (
 				(filters.id === null || item.id.toString().includes(filters.id.toString())) &&
 				(filters.title === null || item.title.toLowerCase().includes(filters.title.toLowerCase())) &&
-				(filters.company === null || item.company.toLowerCase().includes(filters.company.toLowerCase())) &&
+				(filters.company === null || item.company.name.toLowerCase().includes(filters.company.toLowerCase())) &&
 				(
 					(filters.course === null || item.course.acronym.toLowerCase().includes(filters.course.toLowerCase())) ||
 					(filters.course === null || item.course.name.toLowerCase().includes(filters.course.toLowerCase()))
 				) &&
-				(filters.local === null || item.local.toLowerCase().includes(filters.local.toLowerCase())) &&
+				(filters.local === null || item.location.toLowerCase().includes(filters.local.toLowerCase())) &&
 				(filters.calendar === null || item.calendar.title.toLowerCase().includes(filters.calendar.toLowerCase())) &&
 				(filters.type === null || item.type === filters.type)
 			);
@@ -128,7 +128,7 @@ const List = () => {
 				{canFav && <th className='fit-column text-center'><p><Favourite value={favourite} small /></p></th>}
 				<th className='fit-column text-center'><p>{id}</p></th>
 				<th><Pill type={type == 1 ? "Estágio" : "Projeto"} collapse={true} className='noselect' tooltip={type == 1 ? "Estágio" : "Projeto"} tooltipPosition='right' /></th>
-				<th><p>{title}</p></th>
+				<th className="overflow-column"><p>{title}</p></th>
 				<th><p>{company.name}</p></th>
 				<th><p>{location}</p></th>
 				<th><p>{calendar.title}</p></th>
@@ -211,7 +211,7 @@ const List = () => {
 								</select>
 							</p>
 						</th>
-						<th><p><input placeholder='Título' onChange={(e) => setTitle(e.target.value)}/></p></th>
+						<th className="overflow-column"><p><input placeholder='Título' onChange={e => setTitle(e.target.value)} /></p></th>
 						<th><p><input placeholder='Empresa' onChange={(e) => setCompany(e.target.value)}/></p></th>
 						<th><p><input placeholder='Localização' onChange={(e) => setLocal(e.target.value)}/></p></th>
 						<th><p><input placeholder='Calendário' onChange={(e) => setCalendar(e.target.value)}/></p></th>

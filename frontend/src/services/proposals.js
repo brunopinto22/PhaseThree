@@ -108,7 +108,7 @@ export async function editProposal(token, id, data, setStatus, setErrorMessage) 
 
 		const responseData = await res.json();
 		setStatus(res.status)
-		setErrorMessage(responseData.message || "Erro ao criar curso");
+		setErrorMessage(responseData.message || "Erro ao editar proposta");
 
     if(res.status === 200)
       return true;

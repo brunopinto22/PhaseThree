@@ -93,10 +93,8 @@ export async function editCalendar(token, id, data, setStatus, setErrorMessage) 
 
 export async function deleteCalendar(token, id) {
 
-	// TODO : deleteCalendar
-
 	try {
-		const res = await fetch(`${apiUrl}/scientificArea/${id}/delete`, {
+		const res = await fetch(`${apiUrl}/calendar/${id}/delete`, {
       method: "DELETE",
       headers: {
         "Authorization": token,

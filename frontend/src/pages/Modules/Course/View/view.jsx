@@ -2,7 +2,7 @@ import './view.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButton, Alert, OptionButton } from '../../../../components';
-import { getCourse } from '../../../../services'
+import { deleteCalendar, getCourse } from '../../../../services'
 import { UserContext } from '../../../../contexts';
 import Markdown from "react-markdown";
 
@@ -29,6 +29,7 @@ function View() {
 
 	const [status, setStatus] = useState([]);
 	const [error, setError] = useState([]);
+	const [reload, setReload] = useState(false);
 
 	const [course, setCourse] = useState({
 		course_name: "",
@@ -41,7 +42,8 @@ function View() {
 		nProposals: 0,
 		branches: [],
 		commission: [],
-		calendars: []
+		calendars: [],
+		can_edit: false,
 	});
 
 
@@ -63,7 +65,7 @@ function View() {
 			}
 		}
 		fetchCourse();
-	}, [id, navigate, status]);
+	}, [id, navigate, status, reload]);
 
 
 	const title = course.course_name;
@@ -77,16 +79,13 @@ function View() {
 	const nTeachers = course.nTeachers;
 	const nProposals = course.nProposals;
 	const calendars = course.calendars;
+	const canEdit = course.can_edit;
 
-	const canEdit = role === "admin" || permissions["Cursos"].edit;
-
-	const canEditCalendars = role === "admin" || permissions["Calendários"].edit;
-	const canDeleteCalendars = role === "admin" || permissions["Calendários"].delete;
 
 	const [seeC, setSeeC] = useState(true);
 
 
-	const Row = ({id, title, submissionStart, submissionEnd, registrations, divulgation, candidatures, placements, active = true}) => {
+	const Row = ({id, title, submissionStart, submissionEnd, registrations, divulgation, candidatures, placements, active = true, can_edit, can_delete}) => {
 		
 		const view = () => {
 			navigate("/calendar/view?id="+id);
@@ -94,6 +93,11 @@ function View() {
 
 		const edit = () => {
 			navigate("/calendar/edit?id="+id);
+		}
+
+		const remove = async () => {
+			await deleteCalendar(userInfo.token, id);
+			setReload(!reload);
 		}
 
 		return(
@@ -108,8 +112,8 @@ function View() {
 				<th className='fit-column'>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
-						{canEditCalendars && <OptionButton type='edit' action={edit} />}
-						{canDeleteCalendars && <OptionButton type='delete' action={view} />}
+						{can_edit && <OptionButton type='edit' action={edit} />}
+						{can_delete && <OptionButton type='delete' action={remove} />}
 					</div>
 				</th>
 			</tr>

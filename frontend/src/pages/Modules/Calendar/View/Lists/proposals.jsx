@@ -83,7 +83,6 @@ const Proposals = ({list, token, role}) => {
 				<th><Pill type={type == 1 ? "Estágio" : "Projeto"} collapse={true} className='noselect' tooltip={type == 1 ? "Estágio" : "Projeto"} tooltipPosition="right" /></th>
 				<th className="overflow-column"><p>{title}</p></th>
 				<th><p>{company.name}</p></th>
-				<th><p>{course.name}</p></th>
 				<th><p>{location}</p></th>
 				<th><p style={{textAlign: 'center'}}>{taken} / {slots}</p></th>
 				<th>
@@ -151,7 +150,6 @@ const Proposals = ({list, token, role}) => {
 					</th>
 					<th className="overflow-column"><p><input placeholder='Título' onChange={e => setTitle(e.target.value)} /></p></th>
 					<th><p><input placeholder='Empresa' onChange={e => setCompany(e.target.value)} /></p></th>
-					<th><p><input placeholder='Curso' onChange={e => setCourse(e.target.value)} /></p></th>
 					<th><p><input placeholder='Localização' onChange={e => setLocal(e.target.value)} /></p></th>
 					<th style={{width: 0}}><p>Vagas</p></th>
 					<th className="fit-column"></th>

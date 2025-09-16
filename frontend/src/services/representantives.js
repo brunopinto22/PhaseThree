@@ -29,7 +29,7 @@ export async function getRepresentative(token, id, setStatus, setErrorMessage) {
 	
 }
 
-export async function registerRepresentantive(data, setStatus, setErrorMessage) {
+export async function registerRepresentative(data, setStatus, setErrorMessage) {
 
 	try {
 
@@ -60,4 +60,32 @@ export async function registerRepresentantive(data, setStatus, setErrorMessage) 
     return false;
   }
 	
+}
+
+export async function editRepresentative(token, id, data, setStatus, setErrorMessage) {
+	
+	try {
+		const res = await fetch(`${apiUrl}/representative/${id}/edit`, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": token,
+			},
+			body: JSON.stringify(data),
+		});
+
+		const responseData = await res.json();
+		setStatus(res.status)
+		setErrorMessage(responseData.message || "Erro ao editar aluno");
+
+		if(res.status === 200)
+			return true;
+		return false;
+
+	} catch {
+		return false;
+	}
+
+	return false;
+
 }

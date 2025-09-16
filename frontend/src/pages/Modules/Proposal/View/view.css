@@ -16,7 +16,7 @@
 }
 
 #proposal .main {
-	gap: var(--spacing-2xl);
+	gap: var(--spacing-xl);
 }
 
 #proposal .title-container {

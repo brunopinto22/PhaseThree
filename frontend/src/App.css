@@ -274,7 +274,10 @@ table td:first-child {
   width: 1%;
 }
 .overflow-column {
-	max-width: 30ch;
+	min-width: 30ch;
+	max-width: 64ch;
+}
+.overflow-column p {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
