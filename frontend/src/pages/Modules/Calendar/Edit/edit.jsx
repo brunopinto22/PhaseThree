@@ -142,7 +142,7 @@ const Edit = () => {
 			<section className="inputs d-flex flex-column p-0">
 				<div className="inputs col d-flex flex-row">
 					<Dropdown className='col' text='Ano letivo' value={year} setValue={setYear}>
-						{Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 1 + i).map((d) => (
+						{Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 2 + i).map((d) => (
 							<option key={d} value={d}>{d}/{d+1}</option>
 						))}
 					</Dropdown>
