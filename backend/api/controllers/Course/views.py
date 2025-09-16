@@ -37,6 +37,31 @@ def getCourse(request, pk):
             )
         ).order_by('is_active_order', '-calendar_year', 'semester_order')
 
+        can_edit = False
+        can_delete = False
+
+        can_edit_c = False
+        can_delete_c = False
+
+
+        if user_type == "admin":
+            can_edit = can_edit_c = can_delete = can_delete_c = True
+
+        elif user_type == "teacher":
+            t = Teacher.objects.get(user__email=user_email)
+            can_edit = can_edit_c = c.commission.filter(id_teacher=t.id_teacher).exists()
+            can_delete = can_delete_c = c.responsible == t
+
+            module = Module.objects.get(module_name='Cursos')
+            permission = Permissions.objects.get(teacher=t, module=module)
+            can_edit = can_edit or permission.can_edit
+            can_delete = can_delete or permission.can_delete
+
+            module = Module.objects.get(module_name='Calendários')
+            permission = Permissions.objects.get(teacher=t, module=module)
+            can_edit_c = can_edit_c or permission.can_edit
+            can_delete_c = can_delete_c or permission.can_delete
+
         data = {
             "course_name": c.course_name,
             "scientific_area_id": c.scientific_area.id_area,
@@ -79,19 +104,20 @@ def getCourse(request, pk):
                     "registrations": cl.registrations.strftime("%d/%m/%Y") if cl.registrations else None,
                     "candidatures": cl.candidatures.strftime("%d/%m/%Y"),
                     "placements": cl.placements.strftime("%d/%m/%Y"),
+                    "can_edit": can_edit_c,
+                    "can_delete": can_delete_c,
                 }
                 for cl in calendars
-            ]
+            ],
+            "can_edit": can_edit,
+            "can_delete": can_delete,
         }
 
         return JsonResponse(data, status=HTTP_200_OK, safe=False)
     except Course.DoesNotExist:
         return Response({"message": "Curso não encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET"])
