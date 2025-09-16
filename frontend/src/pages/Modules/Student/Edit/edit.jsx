@@ -38,11 +38,11 @@ const Row = ({index, name, state, onChange, onDelete}) => {
 
 
 const Edit = () =>  {
-	const token = localStorage.getItem("access_token");
-
+	
 	const navigate = useNavigate();
 	const { userInfo } = useContext(UserContext);
 	const role = userInfo?.role;
+	const token = userInfo?.token;
 	const permissions = userInfo?.perms || {
 		Calendários: { view: false, edit: false, delete: false },
 		Cursos: { view: false, edit: false, delete: false },

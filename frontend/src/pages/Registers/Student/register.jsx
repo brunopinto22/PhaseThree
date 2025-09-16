@@ -34,8 +34,8 @@ const Register = () => {
 	const [courses, setCourses] = useState([]);
 	useEffect(() => {
     const fetchCourses = async () => {
-			const courses = await listCourses(null, setStatus, setErrorMessage);
-			setCourses(courses);
+			const cs = await listCourses(null, setStatus, setErrorMessage);
+			setCourses(cs.filter((c) => c.active_calendars_registrations));
     };
     fetchCourses();
   }, []);
@@ -59,6 +59,7 @@ const Register = () => {
 		};
 
 		if(registerStudent(data, setStatus, setErrorMessage)){
+			navigate("/")
 		}
 	}
 
