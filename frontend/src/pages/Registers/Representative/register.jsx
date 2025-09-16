@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from './../../../assets/imgs/logo.png';
 import bg from './.././../../assets/imgs/company.jpg';
 import { PrimaryButton, TertiaryButton, TextInput, PasswordInput } from './../../../components';
-import { getSupportEmail, registerCompany, registerRepresentantive } from '../../../services';
+import { getSupportEmail, registerCompany, registerRepresentative } from '../../../services';
 import { CompanyContext } from '../../../contexts';
 
 const Register = () => {
@@ -72,7 +72,7 @@ const Register = () => {
 				navigate("/");
 			}
 		} else {
-			if(registerRepresentantive(data, setStatus, setErrorM)) {
+			if(registerRepresentative(data, setStatus, setErrorM)) {
 				navigate("/");
 			}
 		}
