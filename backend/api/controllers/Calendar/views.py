@@ -212,7 +212,7 @@ def createCalendar(request):
 
         return Response({"message":"Calendário criado com sucesso."}, status=status.HTTP_201_CREATED)
     except Course.DoesNotExist:
-        return Response({"message": "Calendário não encontrado."}, status=HTTP_404_NOT_FOUND)
+        return Response({"message": "Curso não encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response(
             {"error": "Erro interno do servidor", "details": str(e)},
@@ -275,14 +275,46 @@ def editCalendar(request, pk):
         return Response({"message": "Calendário editado com sucesso."}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return Response(
-            {"error": "Erro interno do servidor", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['DELETE'])
 def deleteCalendar(request, pk):
     auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
 
-    return Response({"message": "deleteCalendar"}, status=status.HTTP_200_OK)
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type not in ["admin", "teacher"]:
+        return Response({"message": "Sem permissão para remover um Calendário"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        c = Calendar.objects.get(id_calendar=pk)
+
+        if user_type == "teacher":
+            teacher = Teacher.objects.get(user__email=user_email)
+            if c.course.commission.filter(id=teacher.id).exists():
+                pass
+
+            module = Module.objects.get(module_name='Calendários')
+            permission = Permissions.objects.get(teacher=teacher, module=module)
+            if not permission.can_delete:
+                return Response({"message": "Sem permissão para eliminar o Calendário"}, status=HTTP_401_UNAUTHORIZED)
+
+        for s in Student.objects.filter(calendar=c):
+            s.user.delete()
+            s.delete()
+
+        for p in Proposal.objects.filter(calendar=c):
+            p.delete()
+
+        c.delete()
+        return Response({"message": "Calendário eliminado com sucesso"}, status=status.HTTP_200_OK)
+
+    except Teacher.DoesNotExist:
+        return Response({"message": "Docente não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Calendar.DoesNotExist:
+        return Response({"message": "Calendário não encontrado."}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
