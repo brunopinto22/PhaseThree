@@ -6,7 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, SecundaryButton, TextInput, Dropdown, TextArea, CheckBox, Alert } from '../../../../components';
 import { UserContext } from '../../../../contexts';
 import { getCompany, getCourse, listCourses } from '../../../../services';
-import { createProposal, getProposal } from '../../../../services/proposals';
+import { createProposal, editProposal, getProposal } from '../../../../services';
 
 const Edit = () =>  {
 
@@ -43,7 +43,7 @@ const Edit = () =>  {
 	const [selection, setSelection] = useState("");
 	const [conditions, setConditions] = useState("");
 
-	const [type, setType] = useState(typeUrl === "project" ? 2 : null);
+	const [type, setType] = useState(typeUrl === "project" ? 2 : userInfo?.role === "representative" ? 1 : null);
 	const [course, setCourse] = useState(null);
 	const [branch, setBranch] = useState([]);
 	const [calendar, setCalendar] = useState(null);
@@ -68,7 +68,7 @@ const Edit = () =>  {
 		if (id && !isNew) {
 			getProposal(userInfo.token, id, setStatus, setError).then(data => {
 					if (!data) return;
-					setCompany(data.company_id);
+					setCompany(data.company.id || null);
 					setTitle(data.title);
 					setDescription(data.description);
 					setTechnologies(data.technologies || "");
@@ -78,23 +78,14 @@ const Edit = () =>  {
 					setConditions(data.conditions || "");
 					setType(data.type);
 					setCourse(data.course.id);
-					setBranch(data.branches || []);
+					setBranch((data.branches || []).map(branch => branch.id));
 					setCalendar(data.calendar.id);
-					setFormat(data.work_format);
-					setLocalization(data.location);
+					setFormat(data.format);
+					setLocalization(data.local);
 					setSchedule(data.schedule);
 					setSlots(data.slots);
 					setObjectives(data.objectives || null);
-					if (data.advisor_id) {
-						setResponsible(data.advisor_id);
-						const advisor = data.advisor_data || {};
-						setResponsibleName(advisor.name || "");
-						setResponsibleEmail(advisor.email || "");
-					} else if (data.advisor_data) {
-						setResponsible(-1);
-						setResponsibleName(data.advisor_data.name || "");
-						setResponsibleEmail(data.advisor_data.email || "");
-					}
+					setResponsible(data?.advisor?.id || null);
 					setTec(data.technologies_active || false);
 					setMet(data.methodologies_active || false);
 					setObj(data.objectives_active || false);
@@ -179,7 +170,11 @@ const Edit = () =>  {
 			if(res !== -1)
 				navigate("/proposal/view?id=" + res);
 		}
-		// TODO : editProposal
+		else {
+			var res = await editProposal(userInfo.token, id, data, setStatus, setError)
+			if(res)
+				navigate("/proposal/view?id=" + id);
+		}
 
 	}
 	
@@ -215,7 +210,7 @@ const Edit = () =>  {
 				<div className="inputs d-flex flex-column w-100">
 					{isCreated && <Dropdown text='Empresa' placeholder='Selecione uma Empresa'/>}
 
-					<Dropdown text='Tipo de Proposta' value={type} setValue={(e) => setType(Number(e))} disabled={typeUrl != null || canEdit} >
+					<Dropdown text='Tipo de Proposta' value={type} setValue={(e) => setType(Number(e))} disabled={typeUrl != null || canEdit || userInfo?.role === "representative"} >
 						<option value={1}>Estágio</option>
 						<option value={2}>Projeto</option>
 					</Dropdown>
