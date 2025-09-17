@@ -185,7 +185,7 @@ def createCalendar(request):
 
         try:
             course = Course.objects.get(id_course=course_id)
-            if course.commission.filter(id=teacher.id).exists():
+            if course.commission.filter(id_teacher=teacher.id_teacher).exists():
                 has_permission = True
         except Course.DoesNotExist:
             return Response({"message": "Curso não encontrado"}, status=HTTP_404_NOT_FOUND)
@@ -252,15 +252,18 @@ def editCalendar(request, pk):
             pass
 
         course = calendar.course
-        if course.commission.filter(id=teacher.id).exists():
+        if course.commission.filter(id_teacher=teacher.id_teacher).exists():
             has_permission = True
 
         if not has_permission:
             return Response({"message": "Sem permissão para editar este Calendário"}, status=HTTP_401_UNAUTHORIZED)
 
     try:
-        calendar.year = request.data.get("year"),
-        calendar.semester = request.data.get("semester"),
+        year = request.data.get("year", calendar.calendar_year)
+        semester = request.data.get("semester", calendar.calendar_semester)
+
+        calendar.calendar_year = int(year) if year is not None else calendar.calendar_year
+        calendar.calendar_semester = int(semester) if semester is not None else calendar.calendar_semester
         calendar.submission_start = request.data.get("submission_start", calendar.submission_start)
         calendar.submission_end = request.data.get("submission_end", calendar.submission_end)
         calendar.divulgation = request.data.get("divulgation", calendar.divulgation)
@@ -293,14 +296,17 @@ def deleteCalendar(request, pk):
         c = Calendar.objects.get(id_calendar=pk)
 
         if user_type == "teacher":
-            teacher = Teacher.objects.get(user__email=user_email)
-            if c.course.commission.filter(id=teacher.id).exists():
-                pass
+            has_permission = False
 
-            module = Module.objects.get(module_name='Calendários')
-            permission = Permissions.objects.get(teacher=teacher, module=module)
-            if not permission.can_delete:
-                return Response({"message": "Sem permissão para eliminar o Calendário"}, status=HTTP_401_UNAUTHORIZED)
+            teacher = Teacher.objects.get(user__email=user_email)
+            if c.course.commission.filter(id_teacher=teacher.id_teacher).exists():
+                has_permission = True
+
+            if not has_permission:
+                module = Module.objects.get(module_name='Calendários')
+                permission = Permissions.objects.get(teacher=teacher, module=module)
+                if not permission.can_delete:
+                    return Response({"message": "Sem permissão para eliminar o Calendário"}, status=HTTP_401_UNAUTHORIZED)
 
         for s in Student.objects.filter(calendar=c):
             s.user.delete()

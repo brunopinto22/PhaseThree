@@ -30,9 +30,7 @@ const Edit = () => {
 
 	useEffect(() => {
 		if (!isNew && !id)
-			navigate("/");
-		else if(isNew && role !== "admin" && !permissions["Calendários"].edit)
-			navigate("/unauthorized")
+			navigate("/notfound");
 
 	}, [isNew, id, navigate, role, permissions]);
 
@@ -70,7 +68,7 @@ const Edit = () => {
 
 		const data = {
 			course_id: courseId || null,
-			year: year,
+			year: Number(year),
 			semester: semester,
 			submission_start: submissionStart,
 			submission_end: submissionEnd,
