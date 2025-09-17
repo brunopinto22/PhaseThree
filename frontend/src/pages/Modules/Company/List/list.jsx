@@ -2,7 +2,7 @@ import './list.css';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButton, Alert } from '../../../../components';
-import { listCompanies } from '../../../../services';
+import { deleteCompany, listCompanies } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 import { useDebounce } from '../../../../utils';
 
@@ -50,8 +50,9 @@ const List = () => {
 		const edit = () => {
 			navigate("/company/edit?id="+id);
 		}
-		const handleDelete = () => {
-			// TODO : eliminar Empresa
+		const handleDelete = async () => {
+			await deleteCompany(userInfo.token, id, setStatus, setError);
+			setReload(!reload);
 		}
 
 		return(

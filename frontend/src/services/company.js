@@ -121,6 +121,29 @@ export async function editCompany(token, id, data, setStatus, setErrorMessage) {
 	
 }
 
+export async function deleteCompany(token, id, setStatus, setErrorMessage) {
+	
+	try {
+		const res = await fetch(`${apiUrl}/company/${id}/delete`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": token,
+      }
+    });
+
+		const data = await res.json();
+
+    if(res.status === 200)
+      return true;
+
+	} catch {
+		return false;
+	}
+	
+	return false;
+
+}
+
 export async function invite(token, email, setStatus, setErrorMessage) {
 
 	try {

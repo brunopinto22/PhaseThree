@@ -238,17 +238,50 @@ def editCompany(request, pk):
     except Company.DoesNotExist:
         return Response({"message": "Empresa não foi encontrada."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response(
-            {"message": "Erro interno do servidor", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['DELETE'])
 def deleteCompany(request, pk):
     auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
 
-    return Response({"message": "deleteCompany"}, status=status.HTTP_200_OK)
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    elif user_type not in ["admin", "teacher"]:
+        return Response({"message": "Sem permissão para remover a Empresa"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    elif user_type == "teacher":
+        teacher = Teacher.objects.get(user__email=user_email)
+        module = Module.objects.get(module_name='Empresas')
+        permission = Permissions.objects.get(teacher=teacher, module=module)
+        if not permission.can_delete:
+            return Response({"message": "Sem permissão para remover a Empresas"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+
+        c = Company.objects.get(id_company=pk)
+
+        for rep in c.representatives.all():
+            rep.user.delete()
+            rep.delete()
+
+        for p in Proposal.objects.filter(company=c):
+            p.delete()
+
+        c.delete()
+
+        return Response({"message": "Empresa removida com sucesso"}, status=status.HTTP_200_OK)
+
+    except Company.DoesNotExist:
+        return Response({"message": "Empresa não foi encontrada."}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
