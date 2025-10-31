@@ -1,7 +1,7 @@
 export async function authorization(authorizedRoles) {
     const access_token = localStorage.getItem("access_token");
 
-    const apiUrl = process.env.REACT_APP_API_URL;
+    const apiUrl = process.env.REACT_APP_API_URL || '/api';
 
     if (!access_token) {
         console.error("No access token found.");

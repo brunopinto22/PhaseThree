@@ -27,6 +27,7 @@ class ApiConfig(AppConfig):
                             username="admin",
                             email=admin_email,
                             password=admin_password,
+                            user_type="admin",
                             is_staff=True,
                             is_superuser=True
                         )

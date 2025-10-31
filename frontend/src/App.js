@@ -92,13 +92,13 @@ function App() {
 				setCompany(null);
 
 				setUserInfo({
-					pfp: storedPfp,
-					name: storedName,
-					id: storedId,
-					token: storedToken,
-					role: storedRole,
-					perms: p,
-					company: storedComp === undefined ? null : storedComp,
+					pfp: null,
+					name: null,
+					id: null,
+					token: null,
+					role: null,
+					perms: d_perms,
+					company: null,
 				});
 			}
 			setLoading(false)
