@@ -22,12 +22,20 @@ This separation allows for a clear division between data handling and user inter
 
 ## 🛠️ Technology Stack
 
-- Frontend: [React](https://reactjs.org/), HTML, CSS, JavaScript 
-- Backend: [Django](https://www.djangoproject.com/), Python
-- Design: [Figma](https://www.figma.com/)
+- **Frontend**: [React](https://reactjs.org/) 18.3, Bootstrap 5, HTML, CSS, JavaScript
+- **Backend**: [Django](https://www.djangoproject.com/) 5.2, Django REST Framework, Python 3.12
+- **Database**: PostgreSQL 16, SQLite3 (dev)
+- **Task Queue**: Celery 5.3+ with Redis
+- **Authentication**: JWT (PyJWT)
+- **Web Server**: Nginx, Gunicorn
+- **Containerization**: Docker & Docker Compose
+- **Document Generation**: docxtpl, openpyxl
+- **Design**: [Figma](https://www.figma.com/)
 
 
 ## 📚 Documentation
+
+### Project Documentation
 
 All project documentation is available in the `assets/docs` directory. The folder contains the following files:
 
@@ -35,10 +43,37 @@ All project documentation is available in the `assets/docs` directory. The folde
 - **Proposta** – Formal document of the initial project proposal.  
 - **Funcionalidades** – Functional requirements using the MoSCoW notation, including their final implementation status.  
 - **Endpoints** – Complete documentation of all system endpoints and their implementation state.  
-- **Design da Interface** – Documentation of the application’s design and interface structure.  
-
+- **Design da Interface** – Documentation of the application's design and interface structure.
 
 ## 🚀 How to Run
+
+### 🐳 Docker (Recommended)
+
+The easiest way to run the entire system is using Docker:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd PhaseThree
+
+# Build and start all services
+docker-compose up -d --build
+
+# Access the application at http://localhost
+```
+
+📖 **For detailed Docker setup instructions, see [DOCKER_SETUP.md](./DOCKER_SETUP.md)**
+
+**Default Login:**
+- Username: `admin@localhost.pt`
+- Password: `admin123`
+
+**Access Points:**
+- Frontend: http://localhost
+- Backend API: http://localhost/api/
+- Admin Panel: http://localhost/admin/
+
+### 💻 Manual Setup (Development)
 
 This project consists of two main applications: the Backend API and the Frontend Application. Each has its own setup and running instructions detailed in their respective directories.
 

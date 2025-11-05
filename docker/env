@@ -1,0 +1,20 @@
+DJANGO_SECRET_KEY='django-insecure-jb9q)28veyzf%&+o48gdt0m)-%4td-e9^393ypw-+*%kdf_h!e'
+DJANGO_DEBUG=False
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+CSRF_TRUSTED_ORIGINS=http://localhost,http://127.0.0.1
+
+POSTGRES_DB=phasethree
+POSTGRES_USER=phasethree
+POSTGRES_PASSWORD=changeme
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+FRONTEND_URL=http://localhost
+
+# Email configuration (for development - uses console backend)
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+
+# JWT configuration
+JWT_SECRET_KEY=my_very_very_secret_jwt_key_change_in_production
+
+
