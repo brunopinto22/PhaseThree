@@ -30,7 +30,7 @@ processes = []
 
 # Django server
 print("🚀 Starting Django server...")
-processes.append(subprocess.Popen(["python", "manage.py", "runserver"]))
+processes.append(subprocess.Popen(["python3", "manage.py", "runserver"]))
 
 # Celery worker (usando solo para Windows)
 print("🔹 Starting Celery worker...")
