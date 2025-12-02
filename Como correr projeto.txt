@@ -1,0 +1,16 @@
+Num terminal na raiz do projeto (W:\MEI-UC-Repositorios\GP-CLONE-A_USAR\PhaseThree>) fazer 
+docker composse up -d db
+
+Num terminal na pasta do backend fazer
+venv\Scripts\activate 
+e depois
+python manage.py runserver 8000
+
+Num terminal na pasta do frontend fazer
+npm start
+
+Para criar o venv
+python -m venv venv
+venv\Scripts\activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt

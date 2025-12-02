@@ -30,7 +30,8 @@ COPY backend /app
 RUN mkdir -p /app/staticfiles /app/media
 
 COPY docker/backend/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Strip Windows line endings to avoid exec "no such file"
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 8000
 
