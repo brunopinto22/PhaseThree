@@ -1,6 +1,5 @@
 import os
 import re
-import tempfile
 import traceback
 from copy import copy
 from io import BytesIO
@@ -15,7 +14,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import *
 from docxtpl import DocxTemplate
-from docx2pdf import convert
 
 from api.models import *
 from api.token_manager import *
@@ -534,30 +532,21 @@ def generatePdf(request, pk):
         }
         doc.render(context)
 
-        # Create temp files
-        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_docx:
-            doc.save(tmp_docx.name)
-            tmp_docx_path = tmp_docx.name
-
-        tmp_pdf_fd, tmp_pdf_path = tempfile.mkstemp(suffix=".pdf")
-        os.close(tmp_pdf_fd)
-
-        # Convert to PDF
-        convert(tmp_docx_path, tmp_pdf_path)
-        with open(tmp_pdf_path, "rb") as f:
-            pdf_bytes = f.read()
-
-        # Clean temp files
-        os.remove(tmp_docx_path)
-        os.remove(tmp_pdf_path)
+        # Save to bytes buffer (return DOCX directly - PDF conversion requires LibreOffice)
+        docx_buffer = BytesIO()
+        doc.save(docx_buffer)
+        docx_buffer.seek(0)
 
         raw_filename = f"{p.calendar.calendar_year}-P{p.id_proposal}-{p.calendar.calendar_semester}S-{p.proposal_title}"
-
         normalized = unicodedata.normalize('NFKD', raw_filename).encode('ASCII', 'ignore').decode('ASCII')
-        safe_filename = re.sub(r'[\\/*?:"<>|]', "_", normalized) + ".pdf"
+        safe_filename = re.sub(r'[\\/*?:"<>|]', "_", normalized) + ".docx"
 
-        response = FileResponse(BytesIO(pdf_bytes), as_attachment=True, filename=safe_filename,
-                                content_type="application/pdf")
+        response = FileResponse(
+            docx_buffer,
+            as_attachment=True,
+            filename=safe_filename,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
         response['Access-Control-Expose-Headers'] = 'Content-Disposition, X-Filename'
         return response
 

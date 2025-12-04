@@ -1,18 +1,16 @@
-import './view.css';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import '../View/view.css';
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { PrimaryButton, Alert, ProposalCard, StateTracker } from '../../../../components';
-import { getCandidature } from '../../../../services';
+import { getStudentCandidature } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
-function View() {
+function MyCandidature() {
 
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
-	const id = searchParams.get('id');
-	const { token, type } = useContext(UserContext);
+	const { token } = useContext(UserContext);
 
-	const [candidature, setCandidature] = useState(null);
+	const [data, setData] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState(null);
 	const [errorMessage, setErrorMessage] = useState("");
@@ -22,14 +20,14 @@ function View() {
 	useEffect(() => {
 		const fetchData = async () => {
 			setLoading(true);
-			const data = await getCandidature(token, id, setStatus, setErrorMessage);
-			if (data) {
-				setCandidature(data);
+			const result = await getStudentCandidature(token, setStatus, setErrorMessage);
+			if (result) {
+				setData(result);
 			}
 			setLoading(false);
 		};
-		if (id) fetchData();
-	}, [token, id]);
+		fetchData();
+	}, [token]);
 
 	// Map candidature state to StateTracker number
 	const stateMap = {
@@ -51,39 +49,68 @@ function View() {
 		);
 	}
 
-	if (errorMessage || !candidature) {
+	if (errorMessage) {
 		return (
 			<div id='candidature' className='d-flex flex-column'>
-				<Alert text={errorMessage || "Candidatura não encontrada"} type='danger' />
+				<Alert text={errorMessage} type='danger' />
 			</div>
 		);
 	}
 
-	const { student, proposals, state, calendar, can_edit } = candidature;
+	// No candidature yet - show prompt to submit
+	if (!data?.candidature) {
+		return (
+			<div id='candidature' className='d-flex flex-column'>
+				<h3>Minha Candidatura</h3>
+				
+				{data?.calendar ? (
+					<>
+						<Alert text='Ainda não submeteu uma candidatura' type='warning' />
+						
+						<div className='info-box d-flex flex-column gap-2 my-3'>
+							<p><strong>Calendário:</strong> {data.calendar.title}</p>
+							<p><strong>Propostas a selecionar:</strong> {data.calendar.min_proposals} a {data.calendar.max_proposals}</p>
+							<p><strong>Período de candidaturas:</strong> {data.calendar.candidatures_start} a {data.calendar.candidatures_end}</p>
+						</div>
+
+						{data.can_submit ? (
+							<div className="col-md-4">
+								<PrimaryButton 
+									content={<h6>Submeter Candidatura</h6>} 
+									action={() => navigate("/candidature/edit")} 
+								/>
+							</div>
+						) : (
+							<Alert text='Fora do período de candidaturas' type='info' />
+						)}
+					</>
+				) : (
+					<Alert text='Não tem um calendário atribuído. Contacte a coordenação do curso.' type='danger' />
+				)}
+			</div>
+		);
+	}
+
+	const { candidature, calendar } = data;
+	const { proposals, state, can_edit } = candidature;
 	const stateNumber = stateMap[state] || 1;
 	
 	// Find accepted proposal if any
 	const acceptedProposal = proposals.find(p => p.state === 'accepted');
 
-	const parts = student.name.trim().split(" ");
-	const shortName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : student.name;
-
 	return (
 		<div id='candidature' className='d-flex flex-column'>
 
 			<div className="header d-flex flex-column">
-				<h3 className='title'>Estado da Candidatura</h3>
+				<h3 className='title'>Minha Candidatura</h3>
 				{acceptedProposal && (
 					<h6>
-						{acceptedProposal.title}{' '}
+						Colocado em: {acceptedProposal.title}{' '}
 						<span className='text-link' onClick={() => navigate("/proposal/view?id=" + acceptedProposal.id)}>
 							@{acceptedProposal.company.name}
 						</span>
 					</h6>
 				)}
-				<h6 className='sub-title text-link' onClick={() => navigate("/student/view?id=" + student.number)}>
-					{shortName} nº{student.number}
-				</h6>
 			</div>
 
 			<StateTracker currentState={stateNumber} />
@@ -92,7 +119,7 @@ function View() {
 				<div className="d-flex flex-row align-content-center">
 					<h4 className='d-flex flex-row align-items-center gap-2 noselect' style={{ cursor: "pointer" }} onClick={() => setSeeP(!seeP)}>
 						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeP ? "0" : "-90deg"})` }}></i>
-						<span>Propostas ({proposals.length})</span>
+						<span>Propostas Selecionadas ({proposals.length})</span>
 					</h4>
 				</div>
 				<div className={`collapsible ${seeP ? "" : "collapse"}`}>
@@ -116,15 +143,15 @@ function View() {
 				</div>
 			</div>
 
-			<div className="info-section">
+			<div className="info-section my-3">
 				<p><strong>Calendário:</strong> {calendar.title}</p>
 				<p><strong>Limites:</strong> {calendar.min_proposals} a {calendar.max_proposals} propostas</p>
 				<p><strong>Data de submissão:</strong> {candidature.submission_date}</p>
 			</div>
 
-			{can_edit && (type === 'admin' || type === 'teacher') && (
-				<div className="col">
-					<PrimaryButton content={<h6>Editar Candidatura</h6>} action={() => navigate("/candidature/edit?id=" + id)} />
+			{can_edit && (
+				<div className="col-md-4">
+					<PrimaryButton content={<h6>Editar Candidatura</h6>} action={() => navigate("/candidature/edit?id=" + candidature.id)} />
 				</div>
 			)}
 
@@ -133,4 +160,5 @@ function View() {
 
 }
 
-export default View;
+export default MyCandidature;
+

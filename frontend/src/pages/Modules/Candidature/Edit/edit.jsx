@@ -1,154 +1,229 @@
 import './edit.css';
-import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
+import { useState, useEffect, useContext } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { PrimaryButton, SecundaryButton, Alert, OptionButton, CheckBox } from '../../../../components';
+import { getCandidature, updateCandidature, getStudentCandidature, submitCandidature } from '../../../../services';
+import { listProposals } from '../../../../services';
+import { UserContext } from '../../../../contexts';
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, SecundaryButton, TextInput, Dropdown, CheckBox, Alert, OptionButton } from '../../../../components';
-
-const Edit = () =>  {
+const Edit = () => {
 
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
+	const { token, type } = useContext(UserContext);
 
 	const id = searchParams.get("id");
-  const isNew = searchParams.get("new");
-	
-	const [state, setState] = useState(null);
-	const [list, setList] = useState([
-		{
-			id: 1,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-		},
-		{
-			id: 2,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-		},
-		{
-			id: 3,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-		},
-	]);
+	const isNew = !id;
 
-	const [perms, setPerms] = useState({
-		Calendars: { view: true, edit: false, delete: false },
-		Course: { view: true, edit: false, delete: false },
-		Students: { view: true, edit: false, delete: false },
-		Teachers: { view: true, edit: false, delete: false },
-		Companies: { view: true, edit: false, delete: false },
-		Proposals: { view: true, edit: false, delete: false },
-		Candidatures: { view: true, edit: false, delete: false },
-	});
+	const [loading, setLoading] = useState(true);
+	const [submitting, setSubmitting] = useState(false);
+	const [status, setStatus] = useState(null);
+	const [errorMessage, setErrorMessage] = useState("");
+	const [successMessage, setSuccessMessage] = useState("");
 
-	// TODO : verificar se é o Admin~
-	const canEdit = true;
+	const [candidature, setCandidature] = useState(null);
+	const [calendar, setCalendar] = useState(null);
+	const [availableProposals, setAvailableProposals] = useState([]);
+	const [selectedProposals, setSelectedProposals] = useState([]);
 
-	if(isNew == null || !isNew) {
-		// TODO : pedir info API
-	}
+	useEffect(() => {
+		const fetchData = async () => {
+			setLoading(true);
 
+			if (type === 'student') {
+				// For students: get their candidature info and available proposals
+				const studentData = await getStudentCandidature(token, setStatus, setErrorMessage);
+				if (studentData) {
+					setCalendar(studentData.calendar);
+					if (studentData.candidature) {
+						setCandidature(studentData.candidature);
+						setSelectedProposals(studentData.candidature.proposals.map(p => p.id));
+					}
+				}
 
-	const submit = () => {
-			// TODO : submit editar
-	}
-	
+				// Get available proposals for student's calendar
+				const proposals = await listProposals(token, setStatus, setErrorMessage);
+				if (proposals) {
+					setAvailableProposals(proposals);
+				}
+			} else if (id) {
+				// For admin/teachers editing existing candidature
+				const data = await getCandidature(token, id, setStatus, setErrorMessage);
+				if (data) {
+					setCandidature(data);
+					setCalendar(data.calendar);
+					setSelectedProposals(data.proposals.map(p => p.id));
+				}
+			}
+
+			setLoading(false);
+		};
+		fetchData();
+	}, [token, id, type]);
+
+	const toggleProposal = (proposalId) => {
+		if (selectedProposals.includes(proposalId)) {
+			setSelectedProposals(selectedProposals.filter(id => id !== proposalId));
+		} else {
+			setSelectedProposals([...selectedProposals, proposalId]);
+		}
+		setErrorMessage("");
+		setSuccessMessage("");
+	};
+
+	const submit = async () => {
+		if (!calendar) return;
+
+		// Validate limits (REQ-1)
+		const count = selectedProposals.length;
+		if (count < calendar.min_proposals) {
+			setErrorMessage(`Deve selecionar pelo menos ${calendar.min_proposals} proposta(s). Selecionou ${count}.`);
+			return;
+		}
+		if (count > calendar.max_proposals) {
+			setErrorMessage(`Não pode selecionar mais de ${calendar.max_proposals} proposta(s). Selecionou ${count}.`);
+			return;
+		}
+
+		setSubmitting(true);
+		setErrorMessage("");
+
+		let success = false;
+		if (isNew || !candidature) {
+			// Submit new candidature
+			const result = await submitCandidature(token, selectedProposals, setStatus, setErrorMessage);
+			success = !!result;
+			if (success) {
+				setSuccessMessage("Candidatura submetida com sucesso!");
+				setTimeout(() => navigate("/candidature/view?id=" + result.candidature_id), 1500);
+			}
+		} else {
+			// Update existing candidature
+			const candidatureId = candidature.id || id;
+			success = await updateCandidature(token, candidatureId, selectedProposals, setStatus, setErrorMessage);
+			if (success) {
+				setSuccessMessage("Candidatura atualizada com sucesso!");
+				setTimeout(() => navigate("/candidature/view?id=" + candidatureId), 1500);
+			}
+		}
+
+		setSubmitting(false);
+	};
+
 	const cancel = () => {
 		if (window.history.length > 2)
 			navigate(-1);
 		else
 			navigate('/');
-	}
+	};
 
+	const Row = ({ id, proposal_number, title, company, slots, taken, favourite }) => {
+		const isSelected = selectedProposals.includes(id);
+		const slotsLeft = slots - taken;
 
-	const Row = ({id, companyName, proposalName, state}) => {
-		
 		const view = () => {
-			navigate("/proposal/view?id="+id);
-		}
-		const edit = () => {
-			// TODO : mudar estado
-		}
-		const handleDelete = () => {
-			// TODO : remover Proposta da Candidatura
-		}
+			navigate("/proposal/view?id=" + id);
+		};
 
-		return(
-			<tr className='table-row'>
-				<th><p>{id}</p></th>
-				<th><p>{proposalName}</p></th>
-				<th><p>{companyName}</p></th>
+		return (
+			<tr className={`table-row ${isSelected ? 'selected' : ''}`}>
 				<th>
-					<Dropdown text=''>
-						<option>Pendente</option>
-						<option>Colocado</option>
-						<option>Rejeitado</option>
-					</Dropdown>
+					<CheckBox 
+						checked={isSelected} 
+						onChange={() => toggleProposal(id)}
+						disabled={!isSelected && slotsLeft <= 0}
+					/>
 				</th>
+				<th><p>#{proposal_number}</p></th>
+				<th><p>{title}</p></th>
+				<th><p>{company?.name || 'ISEC'}</p></th>
+				<th><p>{slotsLeft}/{slots}</p></th>
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
-						<OptionButton type='remove' action={handleDelete} />
 					</div>
 				</th>
 			</tr>
 		);
+	};
+
+	if (loading) {
+		return (
+			<div id='candidature' className='d-flex flex-column'>
+				<Alert text='A carregar...' type='info' />
+			</div>
+		);
 	}
 
+	if (!calendar) {
+		return (
+			<div id='candidature' className='d-flex flex-column'>
+				<Alert text={errorMessage || "Não tem um calendário atribuído"} type='danger' />
+			</div>
+		);
+	}
 
-	return(
+	const canSubmit = type === 'student' && calendar && !candidature?.can_edit === false;
+
+	return (
 		<div id='candidature' className='d-flex flex-column'>
 
 			<section className='row p-0'>
-				<h4>Editar Candidatura</h4>
-				<div className='d-flex flex-column gap-3'>
-					
-					<div className="row">
-						<Dropdown className='col-4' text='Estado da Candidatura' setValue={setState}>
-							<option>Submetido</option>
-							<option>Revisão</option>
-							<option>Colocado</option>
-							<option>Protocolo ISEC</option>
-							<option>Protocolo Empresa</option>
-							<option>Protocolo Aluno</option>
-							<option>Pode iniciar Estágio</option>
-						</Dropdown>
-					</div>
-
+				<h4>{isNew || !candidature ? 'Submeter Candidatura' : 'Editar Candidatura'}</h4>
+				
+				<div className='info-box d-flex flex-column gap-2 mb-3'>
+					<p><strong>Calendário:</strong> {calendar.title}</p>
+					<p>
+						<strong>Propostas a selecionar:</strong>{' '}
+						<span className={selectedProposals.length < calendar.min_proposals || selectedProposals.length > calendar.max_proposals ? 'text-danger' : 'text-success'}>
+							{selectedProposals.length}
+						</span>
+						{' '}de {calendar.min_proposals} a {calendar.max_proposals}
+					</p>
+					{calendar.candidatures_start && calendar.candidatures_end && (
+						<p><strong>Período:</strong> {calendar.candidatures_start} a {calendar.candidatures_end}</p>
+					)}
 				</div>
+
+				{successMessage && <Alert text={successMessage} type='success' />}
+				{errorMessage && <Alert text={errorMessage} type='danger' />}
 			</section>
 
 			<section className='p-0'>
-				<h4>Propostas</h4>
+				<h4>Propostas Disponíveis</h4>
 
-				{list.length === 0 && <Alert text='Não existe nenhum docente de momento' type='danger' />}
+				{availableProposals.length === 0 && (
+					<Alert text='Não existem propostas disponíveis de momento' type='warning' />
+				)}
 
-				{list.length > 0 && (
+				{availableProposals.length > 0 && (
 					<table>
-						<tr className='header'>
-							<th><p>#</p></th>
-							<th><p>Proposta</p></th>
-							<th><p>Empresa/Docente</p></th>
-							<th><p>Estado</p></th>
-							<th></th>
-						</tr>
-
-						{list.map(proposal => (
-							<Row key={proposal.id} {...proposal} />
-						))}
-						
+						<thead>
+							<tr className='header'>
+								<th className='fit-column'></th>
+								<th className='fit-column'><p>#</p></th>
+								<th><p>Proposta</p></th>
+								<th><p>Empresa/Docente</p></th>
+								<th className='fit-column'><p>Vagas</p></th>
+								<th className='fit-column'></th>
+							</tr>
+						</thead>
+						<tbody>
+							{availableProposals.map(proposal => (
+								<Row key={proposal.id} {...proposal} />
+							))}
+						</tbody>
 					</table>
 				)}
-				
+
 			</section>
 
 			<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-5 p-0">
-				<PrimaryButton action={submit} content={<h6>Guardar</h6>} />
+				<PrimaryButton 
+					action={submit} 
+					content={<h6>{submitting ? 'A submeter...' : (isNew || !candidature ? 'Submeter' : 'Guardar')}</h6>}
+					disabled={submitting || selectedProposals.length < calendar.min_proposals || selectedProposals.length > calendar.max_proposals}
+				/>
 				<SecundaryButton action={cancel} content={<h6>Cancelar</h6>} />
 			</section>
 		</div>

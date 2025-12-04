@@ -120,10 +120,10 @@ class Student(models.Model):
             "average",
             "subjects_done",
             "student_course",
-            "student_branch",
             "student_ects",
             "calendar",
         ]
+        # Note: student_branch is optional (nullable in model)
 
         for field in required_fields:
             value = getattr(self, field, None)

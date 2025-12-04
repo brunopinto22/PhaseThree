@@ -12,7 +12,7 @@ import {
 	ListProposals, ViewProposal, EditProposal,
 	ListCompanies, ViewCompany, EditCompany,
 	ViewRepresentative, EditRepresentative,
-	ListCandidatures, ViewCandidature, EditCandidature,
+	ListCandidatures, ViewCandidature, EditCandidature, MyCandidature,
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
 } from './pages';
@@ -227,6 +227,7 @@ function App() {
 							<Route path="list" element={<ListCandidatures />} />
 							<Route path="view" element={<ViewCandidature />} />
 							<Route path="edit" element={<EditCandidature />} />
+							<Route path="me" element={<MyCandidature />} />
 						</Route>
 
 						{/* System Settings */}

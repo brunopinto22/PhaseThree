@@ -19,3 +19,5 @@ export * from './system';
 export * from './teachers';
 
 export * from './company';
+
+export * from './candidatures';

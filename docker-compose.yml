@@ -12,6 +12,10 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: phasethree_redis
+
   backend:
     build:
       context: .
@@ -22,9 +26,12 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: gestor_estagios.settings
       POSTGRES_HOST: db
+      CELERY_BROKER_URL: redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - staticfiles:/app/staticfiles
       - media:/app/media

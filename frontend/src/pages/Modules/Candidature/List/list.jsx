@@ -1,138 +1,87 @@
 import './list.css';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
+import { listCandidatures, deleteCandidature } from '../../../../services';
+import { UserContext } from '../../../../contexts';
 
 const List = () => {
 
 	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
+	const { token } = useContext(UserContext);
 
-	const iconMap = [
-		"bi-arrow-clockwise",
-		"bi-check2",
-		"bi-file-binary",
-		"bi-journal-bookmark-fill",
-		"bi-building-check",
-		"bi-journal-check",
-		"bi-rocket-fill",
-	];
-		
-	const text = [
-		"Pendente",
-		"Colocado",
-		"Protocolo Gerado",
-		"Protocolo ISEC",
-		"Protocolo Empresa",
-		"Protocolo Aluno",
-		"Em estágio",
-	]
+	const calendarId = searchParams.get("calendar");
 
-	const btnClass = [
-		"pending",
-		"accpeted",
-		"protocol-generated",
-		"protocol-isec",
-		"protocol-company",
-		"protocol-student",
-		"start",
-	];
+	const [list, setList] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [status, setStatus] = useState(null);
+	const [errorMessage, setErrorMessage] = useState("");
 
-	const [list, setList] = useState([
-		{
-      id: 1,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-    },
-		{
-      id: 2,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-    },
-		{
-      id: 3,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-    },
-		{
-      id: 4,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 4,
-    },
-		{
-      id: 5,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 5,
-    },
-		{
-      id: 6,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 6,
-    },
-		{
-      id: 7,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 7,
-    },
-  ]);
-	// TODO : pedir lista de Candidaturas	
-
+	useEffect(() => {
+		const fetchData = async () => {
+			setLoading(true);
+			const data = await listCandidatures(token, calendarId, setStatus, setErrorMessage);
+			if (data) {
+				setList(data);
+			}
+			setLoading(false);
+		};
+		fetchData();
+	}, [token, calendarId]);
 
 	const exportList = () => {
+		// TODO: implement export functionality
 	}
 
+	const handleDelete = async (id) => {
+		if (!window.confirm("Tem a certeza que deseja eliminar esta candidatura?")) return;
+		
+		const success = await deleteCandidature(token, id, setStatus, setErrorMessage);
+		if (success) {
+			setList(list.filter(c => c.id !== id));
+		}
+	}
 
-	const Row = ({id, studentName, studentNumber, companyName, proposalName, state}) => {
+	const Row = ({ id, student, state, proposals_count, accepted_proposal, can_edit, can_delete }) => {
 		
 		const view = () => {
-			navigate("/candidature/view?id="+id);
+			navigate("/candidature/view?id=" + id);
 		}
 		const edit = () => {
-			navigate("/candidature/edit?id="+id);
-		}
-		const handleDelete = () => {
-			// TODO : eliminar Candidatura
+			navigate("/candidature/edit?id=" + id);
 		}
 
-		return(
+		return (
 			<tr className='table-row'>
 				<th><State state={state} hideState={true} hideText={true} tooltip={true} /></th>
-				<th className='fit-column text-center'><p>{studentNumber}</p></th>
-				<th><p>{studentName}</p></th>
-				<th><p>{state > 1 ? (companyName) : '—'}</p></th>
-				<th><p>{state > 1 ? (proposalName) : '—'}</p></th>
+				<th className='fit-column text-center'><p>{student.number}</p></th>
+				<th><p>{student.name}</p></th>
+				<th><p>{accepted_proposal ? accepted_proposal.company : '—'}</p></th>
+				<th><p>{accepted_proposal ? accepted_proposal.title : `${proposals_count} proposta(s)`}</p></th>
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
-						<OptionButton type='edit' action={edit} />
-						<OptionButton type='delete' action={handleDelete} />
+						{can_edit && <OptionButton type='edit' action={edit} />}
+						{can_delete && <OptionButton type='delete' action={() => handleDelete(id)} />}
 					</div>
 				</th>
 			</tr>
 		);
 	}
 
-	return(
+	if (loading) {
+		return (
+			<div className='candidatures-list d-flex flex-column'>
+				<div className="top d-flex flex-row justify-content-between">
+					<div className="title"><h4>Candidaturas</h4></div>
+				</div>
+				<Alert text='A carregar...' type='info' />
+			</div>
+		);
+	}
+
+	return (
 		<div className='candidatures-list d-flex flex-column'>
 
 			<div className="top d-flex flex-row justify-content-between">
@@ -145,29 +94,43 @@ const List = () => {
 				</div>
 			</div>
 
-			<div className="captions d-flex flex-row align-items-center gap-3">
-				{iconMap.map((icon,index) => (
-					<><div className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length-1 && (<p>|</p>)}</>
-				))}
+			<div className="captions d-flex flex-row align-items-center gap-3 flex-wrap">
+				<div className="cap noselect d-flex flex-row align-items-center gap-2 pending"><i className="bi bi-arrow-clockwise"></i><p>Submetido</p></div>
+				<p>|</p>
+				<div className="cap noselect d-flex flex-row align-items-center gap-2 accpeted"><i className="bi bi-check2"></i><p>Colocado</p></div>
+				<p>|</p>
+				<div className="cap noselect d-flex flex-row align-items-center gap-2 protocol-generated"><i className="bi bi-file-binary"></i><p>Protocolo Gerado</p></div>
+				<p>|</p>
+				<div className="cap noselect d-flex flex-row align-items-center gap-2 protocol-isec"><i className="bi bi-journal-bookmark-fill"></i><p>Assinatura ISEC</p></div>
+				<p>|</p>
+				<div className="cap noselect d-flex flex-row align-items-center gap-2 protocol-company"><i className="bi bi-building-check"></i><p>Assinatura Empresa</p></div>
+				<p>|</p>
+				<div className="cap noselect d-flex flex-row align-items-center gap-2 protocol-student"><i className="bi bi-journal-check"></i><p>Assinatura Aluno</p></div>
+				<p>|</p>
+				<div className="cap noselect d-flex flex-row align-items-center gap-2 start"><i className="bi bi-rocket-fill"></i><p>Concluído</p></div>
 			</div>
 
-			{list.length === 0 && <Alert text='Não existe nenhum docente de momento' />}
+			{errorMessage && <Alert text={errorMessage} type='danger' />}
+
+			{list.length === 0 && !errorMessage && <Alert text='Não existe nenhuma candidatura de momento' />}
 
 			{list.length > 0 && (
 				<table>
-					<tr className='header'>
-						<th className='fit-column'><p>Estado</p></th>
-						<th className='fit-column'><p>Nº aluno</p></th>
-						<th><p>Aluno</p></th>
-						<th><p>Empresa/Docente</p></th>
-						<th><p>Proposta</p></th>
-						<th className='fit-column'></th>
-					</tr>
-
-					{list.map(candidature => (
-						<Row key={candidature.id} {...candidature} />
-					))}
-					
+					<thead>
+						<tr className='header'>
+							<th className='fit-column'><p>Estado</p></th>
+							<th className='fit-column'><p>Nº aluno</p></th>
+							<th><p>Aluno</p></th>
+							<th><p>Empresa/Docente</p></th>
+							<th><p>Proposta</p></th>
+							<th className='fit-column'></th>
+						</tr>
+					</thead>
+					<tbody>
+						{list.map(candidature => (
+							<Row key={candidature.id} {...candidature} />
+						))}
+					</tbody>
 				</table>
 			)}
 

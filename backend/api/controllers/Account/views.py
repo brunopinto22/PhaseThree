@@ -296,21 +296,28 @@ def summary(request):
             }
 
         elif user_type == "student":
-            s = Student.objects.get(user__email=user_email)
-            c = s.calendar
+            try:
+                s = Student.objects.get(user__email=user_email)
+                c = s.calendar
 
-            data = {
-                "is_missing_info": s.is_missing_info(),
-                "calendar": {
-                    "id": c.id_calendar,
-                    "title": str(c),
-                    "submission_start": c.submission_start.strftime("%d/%m/%Y"),
-                    "submission_end": c.submission_end.strftime("%d/%m/%Y"),
-                    "divulgation": c.divulgation.strftime("%d/%m/%Y"),
-                    "candidatures": c.candidatures.strftime("%d/%m/%Y"),
-                    "placements": c.placements.strftime("%d/%m/%Y"),
+                data = {
+                    "is_missing_info": s.is_missing_info(),
+                    "calendar": {
+                        "id": c.id_calendar,
+                        "title": str(c),
+                        "submission_start": c.submission_start.strftime("%d/%m/%Y"),
+                        "submission_end": c.submission_end.strftime("%d/%m/%Y"),
+                        "divulgation": c.divulgation.strftime("%d/%m/%Y"),
+                        "candidatures": c.candidatures.strftime("%d/%m/%Y"),
+                        "placements": c.placements.strftime("%d/%m/%Y"),
+                    } if c else None
                 }
-            }
+            except Student.DoesNotExist:
+                data = {
+                    "is_missing_info": True,
+                    "calendar": None,
+                    "error": "Perfil de estudante não encontrado. Contacte a administração."
+                }
 
         else:
             return Response({"message": "Tipo de utilizador não reconhecido ou não encontrado."}, status=status.HTTP_404_NOT_FOUND)

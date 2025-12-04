@@ -59,23 +59,24 @@ const Dashboard = () => {
 						(
 							<>
 							<DashButton
-								icon={<i className="bi bi-clipboard2-plus-fill"></i>} // TODO : submeter candidatura de um aluno (PÁGINAS)
+								action={() => navigate("/candidature/edit")}
+								icon={<i className="bi bi-clipboard2-plus-fill"></i>}
 								text="Submeter Candidatura"
-								disabled={summary?.is_missing_info}
+								disabled={summary?.is_missing_info || !summary?.calendar}
 							/>
 							
 							<DashButton
 								action={() => navigate("/proposal/list")}
 								icon={<i className="bi bi-file-earmark-text-fill"></i>}
 								text="Ver Propostas"
-								disabled={summary?.is_missing_info}
+								disabled={summary?.is_missing_info || !summary?.calendar}
 							/>
 
 							<DashButton
+								action={() => navigate("/candidature/me")}
 								icon={<i className="bi bi-clipboard2-pulse-fill"></i>}
-								text="Candidatura"
-								action={() => navigate("/candidature/view?id=1")}
-								disabled={summary?.is_missing_info}
+								text="Minha Candidatura"
+								disabled={summary?.is_missing_info || !summary?.calendar}
 							/>
 							</>
 						)
