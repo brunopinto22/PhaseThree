@@ -19,32 +19,31 @@ def generate_token(id, email, type):
 
 def decode_token(token):
     """
-    Decodes a JWT token to extract the user ID and type.
+    Decodes a JWT token to extract the user ID, email and type.
     Args:
-        token (str): The JWT token to decode.
+        token (str): The JWT token to decode (with or without 'Bearer ' prefix).
     Returns:
-        tuple: A tuple containing the user ID and type if the token is valid.
-               If the token is expired, returns ("Expired Token.", None).
-               If the token is invalid, returns ("Invalid Token", None).
-               If the payload does not contain 'user_id', returns ("Payload does not contain 'user_id'.", None).
-    Raises:
-        jwt.ExpiredSignatureError: If the token has expired.
-        jwt.InvalidTokenError: If the token is invalid.
-        KeyError: If the payload does not contain 'user_id'.
+        tuple: A tuple containing (user_id, email, type) if valid.
+               On error, returns (None, error_message, None).
     """
     try:
+        # Remove 'Bearer ' prefix if present
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         user_id = payload['user_id']
         email = payload['email']
-        type = payload['type']
-        return user_id, email, type
+        user_type = payload['type']
+        return user_id, email, user_type
     except jwt.ExpiredSignatureError:
-
-        return "Expired Token.", None
+        return None, "Expired Token.", None
     except jwt.InvalidTokenError:
-        return "Invalid Token", None
+        return None, "Invalid Token", None
     except KeyError:
-        return "Payload does not contain 'user_id'.", None
+        return None, "Payload does not contain 'user_id'.", None
+    except Exception:
+        return None, "Invalid Token", None
 
 
 def verify_token(token):
