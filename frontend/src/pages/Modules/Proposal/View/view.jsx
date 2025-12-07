@@ -239,6 +239,14 @@ function View() {
 
 					<div className="btns d-flex flex-column">
 						<PrimaryButton small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><p>Proposta</p><i className="bi bi-download"></i></div>} action={async () => getPdf(userInfo.token, id)} />
+						{role === "student" && (
+							<PrimaryButton 
+								small 
+								content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-clipboard-plus"></i><p>Candidatar-me</p></div>} 
+								action={() => navigate("/candidature/edit?proposal="+id)} 
+								disabled={taken >= slots}
+							/>
+						)}
 						{(canEdit || role === "admin") && <PrimaryButton small content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} disabled={!canEdit} />}
 					</div>
 				</div>

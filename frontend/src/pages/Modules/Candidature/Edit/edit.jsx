@@ -13,6 +13,7 @@ const Edit = () => {
 	const { token, type } = useContext(UserContext);
 
 	const id = searchParams.get("id");
+	const preSelectedProposal = searchParams.get("proposal"); // Pre-select from proposal view
 	const isNew = !id;
 
 	const [loading, setLoading] = useState(true);
@@ -37,7 +38,16 @@ const Edit = () => {
 					setCalendar(studentData.calendar);
 					if (studentData.candidature) {
 						setCandidature(studentData.candidature);
-						setSelectedProposals(studentData.candidature.proposals.map(p => p.id));
+						const existingProposals = studentData.candidature.proposals.map(p => p.id);
+						// Add pre-selected proposal if not already in list
+						if (preSelectedProposal && !existingProposals.includes(Number(preSelectedProposal))) {
+							setSelectedProposals([...existingProposals, Number(preSelectedProposal)]);
+						} else {
+							setSelectedProposals(existingProposals);
+						}
+					} else if (preSelectedProposal) {
+						// No existing candidature, pre-select the proposal
+						setSelectedProposals([Number(preSelectedProposal)]);
 					}
 				}
 
@@ -59,7 +69,7 @@ const Edit = () => {
 			setLoading(false);
 		};
 		fetchData();
-	}, [token, id, type]);
+	}, [token, id, type, preSelectedProposal]);
 
 	const toggleProposal = (proposalId) => {
 		if (selectedProposals.includes(proposalId)) {
