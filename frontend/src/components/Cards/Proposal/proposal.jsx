@@ -2,10 +2,16 @@ import { useNavigate } from 'react-router-dom';
 import './proposal.css';
 import { useState } from 'react';
 
-const Proposal = ({className = "", id = -1, name = "No proposal name given", idCompany = -1, company = "No company name given", slots = 0, slotsTaken = 0, location = "No location given", state="", canFav = true, favourite = false, disabled = false}) => {
+const Proposal = ({className = "", id = -1, name = "No proposal name given", idCompany = -1, company = "No company name given", slots = 0, slotsTaken = 0, location = "No location given", state="", canFav = true, favourite = false, disabled = false, showStatusBadge = false}) => {
 
 	const navigate = useNavigate();
 	const [fav, setFav] = useState(favourite);
+
+	const statusLabels = {
+		'pending': 'Pendente',
+		'accepted': 'Aceite',
+		'rejected': 'Não Colocado'
+	};
 
 	const openProposal = () => {
 		if(id > 0)
@@ -22,7 +28,11 @@ const Proposal = ({className = "", id = -1, name = "No proposal name given", idC
 	}
 
 	return(
-		<div className={`card-proposal ${disabled ? "disabled" : state} d-flex flex-column ${className}`}>
+		<div className={`card-proposal ${disabled ? "disabled" : state} d-flex flex-column ${className}`} style={{ position: 'relative' }}>
+			
+			{showStatusBadge && state && (
+				<span className={`status-badge ${state}`}>{statusLabels[state] || state}</span>
+			)}
 			
 			<div className="card-title d-flex flex-column">
 				<div> <h6 onClick={openProposal} style={{cursor: "pointer"}}>{name}</h6> </div>

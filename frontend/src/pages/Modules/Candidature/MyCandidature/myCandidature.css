@@ -1,0 +1,54 @@
+.status-card {
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.status-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.help-section {
+    background: #f8f9fa;
+    animation: fadeIn 0.3s ease;
+}
+
+.help-section ol {
+    padding-left: 1.2rem;
+}
+
+.help-section li {
+    margin-bottom: 0.5rem;
+}
+
+.proposals-summary .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.info-section {
+    border: 1px solid #dee2e6;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Make text-link more visible */
+.text-link {
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.text-link:hover {
+    color: #0056b3;
+}
+

@@ -47,6 +47,37 @@
 	--border-color: var(--red);
 }
 
+.card-proposal.pending {
+	--background: var(--secundary-color-200);
+	--border-color: var(--secundary-color-700);
+}
+
+/* Status badge */
+.card-proposal .status-badge {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	font-size: 0.75rem;
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-weight: 600;
+}
+
+.card-proposal .status-badge.pending {
+	background-color: #6c757d;
+	color: white;
+}
+
+.card-proposal .status-badge.accepted {
+	background-color: #28a745;
+	color: white;
+}
+
+.card-proposal .status-badge.rejected {
+	background-color: #dc3545;
+	color: white;
+}
+
 .card-title {
 	color: var(--title-color);
 }
