@@ -121,7 +121,7 @@ const View = () => {
 						</h4>
 					</div>
 					<div className={`collapsible ${seeP ? "" : "collapse"}`}>
-						<Proposals list={proposals} token={userInfo.token} role={userInfo.role} />
+						<Proposals list={proposals} token={userInfo.token} role={userInfo.role} permissions={permissions} />
 					</div>
 				</div>
 			}

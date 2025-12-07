@@ -3,7 +3,7 @@ import { exportProposalsToCSV, useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill, SecundaryButton } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
 
-const Proposals = ({list, token, role}) => {
+const Proposals = ({list, token, role, permissions = {}}) => {
 	const navigate = useNavigate();
 	const spanRef = useRef(null);
 	const inputRef = useRef(null);
@@ -65,6 +65,9 @@ const Proposals = ({list, token, role}) => {
 
 
 
+	const canEdit = role === "admin" || permissions?.Propostas?.edit;
+	const canDelete = role === "admin" || permissions?.Propostas?.delete;
+
 	const Row = ({id, proposal_number, title, company, course, location, slots, taken, type}) => {
 	
 		const view = () => {
@@ -88,8 +91,8 @@ const Proposals = ({list, token, role}) => {
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
-						<OptionButton type='edit' action={edit} />
-						<OptionButton type='delete' action={handleDelete} />
+						{canEdit && <OptionButton type='edit' action={edit} />}
+						{canDelete && <OptionButton type='delete' action={handleDelete} />}
 					</div>
 				</th>
 			</tr>

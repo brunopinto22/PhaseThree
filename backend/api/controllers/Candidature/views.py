@@ -221,11 +221,20 @@ def getStudentCandidature(request):
         return Response({"message": "Apenas alunos podem aceder a esta funcionalidade"}, status=HTTP_403_FORBIDDEN)
 
     try:
-        student = Student.objects.get(user__email=user_email)
+        try:
+            student = Student.objects.get(user__email=user_email)
+        except Student.DoesNotExist:
+            return Response({"message": "Registo de aluno não encontrado. Por favor, faça logout e login novamente."}, status=HTTP_404_NOT_FOUND)
+        
         calendar = student.calendar
 
         if not calendar:
-            return Response({"message": "Não tem um calendário atribuído"}, status=HTTP_400_BAD_REQUEST)
+            return Response({
+                "candidature": None,
+                "can_submit": False,
+                "calendar": None,
+                "message": "Não tem um calendário atribuído"
+            }, status=HTTP_200_OK)
 
         candidature = Candidature.objects.filter(student=student).first()
 

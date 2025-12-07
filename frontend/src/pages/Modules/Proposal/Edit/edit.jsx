@@ -97,7 +97,8 @@ const Edit = () =>  {
 
 	useEffect(() => {
 		const fecthRepresentatives = async () => {
-			if(!company) return;
+			// Only fetch company if we have a valid company ID (number, not undefined/null)
+			if(!company || company === 'undefined' || isNaN(Number(company))) return;
 
 			const c = await getCompany(userInfo.token, company, setStatus, setError);
 			setRepresentatives(c?.representatives || []);
