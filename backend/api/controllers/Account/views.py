@@ -297,6 +297,14 @@ def summary(request):
 
         elif user_type == "student":
             try:
+                # Check if account exists first
+                account = Accounts.objects.filter(email=user_email).first()
+                if not account:
+                    return Response({
+                        "message": "Sessão expirada. Por favor, faça logout e login novamente.",
+                        "logout": True
+                    }, status=HTTP_401_UNAUTHORIZED)
+                
                 s = Student.objects.get(user__email=user_email)
                 c = s.calendar
 
