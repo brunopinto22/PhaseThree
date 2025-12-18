@@ -18,6 +18,7 @@ function MyCandidature() {
 
 	const [seeP, setSeeP] = useState(true);
 	const [showHelp, setShowHelp] = useState(false);
+	const [showHistory, setShowHistory] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -179,9 +180,6 @@ function MyCandidature() {
 	const pendingCount = proposals.filter(p => p.state === 'pending').length;
 	const acceptedCount = proposals.filter(p => p.state === 'accepted').length;
 	const rejectedCount = proposals.filter(p => p.state === 'rejected').length;
-
-	// State to toggle history visibility
-	const [showHistory, setShowHistory] = useState(false);
 
 	return (
 		<div id='candidature' className='d-flex flex-column'>
