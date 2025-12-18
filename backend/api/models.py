@@ -482,3 +482,19 @@ class CandidatureProposal(models.Model):
 
     def __str__(self):
         return f"{self.candidature.student} - {self.proposal.proposal_title} - {self.state}"
+
+
+class CandidatureHistory(models.Model):
+    """Tracks all state changes for candidatures (REQ-3)"""
+    candidature = models.ForeignKey('Candidature', on_delete=models.CASCADE, related_name='history')
+    previous_state = models.CharField(max_length=20, null=True, blank=True)
+    new_state = models.CharField(max_length=20)
+    changed_by = models.ForeignKey('Accounts', on_delete=models.SET_NULL, null=True, blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-changed_at']
+
+    def __str__(self):
+        return f"{self.candidature} | {self.previous_state} → {self.new_state} at {self.changed_at}"

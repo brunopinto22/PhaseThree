@@ -211,3 +211,88 @@ export async function removeFavourite(token, id) {
 	} catch {}
 
 }
+
+// REQ-5: Curriculum upload
+export async function uploadCurriculum(token, file, setStatus, setErrorMessage) {
+	try {
+		const formData = new FormData();
+		formData.append('curriculum', file);
+
+		const res = await fetch(`${apiUrl}/student/curriculum/upload`, {
+			method: "POST",
+			headers: {
+				"Authorization": token,
+			},
+			body: formData,
+		});
+
+		const data = await res.json();
+		setStatus(res.status);
+
+		if (res.ok) {
+			setErrorMessage("");
+			return data;
+		} else {
+			setErrorMessage(data.message || "Erro ao carregar currículo");
+			return null;
+		}
+
+	} catch (error) {
+		setStatus(500);
+		setErrorMessage("Erro de rede ou servidor");
+		return null;
+	}
+}
+
+export async function deleteCurriculum(token, setStatus, setErrorMessage) {
+	try {
+		const res = await fetch(`${apiUrl}/student/curriculum/delete`, {
+			method: "DELETE",
+			headers: {
+				"Authorization": token,
+			},
+		});
+
+		const data = await res.json();
+		setStatus(res.status);
+
+		if (res.ok) {
+			setErrorMessage("");
+			return true;
+		} else {
+			setErrorMessage(data.message || "Erro ao eliminar currículo");
+			return false;
+		}
+
+	} catch (error) {
+		setStatus(500);
+		setErrorMessage("Erro de rede ou servidor");
+		return false;
+	}
+}
+
+export async function getCurriculum(token, studentNumber, setStatus, setErrorMessage) {
+	try {
+		const res = await fetch(`${apiUrl}/student/${studentNumber}/curriculum`, {
+			method: "GET",
+			headers: {
+				"Authorization": token,
+			},
+		});
+
+		const data = await res.json();
+		setStatus(res.status);
+
+		if (res.ok) {
+			return data;
+		} else {
+			setErrorMessage(data.message || "Erro ao obter currículo");
+			return null;
+		}
+
+	} catch (error) {
+		setStatus(500);
+		setErrorMessage("Erro de rede ou servidor");
+		return null;
+	}
+}

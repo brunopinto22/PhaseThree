@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox, PfpModal } from '../../../../components';
 
-import { getStudent, createStudent, editStudent, getCourse, listCourses } from '../../../../services';
+import { getStudent, createStudent, editStudent, getCourse, listCourses, uploadCurriculum, deleteCurriculum } from '../../../../services';
 import { UserContext } from '../../../../contexts';
 
 
@@ -86,6 +86,11 @@ const Edit = () =>  {
 	const [calendar, setCalendar] = useState(null);
 
 	const [todo, setTodo] = useState([]);
+
+	// REQ-5: Curriculum state
+	const [curriculumUrl, setCurriculumUrl] = useState(null);
+	const [curriculumLoading, setCurriculumLoading] = useState(false);
+	const fileInputRef = React.useRef(null);
 
 	const [courses, setCourses] = useState([]);
 	const [branches, setBranches] = useState([]);
@@ -180,6 +185,7 @@ const Edit = () =>  {
 				setBranch(data.branch.id);
 				setCalendar(data.calendar.id);
 				setTodo(data.subjects);
+				setCurriculumUrl(data.curriculum); // REQ-5
 			});
 		}
 	}, [id, isNew, show]);
@@ -197,6 +203,32 @@ const Edit = () =>  {
 		setTodo(prev => prev.filter((_, i) => i !== index));
 	};
 
+	// REQ-5: Curriculum handlers
+	const handleCurriculumUpload = async (e) => {
+		const file = e.target.files[0];
+		if (!file) return;
+
+		setCurriculumLoading(true);
+		const result = await uploadCurriculum(token, file, setStatus, setError);
+		setCurriculumLoading(false);
+
+		if (result?.url) {
+			setCurriculumUrl(result.url);
+		}
+	};
+
+	const handleCurriculumDelete = async () => {
+		if (!window.confirm("Tem a certeza que pretende eliminar o currículo?")) return;
+
+		setCurriculumLoading(true);
+		const success = await deleteCurriculum(token, setStatus, setError);
+		setCurriculumLoading(false);
+
+		if (success) {
+			setCurriculumUrl(null);
+		}
+	};
+
 
 	return(
 		<>
@@ -208,11 +240,62 @@ const Edit = () =>  {
 					<div className="options d-flex flex-column justify-content-center w-100">
 						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Alunos"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
 						<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
-						<PrimaryButton small content={<p>Alterar Currículo</p>} />
 						<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
 			</section>
+
+			{/* REQ-5: Curriculum Upload Section */}
+			{role === "student" && (
+				<section className='row p-0'>
+					<h4>Currículo</h4>
+					<div className="curriculum-section d-flex flex-column gap-2 p-3 bg-light rounded">
+						{curriculumUrl ? (
+							<div className="d-flex flex-row align-items-center gap-3">
+								<i className="bi bi-file-earmark-pdf text-danger" style={{ fontSize: '2rem' }}></i>
+								<div className="d-flex flex-column flex-grow-1">
+									<span className="fw-bold">Currículo carregado</span>
+									<a href={curriculumUrl} target="_blank" rel="noopener noreferrer" className="text-primary">
+										<i className="bi bi-download me-1"></i>Visualizar/Descarregar
+									</a>
+								</div>
+								<div className="d-flex gap-2">
+									<PrimaryButton 
+										small 
+										content={<p><i className="bi bi-arrow-repeat me-1"></i>Substituir</p>} 
+										action={() => fileInputRef.current?.click()} 
+										disabled={curriculumLoading}
+									/>
+									<SecundaryButton 
+										small 
+										content={<p><i className="bi bi-trash me-1"></i>Eliminar</p>} 
+										action={handleCurriculumDelete}
+										disabled={curriculumLoading}
+									/>
+								</div>
+							</div>
+						) : (
+							<div className="d-flex flex-column align-items-center gap-2 py-3">
+								<i className="bi bi-cloud-upload" style={{ fontSize: '2.5rem', color: '#6c757d' }}></i>
+								<p className="text-muted mb-0">Carregue o seu currículo em formato PDF (máx. 10MB)</p>
+								<PrimaryButton 
+									small 
+									content={curriculumLoading ? <p>A carregar...</p> : <p><i className="bi bi-upload me-1"></i>Carregar Currículo</p>} 
+									action={() => fileInputRef.current?.click()}
+									disabled={curriculumLoading}
+								/>
+							</div>
+						)}
+						<input 
+							ref={fileInputRef}
+							type="file" 
+							accept=".pdf"
+							style={{ display: 'none' }}
+							onChange={handleCurriculumUpload}
+						/>
+					</div>
+				</section>
+			)}
 
 			<section className='row p-0'>
 				<h4>Dados Pessoais</h4>

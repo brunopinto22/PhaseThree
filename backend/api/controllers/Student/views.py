@@ -483,3 +483,112 @@ def removeFavorite(request, proposal_id):
         return Response({"message": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
+def uploadCurriculum(request):
+    """
+    Upload curriculum PDF for the logged-in student (REQ-5).
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    if user_type != "student":
+        return Response({"message": "Apenas alunos podem carregar o currículo"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        student = Student.objects.get(user__email=user_email)
+
+        if 'curriculum' not in request.FILES:
+            return Response({"message": "Nenhum ficheiro enviado"}, status=HTTP_400_BAD_REQUEST)
+
+        file = request.FILES['curriculum']
+
+        # Validate PDF
+        if not file.name.lower().endswith('.pdf'):
+            return Response({"message": "O ficheiro deve ser um PDF"}, status=HTTP_400_BAD_REQUEST)
+
+        # Check file size (max 10MB)
+        if file.size > 10 * 1024 * 1024:
+            return Response({"message": "O ficheiro não pode exceder 10MB"}, status=HTTP_400_BAD_REQUEST)
+
+        # Delete old curriculum if exists
+        if student.curriculum:
+            student.curriculum.delete(save=False)
+
+        # Save new curriculum
+        student.curriculum = file
+        student.save()
+
+        return Response({
+            "message": "Currículo carregado com sucesso",
+            "url": request.build_absolute_uri(student.curriculum.url)
+        }, status=HTTP_200_OK)
+
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["DELETE"])
+def deleteCurriculum(request):
+    """
+    Delete curriculum PDF for the logged-in student.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    if user_type != "student":
+        return Response({"message": "Apenas alunos podem eliminar o currículo"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        student = Student.objects.get(user__email=user_email)
+
+        if not student.curriculum:
+            return Response({"message": "Não tem currículo carregado"}, status=HTTP_400_BAD_REQUEST)
+
+        student.curriculum.delete(save=True)
+
+        return Response({"message": "Currículo eliminado com sucesso"}, status=HTTP_200_OK)
+
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def getCurriculum(request, pk):
+    """
+    Get curriculum URL for a student (public access for REQ-5).
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        student = Student.objects.get(student_number=pk)
+
+        if not student.curriculum:
+            return Response({"message": "O aluno não tem currículo carregado"}, status=HTTP_404_NOT_FOUND)
+
+        return Response({
+            "student_number": student.student_number,
+            "student_name": student.student_name,
+            "url": request.build_absolute_uri(student.curriculum.url)
+        }, status=HTTP_200_OK)
+
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)

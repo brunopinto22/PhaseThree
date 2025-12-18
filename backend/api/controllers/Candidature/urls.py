@@ -5,7 +5,8 @@ from .views import (
     getStudentCandidature,
     updateCandidature,
     listCandidatures,
-    deleteCandidature
+    deleteCandidature,
+    changeCandidatureState
 )
 
 urlpatterns = [
@@ -15,5 +16,6 @@ urlpatterns = [
     path('candidature/<int:pk>', getCandidature),
     path('candidature/<int:pk>/edit', updateCandidature),
     path('candidature/<int:pk>/delete', deleteCandidature),
+    path('candidature/<int:pk>/state', changeCandidatureState),
 ]
 

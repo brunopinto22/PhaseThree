@@ -52,3 +52,96 @@
     color: #0056b3;
 }
 
+/* History Timeline (REQ-3) */
+.history-section {
+    margin-top: 1.5rem;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.25rem;
+    padding-left: 15px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -24px;
+    top: 4px;
+    font-size: 0.75rem;
+    color: #007bff;
+}
+
+.timeline-marker i {
+    background: #fff;
+    padding: 2px;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-date {
+    font-weight: 500;
+}
+
+.timeline-author {
+    font-style: italic;
+}
+
+.timeline-body {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.state-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.state-badge.old {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.state-badge.new {
+    background: #d4edda;
+    color: #155724;
+}
+
+.timeline-notes {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #dee2e6;
+}
+

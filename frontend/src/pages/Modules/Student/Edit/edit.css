@@ -17,3 +17,16 @@ section {
 .buttons button {
 	width: 100%;
 }
+
+/* REQ-5: Curriculum section styles */
+.curriculum-section {
+	border: 1px dashed #dee2e6;
+}
+
+.curriculum-section a {
+	text-decoration: none;
+}
+
+.curriculum-section a:hover {
+	text-decoration: underline;
+}

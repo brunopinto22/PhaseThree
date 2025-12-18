@@ -15,6 +15,7 @@ from api.models import *
 from api.permissions import *
 from api.token_manager import *
 from django.db import transaction
+from api.tasks.placements import handle_placements
 
 
 
@@ -323,4 +324,53 @@ def deleteCalendar(request, pk):
     except Calendar.DoesNotExist:
         return Response({"message": "Calendário não encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def triggerPlacements(request, pk):
+    """
+    REQ-4: Manually trigger automatic placements for a calendar.
+    Admin-only endpoint.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    if user_type not in ["admin", "teacher"]:
+        return Response({"message": "Sem permissão para executar colocações"}, status=HTTP_403_FORBIDDEN)
+
+    # Check teacher permissions
+    if user_type == "teacher":
+        try:
+            teacher = Teacher.objects.get(user__email=user_email)
+            calendar = Calendar.objects.get(id_calendar=pk)
+            
+            # Must be in course commission
+            if not calendar.course.commission.filter(id_teacher=teacher.id_teacher).exists():
+                return Response({"message": "Sem permissão para executar colocações neste calendário"}, status=HTTP_403_FORBIDDEN)
+        except Teacher.DoesNotExist:
+            return Response({"message": "Docente não encontrado"}, status=HTTP_404_NOT_FOUND)
+        except Calendar.DoesNotExist:
+            return Response({"message": "Calendário não encontrado"}, status=HTTP_404_NOT_FOUND)
+
+    try:
+        result = handle_placements(pk)
+        
+        if "error" in result and result.get("placed", 0) == 0:
+            return Response({"message": result["error"]}, status=HTTP_400_BAD_REQUEST)
+        
+        return Response({
+            "message": f"Colocações executadas com sucesso",
+            "calendar": result.get("calendar"),
+            "total": result.get("total_candidatures", 0),
+            "placed": result.get("placed", 0),
+            "not_placed": result.get("not_placed", 0),
+            "details": result.get("results", [])
+        }, status=HTTP_200_OK)
+
+    except Exception as e:
+        traceback.print_exc()
         return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

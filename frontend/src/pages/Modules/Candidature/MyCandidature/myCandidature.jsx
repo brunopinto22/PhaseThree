@@ -169,7 +169,7 @@ function MyCandidature() {
 	}
 
 	const { candidature, calendar } = data;
-	const { proposals, state, can_edit } = candidature;
+	const { proposals, state, can_edit, history } = candidature;
 	const currentStateInfo = stateInfo[state] || stateInfo['submitted'];
 	
 	// Find accepted proposal if any
@@ -179,6 +179,9 @@ function MyCandidature() {
 	const pendingCount = proposals.filter(p => p.state === 'pending').length;
 	const acceptedCount = proposals.filter(p => p.state === 'accepted').length;
 	const rejectedCount = proposals.filter(p => p.state === 'rejected').length;
+
+	// State to toggle history visibility
+	const [showHistory, setShowHistory] = useState(false);
 
 	return (
 		<div id='candidature' className='d-flex flex-column'>
@@ -308,6 +311,53 @@ function MyCandidature() {
 					</div>
 				</div>
 			</div>
+
+			{/* History Timeline (REQ-3) */}
+			{history && history.length > 0 && (
+				<div className="history-section my-3">
+					<h4 
+						className='d-flex flex-row align-items-center gap-2 noselect' 
+						style={{ cursor: "pointer" }} 
+						onClick={() => setShowHistory(!showHistory)}
+					>
+						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${showHistory ? "0" : "-90deg"})` }}></i>
+						<span><i className="bi bi-clock-history me-2"></i>Histórico ({history.length})</span>
+					</h4>
+					<div className={`collapsible ${showHistory ? "" : "collapse"}`}>
+						<div className="timeline mt-3">
+							{history.map((item, index) => (
+								<div key={index} className="timeline-item">
+									<div className="timeline-marker">
+										<i className={`bi ${index === 0 ? 'bi-circle-fill' : 'bi-circle'}`}></i>
+									</div>
+									<div className="timeline-content">
+										<div className="timeline-header">
+											<span className="timeline-date">{item.changed_at}</span>
+											<span className="timeline-author">por {item.changed_by}</span>
+										</div>
+										<div className="timeline-body">
+											{item.previous_state ? (
+												<span>
+													<span className="state-badge old">{stateInfo[item.previous_state]?.label || item.previous_state}</span>
+													<i className="bi bi-arrow-right mx-2"></i>
+													<span className="state-badge new">{stateInfo[item.new_state]?.label || item.new_state}</span>
+												</span>
+											) : (
+												<span className="state-badge new">{stateInfo[item.new_state]?.label || item.new_state}</span>
+											)}
+										</div>
+										{item.notes && (
+											<div className="timeline-notes text-muted small">
+												<i className="bi bi-chat-left-text me-1"></i>{item.notes}
+											</div>
+										)}
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
 
 			{/* Actions */}
 			{can_edit && (
