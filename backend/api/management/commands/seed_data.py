@@ -66,19 +66,19 @@ class Command(BaseCommand):
             teachers = []
             teacher_data = [
                 {
-                    "email": "professor1@isec.pt",
+                    "email": "docente1@isec.pt",
                     "name": "João Silva",
                     "category": "Professor Auxiliar",
                     "area": areas[0],
                 },
                 {
-                    "email": "professor2@isec.pt",
+                    "email": "docente2@isec.pt",
                     "name": "Maria Santos",
                     "category": "Professor Coordenador",
                     "area": areas[0],
                 },
                 {
-                    "email": "professor3@isec.pt",
+                    "email": "docente3@isec.pt",
                     "name": "Carlos Oliveira",
                     "category": "Professor Auxiliar",
                     "area": areas[1],

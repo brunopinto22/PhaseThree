@@ -14,17 +14,17 @@ class ApiConfig(AppConfig):
                 from django.db import DatabaseError
 
                 User = get_user_model()
-                admin_email = "admin@localhost.pt"
-                admin_password = "admin123"
+                admin_email = "admin@isec.pt"
+                admin_password = "admin@123"
 
                 try:
                     from api.models import Settings, Module
 
                     # Verifica se o usuário admin já existe
-                    if not User.objects.filter(username="admin").exists():
+                    if not User.objects.filter(email=admin_email).exists():
                         # Cria o usuário admin se não existir
                         User.objects.create_superuser(
-                            username="admin",
+                            username=admin_email,
                             email=admin_email,
                             password=admin_password,
                             user_type="admin",
