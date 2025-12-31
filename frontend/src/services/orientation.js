@@ -1,8 +1,8 @@
-const API_BASE = process.env.REACT_APP_API_URL || '';
+const apiUrl = process.env.REACT_APP_API_URL || '/api';
 
 export const getMyStudents = async (token, setStatus, setError) => {
     try {
-        const response = await fetch(`${API_BASE}/api/orientation/my-students`, {
+        const response = await fetch(`${apiUrl}/orientation/my-students`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -31,7 +31,7 @@ export const getMyStudents = async (token, setStatus, setError) => {
 
 export const getCalendarOrientations = async (token, calendarId, setStatus, setError) => {
     try {
-        const response = await fetch(`${API_BASE}/api/orientation/calendar/${calendarId}`, {
+        const response = await fetch(`${apiUrl}/orientation/calendar/${calendarId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -56,7 +56,7 @@ export const getCalendarOrientations = async (token, calendarId, setStatus, setE
 
 export const reassignAdvisor = async (token, proposalId, advisorId, setStatus, setError) => {
     try {
-        const response = await fetch(`${API_BASE}/api/orientation/proposal/${proposalId}/advisor`, {
+        const response = await fetch(`${apiUrl}/orientation/proposal/${proposalId}/advisor`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -83,7 +83,7 @@ export const reassignAdvisor = async (token, proposalId, advisorId, setStatus, s
 
 export const triggerOrientationAssignment = async (token, calendarId, setStatus, setError) => {
     try {
-        const response = await fetch(`${API_BASE}/api/orientation/calendar/${calendarId}/assign`, {
+        const response = await fetch(`${apiUrl}/orientation/calendar/${calendarId}/assign`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -106,4 +106,3 @@ export const triggerOrientationAssignment = async (token, calendarId, setStatus,
         return null;
     }
 };
-
