@@ -15,6 +15,7 @@ import {
 	ListCandidatures, ViewCandidature, EditCandidature, MyCandidature,
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
+	ListOrientation,
 } from './pages';
 import { Layout } from "./components";
 import { testToken } from "./services";
@@ -229,6 +230,9 @@ function App() {
 							<Route path="edit" element={<EditCandidature />} />
 							<Route path="me" element={<MyCandidature />} />
 						</Route>
+
+						{/* Orientation */}
+						<Route path="/orientation" element={<ListOrientation />} />
 
 						{/* System Settings */}
 						<Route path="/settings">

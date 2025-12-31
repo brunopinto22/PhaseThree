@@ -117,19 +117,19 @@ const List = () => {
 			{list.length > 0 && (
 				<table>
 					<thead>
-						<tr className='header'>
-							<th className='fit-column'><p>Estado</p></th>
-							<th className='fit-column'><p>Nº aluno</p></th>
-							<th><p>Aluno</p></th>
-							<th><p>Empresa/Docente</p></th>
-							<th><p>Proposta</p></th>
-							<th className='fit-column'></th>
-						</tr>
+					<tr className='header'>
+						<th className='fit-column'><p>Estado</p></th>
+						<th className='fit-column'><p>Nº aluno</p></th>
+						<th><p>Aluno</p></th>
+						<th><p>Empresa/Docente</p></th>
+						<th><p>Proposta</p></th>
+						<th className='fit-column'></th>
+					</tr>
 					</thead>
 					<tbody>
-						{list.map(candidature => (
-							<Row key={candidature.id} {...candidature} />
-						))}
+					{list.map(candidature => (
+						<Row key={candidature.id} {...candidature} />
+					))}
 					</tbody>
 				</table>
 			)}

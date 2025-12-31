@@ -10,3 +10,5 @@ export * from './Proposal';
 
 export * from './Company';
 export * from './Representative';
+
+export * from './Orientation';

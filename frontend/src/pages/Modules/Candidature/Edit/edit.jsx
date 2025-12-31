@@ -15,7 +15,7 @@ const Edit = () => {
 	const id = searchParams.get("id");
 	const preSelectedProposal = searchParams.get("proposal"); // Pre-select from proposal view
 	const isNew = !id;
-
+	
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 	const [status, setStatus] = useState(null);
@@ -119,7 +119,7 @@ const Edit = () => {
 
 		setSubmitting(false);
 	};
-
+	
 	const cancel = () => {
 		if (window.history.length > 2)
 			navigate(-1);
@@ -130,7 +130,7 @@ const Edit = () => {
 	const Row = ({ id, proposal_number, title, company, slots, taken, favourite }) => {
 		const isSelected = selectedProposals.includes(id);
 		const slotsLeft = slots - taken;
-
+		
 		const view = () => {
 			navigate("/proposal/view?id=" + id);
 		};
@@ -209,23 +209,23 @@ const Edit = () => {
 				{availableProposals.length > 0 && (
 					<table>
 						<thead>
-							<tr className='header'>
+						<tr className='header'>
 								<th className='fit-column'></th>
 								<th className='fit-column'><p>#</p></th>
-								<th><p>Proposta</p></th>
-								<th><p>Empresa/Docente</p></th>
+							<th><p>Proposta</p></th>
+							<th><p>Empresa/Docente</p></th>
 								<th className='fit-column'><p>Vagas</p></th>
 								<th className='fit-column'></th>
-							</tr>
+						</tr>
 						</thead>
 						<tbody>
 							{availableProposals.map(proposal => (
-								<Row key={proposal.id} {...proposal} />
-							))}
+							<Row key={proposal.id} {...proposal} />
+						))}
 						</tbody>
 					</table>
 				)}
-
+				
 			</section>
 
 			<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-5 p-0">

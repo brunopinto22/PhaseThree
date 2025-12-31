@@ -11,4 +11,5 @@ urlpatterns = [
     path('', include('api.controllers.Representative.urls')),
     path('', include('api.controllers.Proposal.urls')),
     path('', include('api.controllers.Candidature.urls')),
+    path('', include('api.controllers.Orientation.urls')),
 ]

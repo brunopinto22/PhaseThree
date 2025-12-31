@@ -129,7 +129,7 @@ class Command(BaseCommand):
                 {
                     "name": "Licenciatura em Engenharia Informática",
                     "description": "Curso de licenciatura em Engenharia Informática",
-                    "website": "https://www.isec.pt/lei",
+                    "website": "https://www.ipc.pt/oferta-formativa/instituto-superior-de-engenharia-de-coimbra/licenciatura/licenciatura-em-engenharia-informatica/",
                     "email": "lei@isec.pt",
                     "area": areas[0],
                     "branches": [
@@ -140,7 +140,7 @@ class Command(BaseCommand):
                 {
                     "name": "Mestrado em Engenharia Informática",
                     "description": "Curso de mestrado em Engenharia Informática",
-                    "website": "https://www.isec.pt/mei",
+                    "website": "https://www.isec.pt/oferta-formativa/instituto-superior-de-engenharia-de-coimbra/mestrado/mestrado-em-engenharia-informatica/",
                     "email": "mei@isec.pt",
                     "area": areas[0],
                     "branches": [

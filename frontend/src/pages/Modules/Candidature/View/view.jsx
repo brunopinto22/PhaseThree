@@ -9,7 +9,7 @@ function View() {
 
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-	const id = searchParams.get('id');
+  const id = searchParams.get('id');
 	const { token, type } = useContext(UserContext);
 
 	const [candidature, setCandidature] = useState(null);
@@ -99,7 +99,7 @@ function View() {
 					{proposals.length === 0 ? (
 						<Alert text='Nenhuma proposta selecionada' type='warning' />
 					) : (
-						<div className="d-flex flex-wrap gap-3">
+					<div className="d-flex flex-wrap gap-3">
 							{proposals.map(p => (
 								<ProposalCard 
 									key={p.id}
@@ -111,7 +111,7 @@ function View() {
 									state={p.state}
 								/>
 							))}
-						</div>
+					</div>
 					)}
 				</div>
 			</div>
