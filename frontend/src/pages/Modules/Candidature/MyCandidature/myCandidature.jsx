@@ -9,7 +9,8 @@ import { UserContext } from '../../../../contexts';
 function MyCandidature() {
 
 	const navigate = useNavigate();
-	const { token } = useContext(UserContext);
+	const { userInfo } = useContext(UserContext);
+	const token = userInfo?.token;
 
 	const [data, setData] = useState(null);
 	const [loading, setLoading] = useState(true);

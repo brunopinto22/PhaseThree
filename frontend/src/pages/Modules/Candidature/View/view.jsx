@@ -10,7 +10,9 @@ function View() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
-	const { token, type } = useContext(UserContext);
+	const { userInfo } = useContext(UserContext);
+	const token = userInfo?.token;
+	const type = userInfo?.role;
 
 	const [candidature, setCandidature] = useState(null);
 	const [loading, setLoading] = useState(true);

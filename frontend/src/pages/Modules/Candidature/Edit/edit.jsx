@@ -10,7 +10,9 @@ const Edit = () => {
 
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-	const { token, type } = useContext(UserContext);
+	const { userInfo } = useContext(UserContext);
+	const token = userInfo?.token;
+	const type = userInfo?.role;
 
 	const id = searchParams.get("id");
 	const preSelectedProposal = searchParams.get("proposal"); // Pre-select from proposal view

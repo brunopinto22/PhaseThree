@@ -9,7 +9,8 @@ const List = () => {
 
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-	const { token } = useContext(UserContext);
+	const { userInfo } = useContext(UserContext);
+	const token = userInfo?.token;
 
 	const calendarId = searchParams.get("calendar");
 
