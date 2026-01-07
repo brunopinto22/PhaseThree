@@ -120,7 +120,6 @@ class Student(models.Model):
             "average",
             "subjects_done",
             "student_course",
-            "student_branch",
             "student_ects",
             "calendar",
         ]
@@ -350,6 +349,18 @@ class Calendar(models.Model):
 
     def __str__(self):
         return f"{self.calendar_year}/{self.calendar_year+1} - {self.calendar_semester}º Semestre"
+
+    def clean(self):
+        if self.min_proposals is not None and self.max_proposals is not None:
+            if self.min_proposals > self.max_proposals:
+                raise ValidationError({
+                    'min_proposals': 'O mínimo não pode ser maior que o máximo',
+                    'max_proposals': 'O máximo não pode ser menor que o mínimo'
+                })
+        if self.min_proposals is not None and self.min_proposals < 0:
+            raise ValidationError({'min_proposals': 'O mínimo deve ser maior ou igual a 0'})
+        if self.max_proposals is not None and self.max_proposals < 1:
+            raise ValidationError({'max_proposals': 'O máximo deve ser maior ou igual a 1'})
 
     def is_active(self):
         return self.submission_start <= date.today() <= self.placements
