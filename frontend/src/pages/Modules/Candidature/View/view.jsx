@@ -1,8 +1,9 @@
 import './view.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
-import { PrimaryButton, Alert, ProposalCard, StateTracker } from '../../../../components';
+import { PrimaryButton, SecundaryButton, Alert, ProposalCard, StateTracker } from '../../../../components';
 import { getCandidature } from '../../../../services';
+import { generateProtocol, signProtocol, downloadProtocol, getProtocol } from '../../../../services/academic';
 import { UserContext } from '../../../../contexts';
 
 function View() {
@@ -15,9 +16,12 @@ function View() {
 	const type = userInfo?.role;
 
 	const [candidature, setCandidature] = useState(null);
+	const [protocol, setProtocol] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [actionLoading, setActionLoading] = useState(false);
 	const [status, setStatus] = useState(null);
 	const [errorMessage, setErrorMessage] = useState("");
+	const [successMessage, setSuccessMessage] = useState("");
 
 	const [seeP, setSeeP] = useState(true);
 
@@ -27,11 +31,68 @@ function View() {
 			const data = await getCandidature(token, id, setStatus, setErrorMessage);
 			if (data) {
 				setCandidature(data);
+				// If there's a protocol, fetch its details
+				if (data.protocol_id) {
+					const protocolData = await getProtocol(token, data.protocol_id, setStatus, setErrorMessage);
+					if (protocolData) {
+						setProtocol(protocolData);
+					}
+				}
 			}
 			setLoading(false);
 		};
 		if (id) fetchData();
 	}, [token, id]);
+
+	const handleGenerateProtocol = async () => {
+		setActionLoading(true);
+		setErrorMessage("");
+		setSuccessMessage("");
+		const result = await generateProtocol(token, id, setStatus, setErrorMessage);
+		if (result) {
+			setSuccessMessage(`Protocolo ${result.protocol_number} gerado com sucesso!`);
+			// Refresh candidature data
+			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			if (data) {
+				setCandidature(data);
+				if (data.protocol_id) {
+					const protocolData = await getProtocol(token, data.protocol_id, setStatus, setErrorMessage);
+					if (protocolData) setProtocol(protocolData);
+				}
+			}
+		}
+		setActionLoading(false);
+	};
+
+	const handleSignProtocol = async (signatureType) => {
+		if (!protocol) return;
+		setActionLoading(true);
+		setErrorMessage("");
+		setSuccessMessage("");
+		const result = await signProtocol(token, protocol.id, signatureType, setStatus, setErrorMessage);
+		if (result) {
+			setSuccessMessage(`Protocolo assinado com sucesso!`);
+			// Refresh data
+			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			if (data) {
+				setCandidature(data);
+				if (data.protocol_id) {
+					const protocolData = await getProtocol(token, data.protocol_id, setStatus, setErrorMessage);
+					if (protocolData) setProtocol(protocolData);
+				}
+			}
+		}
+		setActionLoading(false);
+	};
+
+	const handleDownloadProtocol = async () => {
+		if (!protocol) return;
+		try {
+			await downloadProtocol(token, protocol.id);
+		} catch (error) {
+			setErrorMessage('Erro ao descarregar protocolo');
+		}
+	};
 
 	// Map candidature state to StateTracker number
 	const stateMap = {
@@ -123,6 +184,121 @@ function View() {
 				<p><strong>Limites:</strong> {calendar.min_proposals} a {calendar.max_proposals} propostas</p>
 				<p><strong>Data de submissão:</strong> {candidature.submission_date}</p>
 			</div>
+
+			{/* Protocol Section - REQ-7 */}
+			{(state === 'placed' || state === 'protocol_generated' || state === 'presidency_signature' || 
+			  state === 'company_signature' || state === 'student_signature' || state === 'finished') && (
+				<div className="protocol-section">
+					<h4><i className="bi bi-file-earmark-text me-2"></i>Protocolo</h4>
+					
+					{successMessage && <Alert text={successMessage} type='success' />}
+					{errorMessage && <Alert text={errorMessage} type='danger' />}
+					
+					{state === 'placed' && !protocol && (type === 'admin' || type === 'teacher') && (
+						<div className="protocol-action">
+							<p>A candidatura foi colocada. Pode agora gerar o protocolo de estágio.</p>
+							<PrimaryButton 
+								content="Gerar Protocolo" 
+								action={handleGenerateProtocol}
+								disabled={actionLoading}
+							/>
+						</div>
+					)}
+					
+					{protocol && (
+						<div className="protocol-details">
+							<div className="protocol-info">
+								<p><strong>Número do Protocolo:</strong> {protocol.protocol_number}</p>
+								<p><strong>Ano Letivo:</strong> {protocol.academic_year}</p>
+								<p><strong>Gerado em:</strong> {new Date(protocol.generated_at).toLocaleDateString('pt-PT')}</p>
+							</div>
+							
+							<div className="protocol-signatures">
+								<h5>Estado das Assinaturas</h5>
+								<div className="signatures-grid">
+									<div className={`signature-item ${protocol.signatures?.isec?.signed ? 'signed' : ''}`}>
+										<span className="signature-label">ISEC</span>
+										{protocol.signatures?.isec?.signed ? (
+											<span className="signature-status">
+												<i className="bi bi-check-circle-fill text-success"></i>
+												{protocol.signatures.isec.signed_at && (
+													<small>{new Date(protocol.signatures.isec.signed_at).toLocaleDateString('pt-PT')}</small>
+												)}
+											</span>
+										) : (
+											<span className="signature-status pending">
+												<i className="bi bi-clock text-warning"></i> Pendente
+											</span>
+										)}
+									</div>
+									<div className={`signature-item ${protocol.signatures?.company?.signed ? 'signed' : ''}`}>
+										<span className="signature-label">Empresa</span>
+										{protocol.signatures?.company?.signed ? (
+											<span className="signature-status">
+												<i className="bi bi-check-circle-fill text-success"></i>
+												{protocol.signatures.company.signed_at && (
+													<small>{new Date(protocol.signatures.company.signed_at).toLocaleDateString('pt-PT')}</small>
+												)}
+											</span>
+										) : (
+											<span className="signature-status pending">
+												<i className="bi bi-clock text-warning"></i> Pendente
+											</span>
+										)}
+									</div>
+									<div className={`signature-item ${protocol.signatures?.student?.signed ? 'signed' : ''}`}>
+										<span className="signature-label">Estudante</span>
+										{protocol.signatures?.student?.signed ? (
+											<span className="signature-status">
+												<i className="bi bi-check-circle-fill text-success"></i>
+												{protocol.signatures.student.signed_at && (
+													<small>{new Date(protocol.signatures.student.signed_at).toLocaleDateString('pt-PT')}</small>
+												)}
+											</span>
+										) : (
+											<span className="signature-status pending">
+												<i className="bi bi-clock text-warning"></i> Pendente
+											</span>
+										)}
+									</div>
+								</div>
+							</div>
+							
+							<div className="protocol-actions d-flex gap-2 mt-3">
+								{protocol.has_document && (
+									<SecundaryButton 
+										content="Descarregar Protocolo" 
+										action={handleDownloadProtocol}
+									/>
+								)}
+								
+								{/* Sign buttons based on state and user role */}
+								{state === 'protocol_generated' && (type === 'admin' || type === 'teacher') && (
+									<PrimaryButton 
+										content="Assinar (ISEC)" 
+										action={() => handleSignProtocol('isec')}
+										disabled={actionLoading}
+									/>
+								)}
+								{state === 'presidency_signature' && (type === 'admin' || type === 'representative') && (
+									<PrimaryButton 
+										content="Assinar (Empresa)" 
+										action={() => handleSignProtocol('company')}
+										disabled={actionLoading}
+									/>
+								)}
+								{state === 'company_signature' && (type === 'admin' || type === 'student') && (
+									<PrimaryButton 
+										content="Assinar (Estudante)" 
+										action={() => handleSignProtocol('student')}
+										disabled={actionLoading}
+									/>
+								)}
+							</div>
+						</div>
+					)}
+				</div>
+			)}
 
 			{can_edit && (type === 'admin' || type === 'teacher') && (
 				<div className="col">

@@ -212,11 +212,17 @@ def getCandidature(request, pk):
                 "notes": h.notes
             })
 
+        # Check if protocol exists
+        protocol_id = None
+        if hasattr(candidature, 'protocol'):
+            protocol_id = candidature.protocol.id_protocol
+
         data = {
             "id": candidature.id_candidature,
             "state": candidature.state,
             "submission_date": candidature.candidature_submission_date.strftime("%d/%m/%Y"),
             "can_edit": can_edit and candidature.state == 'submitted',
+            "protocol_id": protocol_id,
             "student": {
                 "number": candidature.student.student_number,
                 "name": candidature.student.student_name,

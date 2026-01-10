@@ -23,3 +23,5 @@ export * from './company';
 export * from './candidatures';
 
 export * from './orientation';
+
+export * from './academic';

@@ -16,6 +16,7 @@ import {
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
 	ListOrientation,
+	AcademicDashboard,
 } from './pages';
 import { Layout } from "./components";
 import { testToken } from "./services";
@@ -233,6 +234,9 @@ function App() {
 
 						{/* Orientation */}
 						<Route path="/orientation" element={<ListOrientation />} />
+
+						{/* Academic Services */}
+						<Route path="/academic" element={<AcademicDashboard />} />
 
 						{/* System Settings */}
 						<Route path="/settings">

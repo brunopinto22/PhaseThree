@@ -32,11 +32,11 @@ const Dashboard = () => {
 	const [error, setError] = useState(null);
 
 	useEffect(() => {
-		async function fetch() {
+		async function fetchData() {
 			const data = await getSummary(userInfo.token, setStatus, setError);
 			setSummary(data);
 		}
-		fetch();
+		fetchData();
 		setType(userInfo.role);
 	}, [userInfo]);
 
@@ -54,7 +54,6 @@ const Dashboard = () => {
 				{summary?.is_missing_info && <Alert text='Informação em falta no Perfil' />}	
 				
 				<div className='modules-btns d-flex flex-column d-md-grid'>
-
 					{role === 'student' &&
 						(
 							<>
@@ -169,11 +168,18 @@ const Dashboard = () => {
 						/>
 					)}
 					{role === 'admin' && (
+						<>
+						<DashButton
+							action={() => navigate("/academic")}
+							icon={<i className="bi bi-mortarboard-fill"></i>}
+							text='Serviços Académicos'
+						/>
 						<DashButton
 							action={() => navigate("/settings")}
 							icon={<i className="bi bi-gear-fill"></i>}
 							text='Definições'
 						/>
+						</>
 					)}
 
 				</div>

@@ -448,15 +448,20 @@ class Proposal(models.Model):
 
 
 class Candidature(models.Model):
+    # Simplified state machine:
+    # submitted -> placed -> awaiting_signatures -> finished
+    # The Protocol model tracks individual signatures
     STATE_CHOICES = [
-        ('submitted', 'Submitted'),
-        ('revision', 'Revision'),
-        ('placed', 'Placed'),
+        ('submitted', 'Submetida'),           # Student submitted candidature
+        ('revision', 'Em Revisão'),           # Needs changes (optional)
+        ('placed', 'Colocado'),               # Student placed, awaiting protocol
+        ('awaiting_signatures', 'Aguarda Assinaturas'),  # Protocol generated, collecting signatures
+        ('finished', 'Concluído'),            # All signatures complete
+        # Legacy states for backwards compatibility
         ('protocol_generated', 'Protocol Generated'),
         ('presidency_signature', 'ISEC Signature'),
         ('company_signature', 'Company Signature'),
         ('student_signature', 'Student Signature'),
-        ('finished', 'Finished'),
     ]
 
     id_candidature = models.AutoField(primary_key=True)
@@ -498,3 +503,38 @@ class CandidatureHistory(models.Model):
 
     def __str__(self):
         return f"{self.candidature} | {self.previous_state} → {self.new_state} at {self.changed_at}"
+
+
+class Protocol(models.Model):
+    """REQ-7: Protocol documents for approved placements"""
+    id_protocol = models.AutoField(primary_key=True)
+    candidature = models.OneToOneField('Candidature', on_delete=models.CASCADE, related_name='protocol')
+    
+    # Document storage
+    document = models.FileField(upload_to='protocols/', null=True, blank=True)
+    generated_at = models.DateTimeField(auto_now_add=True)
+    
+    # Signature tracking
+    isec_signed_at = models.DateTimeField(null=True, blank=True)
+    isec_signed_by = models.ForeignKey('Accounts', on_delete=models.SET_NULL, null=True, blank=True, related_name='isec_signed_protocols')
+    
+    company_signed_at = models.DateTimeField(null=True, blank=True)
+    company_signed_by = models.ForeignKey('Accounts', on_delete=models.SET_NULL, null=True, blank=True, related_name='company_signed_protocols')
+    
+    student_signed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Protocol metadata
+    protocol_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    academic_year = models.CharField(max_length=20)
+    
+    def __str__(self):
+        return f"Protocol {self.protocol_number or self.id_protocol} - {self.candidature.student}"
+    
+    def save(self, *args, **kwargs):
+        if not self.protocol_number:
+            # Generate protocol number: PROT-YEAR-SEQUENTIAL
+            year = self.candidature.student.calendar.calendar_year if self.candidature.student.calendar else date.today().year
+            count = Protocol.objects.filter(academic_year__startswith=str(year)).count() + 1
+            self.protocol_number = f"PROT-{year}-{count:04d}"
+            self.academic_year = f"{year}/{year+1}"
+        super().save(*args, **kwargs)

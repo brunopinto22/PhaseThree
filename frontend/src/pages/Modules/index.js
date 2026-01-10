@@ -12,3 +12,4 @@ export * from './Company';
 export * from './Representative';
 
 export * from './Orientation';
+export * from './Academic';

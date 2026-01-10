@@ -29,3 +29,100 @@
 	flex-direction: column;
 	align-items: center;
 }
+
+/* Protocol Section */
+#candidature .protocol-section {
+	background: var(--bg-card);
+	border-radius: 12px;
+	padding: 1.5rem;
+	border: 1px solid var(--border-color);
+}
+
+#candidature .protocol-section h4 {
+	margin: 0 0 1rem 0;
+	color: var(--text-primary);
+	font-weight: 600;
+}
+
+#candidature .protocol-action {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+#candidature .protocol-action p {
+	color: var(--text-secondary);
+	margin: 0;
+}
+
+#candidature .protocol-details {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+#candidature .protocol-info {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 0.5rem;
+}
+
+#candidature .protocol-info p {
+	margin: 0;
+	color: var(--text-secondary);
+}
+
+#candidature .protocol-signatures h5 {
+	margin: 0 0 1rem 0;
+	font-size: 0.95rem;
+	color: var(--text-primary);
+}
+
+#candidature .signatures-grid {
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+#candidature .signature-item {
+	flex: 1;
+	min-width: 150px;
+	padding: 1rem;
+	background: var(--bg-secondary);
+	border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	text-align: center;
+}
+
+#candidature .signature-item.signed {
+	background: rgba(34, 197, 94, 0.1);
+	border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+#candidature .signature-label {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+#candidature .signature-status {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+	color: var(--text-secondary);
+}
+
+#candidature .signature-status.pending {
+	color: var(--text-muted);
+}
+
+#candidature .signature-status small {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+#candidature .protocol-actions {
+	flex-wrap: wrap;
+}
