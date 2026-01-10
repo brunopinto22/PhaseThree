@@ -538,3 +538,19 @@ class Protocol(models.Model):
             self.protocol_number = f"PROT-{year}-{count:04d}"
             self.academic_year = f"{year}/{year+1}"
         super().save(*args, **kwargs)
+
+
+class Consent(models.Model):
+    """
+    REQ-17: GDPR Compliance - Track user consent for data processing
+    """
+    user = models.OneToOneField('Accounts', on_delete=models.CASCADE, related_name='gdpr_consent')
+    consent_given = models.BooleanField(default=False)
+    consent_date = models.DateTimeField(auto_now_add=True)
+    consent_ip = models.GenericIPAddressField(null=True, blank=True)
+    consent_withdrawn = models.BooleanField(default=False)
+    withdrawal_date = models.DateTimeField(null=True, blank=True)
+    privacy_policy_version = models.CharField(max_length=10, default="1.0")
+    
+    def __str__(self):
+        return f"Consent for {self.user.email} - {'Given' if self.consent_given and not self.consent_withdrawn else 'Withdrawn'}"

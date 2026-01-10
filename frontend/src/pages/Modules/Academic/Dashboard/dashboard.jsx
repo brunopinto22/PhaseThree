@@ -2,7 +2,7 @@ import './dashboard.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, State, OptionButton, PrimaryButton } from '../../../../components';
-import { getAcademicDashboard, getAcademicPlacements, getPendingActions, generateProtocol, signProtocol, exportPlacements, downloadProtocol } from '../../../../services/academic';
+import { getAcademicDashboard, getAcademicPlacements, getPendingActions, generateProtocol, signProtocol, exportPlacements, downloadProtocol, getPendingRegistrations, validateStudentRegistration } from '../../../../services/academic';
 import { UserContext } from '../../../../contexts';
 
 const AcademicDashboard = () => {
@@ -13,6 +13,7 @@ const AcademicDashboard = () => {
     const [dashboard, setDashboard] = useState(null);
     const [placements, setPlacements] = useState([]);
     const [pendingActions, setPendingActions] = useState([]);
+    const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [status, setStatus] = useState(null);
     const [errorMessage, setErrorMessage] = useState("");
@@ -49,6 +50,11 @@ const AcademicDashboard = () => {
                 const data = await getAcademicPlacements(token, filters, setStatus, setErrorMessage);
                 if (data) {
                     setPlacements(data);
+                }
+            } else if (activeTab === 'registrations') {
+                const data = await getPendingRegistrations(token, setStatus, setErrorMessage);
+                if (data) {
+                    setRegistrations(data.registrations || []);
                 }
             }
         };
@@ -213,6 +219,12 @@ const AcademicDashboard = () => {
                         onClick={() => setActiveTab('placements')}
                     >
                         <i className="bi bi-people-fill me-2"></i>Colocações
+                    </button>
+                    <button 
+                        className={`tab-btn ${activeTab === 'registrations' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('registrations')}
+                    >
+                        <i className="bi bi-person-check-fill me-2"></i>Registos
                     </button>
                 </div>
             </div>
@@ -383,6 +395,79 @@ const AcademicDashboard = () => {
                             <tbody>
                                 {placements.map((placement) => (
                                     <PlacementRow key={placement.id} placement={placement} />
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'registrations' && (
+                <div className="registrations-content">
+                    <div className="registrations-header mb-3">
+                        <h5><i className="bi bi-person-check-fill me-2"></i>Registos Pendentes ({registrations.length})</h5>
+                        <p className="text-muted">Estudantes com informações incompletas ou sem calendário atribuído</p>
+                    </div>
+
+                    {registrations.length === 0 ? (
+                        <Alert text="Todos os registos estão completos" type="success" />
+                    ) : (
+                        <table className="placements-table">
+                            <thead>
+                                <tr className="header">
+                                    <th className="fit-column">Nº</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Curso</th>
+                                    <th>Calendário</th>
+                                    <th>Problemas</th>
+                                    <th className="fit-column">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {registrations.map((reg) => (
+                                    <tr key={reg.id} className="table-row">
+                                        <td className="fit-column text-center">{reg.id}</td>
+                                        <td>{reg.name}</td>
+                                        <td>{reg.email}</td>
+                                        <td>{reg.course}</td>
+                                        <td>{reg.calendar || <span className="badge bg-warning">Não atribuído</span>}</td>
+                                        <td>
+                                            {reg.issues.map((issue, idx) => (
+                                                <span key={idx} className="badge bg-danger me-1">{issue}</span>
+                                            ))}
+                                        </td>
+                                        <td className="d-flex gap-2">
+                                            <button 
+                                                className="btn btn-sm btn-success"
+                                                onClick={() => {
+                                                    const notes = prompt('Notas (opcional):');
+                                                    validateStudentRegistration(token, reg.id, 'approve', null, notes, setStatus, setErrorMessage)
+                                                        .then(() => {
+                                                            alert('Registo aprovado!');
+                                                            setActiveTab('registrations');
+                                                        });
+                                                }}
+                                            >
+                                                <i className="bi bi-check"></i>
+                                            </button>
+                                            <button 
+                                                className="btn btn-sm btn-danger"
+                                                onClick={() => {
+                                                    const notes = prompt('Motivo da rejeição:');
+                                                    if (notes) {
+                                                        validateStudentRegistration(token, reg.id, 'reject', null, notes, setStatus, setErrorMessage)
+                                                            .then(() => {
+                                                                alert('Registo rejeitado');
+                                                                setActiveTab('registrations');
+                                                            });
+                                                    }
+                                                }}
+                                            >
+                                                <i className="bi bi-x"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
                                 ))}
                             </tbody>
                         </table>

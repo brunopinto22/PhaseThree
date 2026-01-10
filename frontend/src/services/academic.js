@@ -272,3 +272,56 @@ export const downloadProtocol = async (token, protocolId) => {
     a.remove();
 };
 
+
+// Student Registration Management (REQ-11-12)
+export const getPendingRegistrations = async (token, setStatus, setError) => {
+    try {
+        const response = await fetch(`${apiUrl}/academic/registrations`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        setStatus(response.status);
+
+        if (!response.ok) {
+            const error = await response.json();
+            setError(error.message || 'Erro ao obter registos pendentes');
+            return null;
+        }
+
+        return await response.json();
+    } catch (error) {
+        setError('Erro de rede ou servidor');
+        return null;
+    }
+};
+
+export const validateStudentRegistration = async (token, studentNumber, action, calendarId, notes, setStatus, setError) => {
+    try {
+        const response = await fetch(`${apiUrl}/academic/registrations/${studentNumber}/validate`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action, calendar_id: calendarId, notes })
+        });
+
+        setStatus(response.status);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            setError(data.message || 'Erro ao validar registo');
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        setError('Erro de rede ou servidor');
+        return null;
+    }
+};

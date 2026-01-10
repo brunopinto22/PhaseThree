@@ -9,4 +9,6 @@ urlpatterns = [
     path('user/password/recover/confirm', recuperar_password_confirm),
     path('user/summary', summary),
     path('user/changePfp', changePfp),
+    path('user/gdpr/export', exportMyData),
+    path('user/gdpr/delete', requestDataDeletion),
 ]

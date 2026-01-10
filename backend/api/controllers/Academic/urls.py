@@ -4,7 +4,9 @@ from .views import (
     listPlacements,
     advanceCandidature,
     pendingActions,
-    exportPlacements
+    exportPlacements,
+    listPendingRegistrations,
+    validateStudentRegistration
 )
 
 urlpatterns = [
@@ -13,5 +15,7 @@ urlpatterns = [
     path('academic/placements/export', exportPlacements),
     path('academic/candidature/<int:pk>/advance', advanceCandidature),
     path('academic/pending-actions', pendingActions),
+    path('academic/registrations', listPendingRegistrations),
+    path('academic/registrations/<int:student_number>/validate', validateStudentRegistration),
 ]
 

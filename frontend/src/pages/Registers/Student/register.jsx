@@ -48,6 +48,12 @@ const Register = () => {
 
 
 		const submit = () => {
+		// REQ-17: Check GDPR consent
+		const gdprCheckbox = document.querySelector('input[type="checkbox"]');
+		if (!gdprCheckbox || !gdprCheckbox.checked) {
+			setErrorMessage("Deve consentir o tratamento de dados pessoais (RGPD).");
+			return;
+		}
 
 		const data = {
 			student_name: name,
@@ -56,6 +62,7 @@ const Register = () => {
 			student_course: course,
 			student_branch: branch,
 			password: password,
+			gdpr_consent: true  // REQ-17
 		};
 
 		if(registerStudent(data, setStatus, setErrorMessage)){
@@ -99,6 +106,23 @@ const Register = () => {
 
 						<PasswordInput text='Palavra-Passe' value={password} setValue={setPassword} />
 						<PasswordInput text='Confirmar Palavra-Passe' value={repeat} setValue={setRepeat} />
+
+						{/* REQ-17: GDPR Consent */}
+						<div className="gdpr-consent mt-3 mb-2">
+							<label className="d-flex align-items-start gap-2">
+								<input 
+									type="checkbox" 
+									required 
+									style={{marginTop: '4px'}}
+								/>
+								<span style={{fontSize: '0.9em', color: '#666'}}>
+									Consinto o tratamento dos meus dados pessoais de acordo com o Regulamento Geral de Proteção de Dados (RGPD). 
+									<a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{marginLeft: '4px'}}>
+										Política de Privacidade
+									</a>
+								</span>
+							</label>
+						</div>
 
             <PrimaryButton content={<h6>Registar</h6>} action={submit} />
 						{errorMessage && (<p className='error-message'>{errorMessage}</p>)}

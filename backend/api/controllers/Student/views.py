@@ -142,6 +142,11 @@ def registerStudent(request):
     try:
         data = request.data.copy()
 
+        # REQ-17: Check GDPR consent
+        gdpr_consent = data.get("gdpr_consent", False)
+        if not gdpr_consent:
+            return Response({"message": "Deve consentir o tratamento de dados pessoais (RGPD)."}, status=status.HTTP_400_BAD_REQUEST)
+
         course = None
         try:
             course = Course.objects.get(id_course=data.get("student_course"))
@@ -182,6 +187,14 @@ def registerStudent(request):
         )
         user.set_password(password)
         user.save()
+        
+        # REQ-17: Create GDPR consent record
+        Consent.objects.create(
+            user=user,
+            consent_given=True,
+            consent_ip=request.META.get('REMOTE_ADDR'),
+            privacy_policy_version="1.0"
+        )
 
         student = Student.objects.create(
             user=user,

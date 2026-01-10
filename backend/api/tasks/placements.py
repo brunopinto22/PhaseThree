@@ -1,7 +1,10 @@
 from django.db import transaction
+from django.core.mail import send_mail
+from django.conf import settings
+from collections import defaultdict
 from api.models import (
     Calendar, Candidature, CandidatureProposal, CandidatureHistory,
-    Student, Proposal
+    Student, Proposal, Company, Representative
 )
 
 
@@ -137,6 +140,12 @@ def handle_placements(calendar_id):
     
     print(f">> Placements complete: {placed_count} placed, {not_placed_count} not placed")
     
+    # REQ-6 & REQ-16: Send notification emails after placements
+    try:
+        _send_placement_notifications(calendar, results)
+    except Exception as e:
+        print(f"Error sending placement notifications: {e}")
+    
     return {
         "calendar": str(calendar),
         "total_candidatures": len(sorted_candidatures),
@@ -144,3 +153,147 @@ def handle_placements(calendar_id):
         "not_placed": not_placed_count,
         "results": results
     }
+
+
+def _send_placement_notifications(calendar, results):
+    """
+    REQ-6: Notify students about placement results
+    REQ-16: Notify companies about students placed in their proposals
+    """
+    # Group results by company for REQ-16
+    company_placements = defaultdict(list)
+    student_emails = []
+    
+    for result in results:
+        if result['status'] == 'placed':
+            proposal = Proposal.objects.select_related('company').get(id_proposal=result['proposal_id'])
+            student = Student.objects.select_related('user').get(student_number=result['student_number'])
+            
+            # Prepare student notification (REQ-6)
+            student_emails.append({
+                'email': student.user.email,
+                'name': student.student_name,
+                'proposal_title': result['proposal_title'],
+                'company': proposal.company.company_name if proposal.company else 'ISEC',
+                'placed': True
+            })
+            
+            # Group by company for REQ-16
+            if proposal.company:
+                company_placements[proposal.company.id_company].append({
+                    'student_name': student.student_name,
+                    'student_number': student.student_number,
+                    'student_email': student.user.email,
+                    'student_contact': student.contact or 'N/A',
+                    'proposal_title': result['proposal_title'],
+                    'average': result['average']
+                })
+        else:
+            # Student not placed (REQ-6)
+            student = Student.objects.select_related('user').get(student_number=result['student_number'])
+            student_emails.append({
+                'email': student.user.email,
+                'name': student.student_name,
+                'placed': False
+            })
+    
+    # Send emails to students (REQ-6)
+    for student_info in student_emails:
+        if student_info['placed']:
+            subject = "Resultado da Colocação de Estágio/Projeto - ISEC"
+            message = f"""
+Caro(a) {student_info['name']},
+
+Temos o prazer de informar que foi colocado(a) na seguinte proposta:
+
+Proposta: {student_info['proposal_title']}
+Entidade: {student_info['company']}
+
+Próximos passos:
+1. Será contactado(a) pela entidade acolhedora
+2. O protocolo será gerado automaticamente
+3. Aguarde instruções para assinatura do protocolo
+
+Pode consultar os detalhes da sua colocação na plataforma: {settings.FRONTEND_URL}
+
+Parabéns pela sua colocação!
+
+Cumprimentos,
+Serviços Académicos ISEC
+            """.strip()
+        else:
+            subject = "Resultado da Colocação de Estágio/Projeto - ISEC"
+            message = f"""
+Caro(a) {student_info['name']},
+
+Infelizmente, não foi possível realizar a sua colocação automática nas propostas selecionadas, pois não havia vagas disponíveis.
+
+A sua candidatura foi movida para revisão. Os Serviços Académicos irão contactá-lo(a) em breve para discutir alternativas.
+
+Por favor, aguarde contacto ou aceda à plataforma para mais informações: {settings.FRONTEND_URL}
+
+Cumprimentos,
+Serviços Académicos ISEC
+            """.strip()
+        
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[student_info['email']],
+            fail_silently=True
+        )
+    
+    # Send emails to companies (REQ-16)
+    for company_id, placements in company_placements.items():
+        try:
+            company = Company.objects.get(id_company=company_id)
+            representatives = Representative.objects.filter(
+                company=company,
+                user__is_active=True
+            ).select_related('user')
+            
+            if not representatives.exists():
+                continue
+            
+            recipient_emails = [rep.user.email for rep in representatives]
+            
+            # Build list of placed students
+            students_list = "\n".join([
+                f"  - {p['student_name']} (Nº {p['student_number']}, Média: {p['average']:.2f})\n"
+                f"    Proposta: {p['proposal_title']}\n"
+                f"    Contacto: {p['student_email']}, {p['student_contact']}"
+                for p in placements
+            ])
+            
+            subject = f"Colocações de Estudantes - {company.company_name}"
+            message = f"""
+Caro(a) Representante da {company.company_name},
+
+Foram colocados {len(placements)} estudante(s) nas vossas propostas de estágio/projeto para o calendário {calendar}:
+
+{students_list}
+
+Próximos passos:
+1. Os protocolos serão gerados automaticamente
+2. Receberá notificação para assinatura dos protocolos
+3. Poderá contactar os estudantes através dos dados acima
+
+Pode consultar mais detalhes na plataforma: {settings.FRONTEND_URL}
+
+Obrigado pela vossa colaboração!
+
+Cumprimentos,
+Serviços Académicos ISEC
+            """.strip()
+            
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=recipient_emails,
+                fail_silently=True
+            )
+            
+        except Company.DoesNotExist:
+            continue

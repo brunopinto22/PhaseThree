@@ -9,6 +9,8 @@ from rest_framework.status import *
 from django.db.models import Count, Q
 from django.db import transaction
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 
 from api.models import (
     Candidature, CandidatureProposal, CandidatureHistory, Protocol,
@@ -544,4 +546,157 @@ def exportPlacements(request):
         
     except Exception as e:
         return Response({"message": "Erro ao exportar dados", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def listPendingRegistrations(request):
+    """
+    REQ-11: List students with pending/incomplete registrations for validation.
+    """
+    auth_header = request.headers.get("Authorization")
+    account, user_type, error = get_user_account(auth_header)
+    
+    if error:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+    
+    if user_type not in ["admin", "teacher"]:
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+    
+    try:
+        # Students with missing info or without calendar assignment
+        pending_students = Student.objects.filter(
+            Q(calendar__isnull=True) |  # No calendar assigned
+            Q(curriculum__isnull=True) |  # No curriculum uploaded
+            Q(average__isnull=True) |  # Missing academic info
+            Q(address__isnull=True) | Q(address='')  # Missing personal info
+        ).select_related('user', 'student_course').order_by('-user__date_joined')
+        
+        registrations = []
+        for student in pending_students:
+            issues = []
+            if not student.calendar:
+                issues.append("Sem calendário atribuído")
+            if not student.curriculum:
+                issues.append("Currículo em falta")
+            if student.average is None:
+                issues.append("Média em falta")
+            if not student.address:
+                issues.append("Morada em falta")
+            
+            registrations.append({
+                "id": student.student_number,
+                "name": student.student_name,
+                "email": student.user.email,
+                "course": student.student_course.course_name if student.student_course else "N/A",
+                "calendar": str(student.calendar) if student.calendar else None,
+                "registered_at": student.user.date_joined.isoformat(),
+                "issues": issues,
+                "active": student.active
+            })
+        
+        return Response({"registrations": registrations}, status=HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({"message": "Erro ao listar registos", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
+def validateStudentRegistration(request, student_number):
+    """
+    REQ-11-12: Validate/approve student registration and assign calendar.
+    """
+    auth_header = request.headers.get("Authorization")
+    account, user_type, error = get_user_account(auth_header)
+    
+    if error:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+    
+    if user_type not in ["admin", "teacher"]:
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+    
+    try:
+        student = Student.objects.select_related('user', 'student_course').get(student_number=student_number)
+        
+        action = request.data.get("action")  # 'approve' or 'reject'
+        notes = request.data.get("notes", "")
+        calendar_id = request.data.get("calendar_id")
+        
+        with transaction.atomic():
+            if action == "approve":
+                # Assign calendar if provided
+                if calendar_id:
+                    try:
+                        calendar = Calendar.objects.get(id_calendar=calendar_id)
+                        student.calendar = calendar
+                    except Calendar.DoesNotExist:
+                        return Response({"message": "Calendário não encontrado"}, status=HTTP_404_NOT_FOUND)
+                
+                student.active = True
+                student.save()
+                
+                # Send approval email
+                subject = "Registo Aprovado - Sistema ISEC"
+                message = f"""
+Caro(a) {student.student_name},
+
+O seu registo no Sistema de Gestão de Estágios do ISEC foi aprovado!
+
+Calendário atribuído: {student.calendar if student.calendar else 'Por atribuir'}
+Curso: {student.student_course.course_name if student.student_course else 'N/A'}
+
+Já pode aceder à plataforma e consultar as propostas disponíveis.
+
+Aceda: {settings.FRONTEND_URL}
+
+{notes if notes else ''}
+
+Cumprimentos,
+Serviços Académicos ISEC
+                """.strip()
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[student.user.email],
+                    fail_silently=True
+                )
+                
+                return Response({"message": "Registo aprovado com sucesso"}, status=HTTP_200_OK)
+                
+            elif action == "reject":
+                student.active = False
+                student.save()
+                
+                # Send rejection email
+                subject = "Registo Pendente - Sistema ISEC"
+                message = f"""
+Caro(a) {student.student_name},
+
+O seu registo no Sistema de Gestão de Estágios do ISEC requer atenção.
+
+Motivo: {notes if notes else 'Informações incompletas'}
+
+Por favor, complete os dados em falta e contacte os Serviços Académicos.
+
+Cumprimentos,
+Serviços Académicos ISEC
+                """.strip()
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[student.user.email],
+                    fail_silently=True
+                )
+                
+                return Response({"message": "Registo rejeitado"}, status=HTTP_200_OK)
+            else:
+                return Response({"message": "Ação inválida"}, status=HTTP_400_BAD_REQUEST)
+        
+    except Student.DoesNotExist:
+        return Response({"message": "Estudante não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro ao validar registo", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 

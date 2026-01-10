@@ -381,3 +381,151 @@ def changePfp(request):
         return Response({"message": "O Utilizador não foi encontrado"}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def exportMyData(request):
+    """
+    REQ-17: GDPR Right to Data Access - Export all user data
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+    
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+    
+    try:
+        user = Accounts.objects.get(email=user_email)
+        
+        # Collect all user data
+        data = {
+            "account": {
+                "email": user.email,
+                "username": user.username,
+                "user_type": user.user_type,
+                "date_joined": user.date_joined.isoformat(),
+                "is_active": user.is_active
+            }
+        }
+        
+        # Add type-specific data
+        if user_type == "student":
+            student = Student.objects.get(user=user)
+            data["student_info"] = {
+                "number": student.student_number,
+                "name": student.student_name,
+                "email": user.email,
+                "nationality": student.nationality,
+                "nif": student.nif,
+                "address": student.address,
+                "contact": student.contact,
+                "average": student.average,
+                "ects": student.student_ects,
+                "course": student.student_course.course_name if student.student_course else None
+            }
+            
+            # Candidatures
+            candidatures = Candidature.objects.filter(student=student)
+            data["candidatures"] = [{
+                "id": c.id_candidature,
+                "state": c.state,
+                "submission_date": c.candidature_submission_date.isoformat()
+            } for c in candidatures]
+            
+        elif user_type == "teacher":
+            teacher = Teacher.objects.get(user=user)
+            data["teacher_info"] = {
+                "name": teacher.teacher_name,
+                "email": user.email,
+                "contact": teacher.teacher_contact
+            }
+            
+        elif user_type == "representative":
+            rep = Representative.objects.get(user=user)
+            data["representative_info"] = {
+                "name": rep.representative_name,
+                "email": user.email,
+                "company": rep.company.company_name if rep.company else None
+            }
+        
+        # GDPR consent
+        try:
+            consent = Consent.objects.get(user=user)
+            data["gdpr_consent"] = {
+                "given": consent.consent_given,
+                "date": consent.consent_date.isoformat(),
+                "withdrawn": consent.consent_withdrawn
+            }
+        except Consent.DoesNotExist:
+            data["gdpr_consent"] = None
+        
+        return Response(data, status=HTTP_200_OK)
+        
+    except Accounts.DoesNotExist:
+        return Response({"message": "Utilizador não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro ao exportar dados", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
+def requestDataDeletion(request):
+    """
+    REQ-17: GDPR Right to Erasure - Request account deletion
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+    
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+    
+    try:
+        user = Accounts.objects.get(email=user_email)
+        
+        # Anonymize user data instead of hard delete (to preserve historical records)
+        user.email = f"deleted_{user.pk}@anonymized.local"
+        user.username = f"deleted_user_{user.pk}"
+        user.is_active = False
+        user.save()
+        
+        # Mark consent as withdrawn
+        try:
+            consent = Consent.objects.get(user=user)
+            consent.consent_withdrawn = True
+            consent.withdrawal_date = timezone.now()
+            consent.save()
+        except Consent.DoesNotExist:
+            pass
+        
+        # Anonymize type-specific data
+        if user_type == "student":
+            student = Student.objects.get(user=user)
+            student.student_name = "Utilizador Anonimizado"
+            student.address = ""
+            student.contact = ""
+            student.active = False
+            student.save()
+        elif user_type == "teacher":
+            teacher = Teacher.objects.get(user=user)
+            teacher.teacher_name = "Docente Anonimizado"
+            teacher.teacher_contact = ""
+            teacher.save()
+        elif user_type == "representative":
+            rep = Representative.objects.get(user=user)
+            rep.representative_name = "Representante Anonimizado"
+            rep.save()
+        
+        # Send confirmation email
+        send_mail(
+            subject="Pedido de Eliminação de Dados - ISEC",
+            message="O seu pedido de eliminação de dados foi processado. A sua conta foi anonimizada.",
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user_email],  # Send to old email before it's changed
+            fail_silently=True
+        )
+        
+        return Response({"message": "Dados eliminados com sucesso"}, status=HTTP_200_OK)
+        
+    except Accounts.DoesNotExist:
+        return Response({"message": "Utilizador não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"message": "Erro ao eliminar dados", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)

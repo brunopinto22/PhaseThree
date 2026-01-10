@@ -15,6 +15,7 @@ from api.models import *
 from api.permissions import *
 from api.token_manager import *
 from django.db import transaction
+from django.conf import settings
 from api.tasks.placements import handle_placements
 
 
@@ -210,6 +211,50 @@ def createCalendar(request):
             course=course,
         )
         calendar.save()
+
+        # REQ-15: Notify companies about new calendar
+        try:
+            # Get all companies with active representatives
+            companies = Company.objects.filter(active=True).prefetch_related('representatives')
+            
+            for company in companies:
+                representatives = company.representatives.filter(user__is_active=True)
+                if representatives.exists():
+                    recipient_emails = [rep.user.email for rep in representatives]
+                    
+                    subject = f"Novo Calendário ISEC - {calendar.calendar_year}/{calendar.calendar_year+1}"
+                    message = f"""
+Caro(a) Representante da {company.company_name},
+
+Foi criado um novo calendário para o ano letivo {calendar.calendar_year}/{calendar.calendar_year+1} - {calendar.calendar_semester}º Semestre ({course.course_name}).
+
+Datas importantes:
+- Início de submissão de propostas: {calendar.submission_start.strftime('%d/%m/%Y')}
+- Fim de submissão de propostas: {calendar.submission_end.strftime('%d/%m/%Y')}
+- Divulgação de propostas: {calendar.divulgation.strftime('%d/%m/%Y')}
+- Candidaturas: {calendar.candidatures.strftime('%d/%m/%Y')}
+- Colocações: {calendar.placements.strftime('%d/%m/%Y')}
+
+Número de propostas permitidas por aluno: {calendar.min_proposals} a {calendar.max_proposals}
+
+Por favor, submeta as suas propostas de estágio/projeto através da plataforma.
+
+Aceda à plataforma: {settings.FRONTEND_URL}
+
+Cumprimentos,
+Sistema de Gestão de Estágios ISEC
+                    """.strip()
+                    
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=recipient_emails,
+                        fail_silently=True,
+                    )
+        except Exception as e:
+            # Log error but don't fail calendar creation
+            print(f"Error sending calendar notification emails: {e}")
 
         return Response({"message":"Calendário criado com sucesso."}, status=status.HTTP_201_CREATED)
     except Course.DoesNotExist:
