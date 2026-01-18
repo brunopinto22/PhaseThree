@@ -1,7 +1,7 @@
 import './view.css';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
-import { PrimaryButton, SecundaryButton, Alert } from '../../../../components';
+import { PrimaryButton, SecundaryButton, Alert, StateTracker } from '../../../../components';
 import { UserContext } from '../../../../contexts';
 import { getMyCandidature } from '../../../../services';
 
@@ -15,6 +15,48 @@ function View() {
 
 	const [candidature, setCandidature] = useState(null);
 	const [calendar, setCalendar] = useState(null);
+
+	const getStateLabel = (state) => {
+		const labels = {
+			'submitted': 'Submetida',
+			'revision': 'Em Revisão',
+			'placed': 'Colocado',
+			'protocol_generated': 'Protocolo Gerado',
+			'presidency_signature': 'Aguardando Assinatura ISEC',
+			'company_signature': 'Aguardando Assinatura Empresa',
+			'student_signature': 'Aguardando Sua Assinatura',
+			'finished': 'Concluído'
+		};
+		return labels[state] || state;
+	};
+
+	const getStateDescription = (state) => {
+		const descriptions = {
+			'submitted': 'Sua candidatura foi submetida com sucesso e está aguardando análise.',
+			'revision': 'Sua candidatura está sendo analisada pelos serviços académicos.',
+			'placed': 'Parabéns! Você foi colocado numa proposta de estágio.',
+			'protocol_generated': 'O protocolo de estágio foi gerado e está pronto para assinatura.',
+			'presidency_signature': 'O protocolo aguarda assinatura da presidência do ISEC.',
+			'company_signature': 'O protocolo aguarda assinatura da empresa.',
+			'student_signature': 'O protocolo aguarda sua assinatura. Por favor, assine o documento.',
+			'finished': 'Processo concluído! Seu estágio está oficialmente iniciado.'
+		};
+		return descriptions[state] || 'Estado desconhecido';
+	};
+
+	const getNextSteps = (state) => {
+		const nextSteps = {
+			'submitted': 'Aguarde a análise dos serviços académicos.',
+			'revision': 'Aguarde o processo de colocação.',
+			'placed': 'Aguarde a geração do protocolo de estágio.',
+			'protocol_generated': 'Aguarde a assinatura da presidência.',
+			'presidency_signature': 'Aguarde a empresa assinar o protocolo.',
+			'company_signature': 'Assine o protocolo assim que possível.',
+			'student_signature': 'Aguarde finalização do processo.',
+			'finished': 'Processo completo. Bom estágio!'
+		};
+		return nextSteps[state] || '';
+	};
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -93,12 +135,23 @@ function View() {
 
 			{hasCandidature ? (
 				<>
+					<section className='state-progress p-0'>
+						<h4>Progresso da Candidatura</h4>
+						<StateTracker currentState={candidature.state} />
+						
+						<div className='current-state-info'>
+							<h5>Estado Atual: {getStateLabel(candidature.state)}</h5>
+							<p className='state-description'>{getStateDescription(candidature.state)}</p>
+							<p className='next-steps'><strong>Próximos Passos:</strong> {getNextSteps(candidature.state)}</p>
+						</div>
+					</section>
+
 					<section className='candidature-details p-0'>
 						<h4>Detalhes da Candidatura</h4>
 						<div className='details-grid'>
 							<div className='detail-item'>
 								<strong>Estado:</strong> 
-								<span className='state'> {candidature.state}</span>
+								<span className='state'> {getStateLabel(candidature.state)}</span>
 							</div>
 							<div className='detail-item'>
 								<strong>Submetida em:</strong> {candidature.submission_date}

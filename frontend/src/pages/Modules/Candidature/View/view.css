@@ -37,6 +37,37 @@
 	margin-bottom: var(--spacing-lg);
 }
 
+.state-progress {
+	margin: var(--spacing-xl) 0;
+	padding: var(--spacing-lg);
+	background-color: var(--background-color-100);
+	border-radius: var(--border-radius, 8px);
+}
+
+.current-state-info {
+	margin-top: var(--spacing-xl);
+	padding: var(--spacing-lg);
+	background-color: var(--background-light, #f8f9fa);
+	border-radius: var(--border-radius, 8px);
+}
+
+.current-state-info h5 {
+	color: var(--primary-color, #007bff);
+	margin-bottom: var(--spacing-md);
+}
+
+.current-state-info .state-description {
+	color: var(--text-color-700);
+	margin-bottom: var(--spacing-sm);
+	line-height: 1.6;
+}
+
+.current-state-info .next-steps {
+	color: var(--text-color-600);
+	font-style: italic;
+	margin-top: var(--spacing-sm);
+}
+
 .candidature-details {
 	margin: var(--spacing-lg) 0;
 }

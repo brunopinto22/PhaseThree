@@ -49,11 +49,21 @@
 	font-size: var(--fs-400);
 }
 
+.state-tracker .state .label {
+	width: min-content;
+	text-align: center;
+	color: var(--text-color-700);
+	font-weight: 700;
+	font-size: var(--fs-300);
+	margin-bottom: 0.2rem;
+}
+
 .state-tracker .state .description {
 	width: min-content;
 	text-align: center;
 	color: var(--text-color-500);
-	font-weight: 600;
+	font-weight: 500;
+	font-size: var(--fs-200);
 }
 
 
@@ -65,6 +75,9 @@
 .state.done .icon::before {
 	background-color: var(--primary-color-500);
 }
+.state.done .label {
+	color: var(--text-color-500);
+}
 .state.done .description {
 	color: var(--text-color-300);
 }
@@ -74,8 +87,11 @@
 	color: var(--primary-color-600);
 	outline-color: var(--primary-color-600);
 }
-.state.current .description {
+.state.current .label {
 	color: var(--text-color-900);
+}
+.state.current .description {
+	color: var(--text-color-700);
 }
 
 .state.to-do .icon {
