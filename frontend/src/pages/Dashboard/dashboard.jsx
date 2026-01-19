@@ -175,6 +175,28 @@ const Dashboard = () => {
 						/>
 					)}
 
+					{role === 'academic_services' && (
+						<>
+							<DashButton
+								action={() => navigate("/student/list")}
+								icon={<i className="bi bi-person-fill"></i>}
+								text="Ver Alunos com Internships"
+							/>
+							<DashButton
+								icon={<i className="bi bi-file-earmark-check-fill"></i>}
+								text="Validar Registos"
+							/>
+							<DashButton
+								icon={<i className="bi bi-clipboard2-check-fill"></i>}
+								text="Gerir Registos"
+							/>
+							<DashButton
+								icon={<i className="bi bi-briefcase-fill"></i>}
+								text="Ver Internships e Placements"
+							/>
+						</>
+					)}
+
 				</div>
 			</div>
 
