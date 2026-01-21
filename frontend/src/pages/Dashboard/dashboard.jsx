@@ -168,17 +168,24 @@ const Dashboard = () => {
 						/>
 					)}
 					{role === 'admin' && (
-						<DashButton
-							action={() => navigate("/settings")}
-							icon={<i className="bi bi-gear-fill"></i>}
-							text='Definições'
-						/>
+						<>
+							<DashButton
+								action={() => navigate("/settings")}
+								icon={<i className="bi bi-gear-fill"></i>}
+								text='Definições'
+							/>
+							<DashButton
+								action={() => navigate("/academic-services/internships")}
+								icon={<i className="bi bi-briefcase-fill"></i>}
+								text='Ver Alunos com Internships'
+							/>
+						</>
 					)}
 
 					{role === 'academic_services' && (
 						<>
 							<DashButton
-								action={() => navigate("/student/list")}
+								action={() => navigate("/academic-services/internships")}
 								icon={<i className="bi bi-person-fill"></i>}
 								text="Ver Alunos com Internships"
 							/>
