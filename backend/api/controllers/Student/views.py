@@ -580,7 +580,7 @@ def uploadCurriculum(request, pk):
 @api_view(["GET"])
 def getCurriculum(request, pk):
     """
-    Obter informações do currículo do aluno (URL pública para download).
+    Obter informações do currículo do aluno.
     O currículo é público para ser visto no perfil.
     """
     try:
@@ -614,3 +614,54 @@ def getCurriculum(request, pk):
             {"message": "Erro ao obter currículo", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["DELETE"])
+def deleteCurriculum(request, pk):
+    """Elimina o ficheiro e define o campo como null."""
+    auth_header = request.headers.get("Authorization")
+    
+    if not auth_header:
+        return Response({"message": "login"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+    except IndexError:
+        return Response({"message": "login"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    result = decode_token(token)
+    
+    if len(result) == 2:
+        return Response({"message": "login"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user_id, user_email, user_type = result
+
+    if user_type not in ["student", "admin"]:
+        return Response({"message": "Sem permissão"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        student = Student.objects.get(student_number=pk)
+        
+        if user_type == "student":
+            requester = Student.objects.get(user__email=user_email)
+            if requester.student_number != student.student_number:
+                return Response({"message": "Sem permissão"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not student.curriculum:
+            return Response({"message": "Sem currículo"}, status=status.HTTP_204_NO_CONTENT)
+
+        try:
+            student.curriculum.delete(save=False)
+        except Exception:
+            pass
+
+        student.curriculum = None
+        student.save()
+
+        return Response({"message": "Currículo eliminado"}, status=status.HTTP_200_OK)
+
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

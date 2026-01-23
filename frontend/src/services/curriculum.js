@@ -53,7 +53,6 @@ export const getCurriculum = async (studentId, token) => {
       },
     });
 
-    // 204 means no curriculum uploaded yet
     if (response.status === 204) {
       return null;
     }
@@ -63,6 +62,30 @@ export const getCurriculum = async (studentId, token) => {
     }
 
     return await response.json();
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteCurriculum = async (studentId, token) => {
+  try {
+    const response = await fetch(`${API_URL}/student/${studentId}/curriculum/delete`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+    });
+
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType && contentType.includes('application/json');
+    const payload = isJson ? await response.json() : await response.text();
+
+    if (!response.ok) {
+      const message = isJson ? payload?.message : payload;
+      throw new Error(message || 'Erro ao eliminar currículo');
+    }
+
+    return payload;
   } catch (error) {
     throw error;
   }
