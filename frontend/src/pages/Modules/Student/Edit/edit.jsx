@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox, PfpModal } from '../../../../components';
 
 import { getStudent, createStudent, editStudent, getCourse, listCourses } from '../../../../services';
+import CurriculumUpload from '../../../../components/CurriculumUpload/curriculumUpload';
 import { UserContext } from '../../../../contexts';
 
 
@@ -58,6 +59,7 @@ const Edit = () =>  {
 	const [error, setError] = useState("");
 
 	const [show, setShow] = useState(false);
+	const [showCurriculumUpload, setShowCurriculumUpload] = useState(false);
 
 	const id = searchParams.get("id");
   const isNew = searchParams.get("new");
@@ -208,10 +210,21 @@ const Edit = () =>  {
 					<div className="options d-flex flex-column justify-content-center w-100">
 						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Alunos"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
 						<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
-						<PrimaryButton small content={<p>Alterar Currículo</p>} />
+						<PrimaryButton small content={<p>Alterar Currículo</p>} action={() => setShowCurriculumUpload(!showCurriculumUpload)} />
 						<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
+				{showCurriculumUpload && (
+					<div className='col-sm-12 col-md-8'>
+						<CurriculumUpload 
+							studentId={id} 
+							token={userInfo.token}
+							onSuccess={() => {
+								setShowCurriculumUpload(false);
+							}}
+						/>
+					</div>
+				)}
 			</section>
 
 			<section className='row p-0'>

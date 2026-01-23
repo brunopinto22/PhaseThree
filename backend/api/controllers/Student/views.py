@@ -483,3 +483,134 @@ def removeFavorite(request, proposal_id):
         return Response({"message": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+def uploadCurriculum(request, pk):
+    """
+    Upload de currículo do aluno. 
+    O aluno só pode fazer upload do próprio currículo.
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    # Suporta "Token <jwt>" ou o token diretamente
+    parts = auth_header.split()
+    token_str = parts[1] if len(parts) == 2 and parts[0].lower() == "token" else auth_header
+
+    decoded = decode_token(token_str)
+    if not isinstance(decoded, tuple):
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    if len(decoded) == 3:
+        user_id, user_email, user_type = decoded
+    else:
+        # decode_token retornou mensagem de erro + None
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        student = Student.objects.get(student_number=pk)
+
+        # Verificar permissões
+        if user_type == "student":
+            self = Student.objects.get(user__email=user_email)
+            if student != self:
+                return Response(
+                    {"message": "Sem permissão para fazer upload do currículo de outro aluno"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        elif user_type != "admin":
+            return Response(
+                {"message": "Sem permissão para fazer upload de currículo"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Verificar se arquivo foi enviado
+        if "curriculum" not in request.FILES:
+            return Response(
+                {"message": "Nenhum arquivo foi enviado"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        curriculum_file = request.FILES["curriculum"]
+
+        # Verificar extensão
+        if not curriculum_file.name.lower().endswith(".pdf"):
+            return Response(
+                {"message": "Apenas arquivos PDF são aceitos"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verificar tamanho (máximo 10MB)
+        if curriculum_file.size > 10 * 1024 * 1024:
+            return Response(
+                {"message": "Arquivo muito grande. Máximo 10MB"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Apagar arquivo anterior se existir
+        if student.curriculum:
+            student.curriculum.delete()
+
+        # Salvar novo arquivo
+        student.curriculum = curriculum_file
+        student.save()
+
+        return Response(
+            {
+                "message": "Currículo enviado com sucesso",
+                "curriculum_url": student.curriculum.url if student.curriculum else None
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Student.DoesNotExist:
+        return Response(
+            {"message": "Aluno não encontrado"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return Response(
+            {"message": "Erro ao fazer upload", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+def getCurriculum(request, pk):
+    """
+    Obter informações do currículo do aluno (URL pública para download).
+    O currículo é público para ser visto no perfil.
+    """
+    try:
+        student = Student.objects.get(student_number=pk)
+
+        if not student.curriculum:
+            return Response(
+                {"message": "Aluno ainda não tem currículo"},
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+        # Build absolute URL com o domínio do backend
+        curriculum_url = request.build_absolute_uri(student.curriculum.url)
+
+        return Response(
+            {
+                "curriculum_url": curriculum_url,
+                "curriculum_name": student.curriculum.name.split("/")[-1]
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Student.DoesNotExist:
+        return Response(
+            {"message": "Aluno não encontrado"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return Response(
+            {"message": "Erro ao obter currículo", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
