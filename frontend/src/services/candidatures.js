@@ -106,3 +106,38 @@ export async function getMyCandidature(token, setStatus, setErrorMessage) {
     return null;
   }
 }
+
+/**
+ * Obtém o histórico de mudanças de estado de uma candidatura
+ * @param {string} token - Token de autenticação
+ * @param {number} candidatureId - ID da candidatura
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Object|null} - Histórico da candidatura ou null em caso de erro
+ */
+export async function getCandidatureHistory(token, candidatureId, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/${candidatureId}/history/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao obter histórico");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}

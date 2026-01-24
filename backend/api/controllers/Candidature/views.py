@@ -107,6 +107,15 @@ def submitCandidature(request):
                 candidature_submission_date=today
             )
 
+            # Registrar histórico inicial
+            CandidatureStatusHistory.objects.create(
+                candidature=candidature,
+                old_state=None,
+                new_state='submitted',
+                changed_by=student.user,
+                notes='Candidatura inicial submetida'
+            )
+
             for proposal in proposals:
                 CandidatureProposal.objects.create(
                     candidature=candidature,
@@ -307,6 +316,8 @@ def getMyCandidature(request):
                 "id_candidature": candidature.id_candidature,
                 "state": candidature.state,
                 "submission_date": candidature.candidature_submission_date.strftime("%d/%m/%Y"),
+                "created_at": candidature.created_at.strftime("%d/%m/%Y %H:%M"),
+                "last_updated": candidature.last_updated.strftime("%d/%m/%Y %H:%M"),
                 "proposals": proposals_list,
                 "calendar": {
                     "min": calendar.min_proposals,
@@ -333,3 +344,114 @@ def getMyCandidature(request):
             {"error": "Erro interno do servidor", "details": str(e)},
             status=HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["GET"])
+def getCandidatureHistory(request, pk):
+    """
+    Endpoint para obter histórico de mudanças de estado de uma candidatura.
+    Apenas o próprio aluno ou admin/academic_services podem acessar.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    # Autenticação
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    try:
+        candidature = Candidature.objects.get(id_candidature=pk)
+        
+        # Verificar permissões
+        if user_type == "student":
+            student = Student.objects.get(user__email=user_email)
+            if candidature.student != student:
+                return Response(
+                    {"message": "Sem permissão para ver este histórico"},
+                    status=HTTP_401_UNAUTHORIZED
+                )
+        elif user_type not in ["admin", "academic_services"]:
+            return Response(
+                {"message": "Sem permissão para ver histórico"},
+                status=HTTP_401_UNAUTHORIZED
+            )
+        
+        # Buscar histórico
+        history = CandidatureStatusHistory.objects.filter(
+            candidature=candidature
+        ).select_related('changed_by').order_by('-changed_at')
+        
+        history_list = []
+        for entry in history:
+            changed_by_info = {
+                "email": "Sistema",
+                "type": "system"
+            }
+            if entry.changed_by:
+                changed_by_info = {
+                    "email": entry.changed_by.email,
+                    "type": entry.changed_by.user_type
+                }
+            
+            history_list.append({
+                "id": entry.id_history,
+                "old_state": entry.old_state,
+                "new_state": entry.new_state,
+                "changed_at": entry.changed_at.strftime("%d/%m/%Y %H:%M:%S"),
+                "changed_by": changed_by_info,
+                "notes": entry.notes
+            })
+        
+        return Response({
+            "candidature_id": candidature.id_candidature,
+            "current_state": candidature.state,
+            "history": history_list
+        }, status=HTTP_200_OK)
+        
+    except Candidature.DoesNotExist:
+        return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['DELETE'])
+def deleteCandidature(request):
+    """
+    Endpoint para aluno deletar sua própria candidatura.
+    Deleta a candidatura e todos os registros relacionados (cascade).
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    # 1. Autenticação
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    # 2. Verificar se é student
+    if user_type != "student":
+        return Response({"message": "Sem permissão para deletar candidatura"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        student = Student.objects.get(user__email=user_email)
+    except Student.DoesNotExist:
+        return Response({"message": "Estudante não encontrado"}, status=HTTP_404_NOT_FOUND)
+
+    # 3. Buscar candidatura do estudante
+    try:
+        candidature = Candidature.objects.get(student=student)
+    except Candidature.DoesNotExist:
+        return Response({"message": "Você não possui candidatura para deletar"}, status=HTTP_404_NOT_FOUND)
+
+    # 4. Deletar candidatura (cascade vai deletar propostas e histórico relacionados)
+    candidature_id = candidature.id_candidature
+    candidature.delete()
+
+    return Response({
+        "message": "Candidatura deletada com sucesso",
+        "deleted_candidature_id": candidature_id
+    }, status=HTTP_200_OK)

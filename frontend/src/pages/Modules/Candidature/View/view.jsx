@@ -2,8 +2,9 @@ import './view.css';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { PrimaryButton, SecundaryButton, Alert, StateTracker } from '../../../../components';
+import HistoryTimeline from '../../../../components/HistoryTimeline/historyTimeline';
 import { UserContext } from '../../../../contexts';
-import { getMyCandidature } from '../../../../services';
+import { getMyCandidature, getCandidatureHistory } from '../../../../services';
 
 function View() {
 
@@ -15,6 +16,7 @@ function View() {
 
 	const [candidature, setCandidature] = useState(null);
 	const [calendar, setCalendar] = useState(null);
+	const [history, setHistory] = useState([]);
 
 	const getStateLabel = (state) => {
 		const labels = {
@@ -67,6 +69,18 @@ function View() {
 				
 				if (data.has_candidature) {
 					setCandidature(data);
+					
+					// Buscar histórico da candidatura
+					const historyData = await getCandidatureHistory(
+						userInfo.token,
+						data.id_candidature,
+						setStatus,
+						setError
+					);
+					
+					if (historyData && historyData.history) {
+						setHistory(historyData.history);
+					}
 				}
 			}
 			
@@ -156,6 +170,12 @@ function View() {
 							<div className='detail-item'>
 								<strong>Submetida em:</strong> {candidature.submission_date}
 							</div>
+							<div className='detail-item'>
+								<strong>Criada em:</strong> {candidature.created_at}
+							</div>
+							<div className='detail-item'>
+								<strong>Última atualização:</strong> {candidature.last_updated}
+							</div>
 						</div>
 					</section>
 
@@ -182,6 +202,8 @@ function View() {
 							</table>
 						)}
 					</section>
+
+					<HistoryTimeline history={history} />
 
 					<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-6 p-0">
 						<SecundaryButton 

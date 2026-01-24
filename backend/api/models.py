@@ -475,9 +475,47 @@ class Candidature(models.Model):
     state = models.CharField(max_length=20, choices=STATE_CHOICES, default='pending')
 
     candidature_submission_date = models.DateField()
+    last_updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Candidature {self.id_candidature}"
+    
+    def change_state(self, new_state, changed_by=None, notes=None):
+        """
+        Altera estado da candidatura e registra no histórico.
+        
+        Args:
+            new_state: Novo estado (deve estar em STATE_CHOICES)
+            changed_by: User que fez a mudança (opcional)
+            notes: Observações sobre a mudança (opcional)
+        """
+        from django.core.exceptions import ValidationError
+        
+        # Validar que novo estado é válido
+        valid_states = [choice[0] for choice in self.STATE_CHOICES]
+        if new_state not in valid_states:
+            raise ValidationError(f"Estado '{new_state}' não é válido")
+        
+        # Salvar estado antigo
+        old_state = self.state
+        
+        # Se estado não mudou, não faz nada
+        if old_state == new_state:
+            return
+        
+        # Alterar estado
+        self.state = new_state
+        self.save()
+        
+        # Registrar no histórico
+        CandidatureStatusHistory.objects.create(
+            candidature=self,
+            old_state=old_state,
+            new_state=new_state,
+            changed_by=changed_by,
+            notes=notes
+        )
 
 
 class CandidatureProposal(models.Model):
@@ -490,6 +528,29 @@ class CandidatureProposal(models.Model):
     candidature = models.ForeignKey('Candidature', on_delete=models.CASCADE, related_name='candidature_proposals')
     proposal = models.ForeignKey('Proposal', on_delete=models.CASCADE, related_name='proposal_candidatures')
     state = models.CharField(max_length=20, choices=STATE_CHOICES, default='pending')
+    state_changed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.candidature.student} - {self.proposal.proposal_title} - {self.state}"
+
+
+class CandidatureStatusHistory(models.Model):
+    id_history = models.AutoField(primary_key=True)
+    candidature = models.ForeignKey('Candidature', on_delete=models.CASCADE, related_name='status_history')
+    
+    old_state = models.CharField(max_length=20, null=True, blank=True)
+    new_state = models.CharField(max_length=20, null=False, blank=False)
+    
+    changed_at = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey('Accounts', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    notes = models.TextField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-changed_at']
+        indexes = [
+            models.Index(fields=['candidature', '-changed_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.candidature} - {self.old_state} → {self.new_state} ({self.changed_at})"
