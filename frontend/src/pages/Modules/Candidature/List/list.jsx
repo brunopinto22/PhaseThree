@@ -3,12 +3,12 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
 import { listCandidatures } from '../../../../services';
-import { AuthContext } from '../../../../contexts';
+import { UserContext } from '../../../../contexts';
 
 const List = () => {
 
 	const navigate = useNavigate();
-	const { token } = useContext(AuthContext);
+	const { userInfo } = useContext(UserContext);
 
 	const [list, setList] = useState([]);
 	const [status, setStatus] = useState(null);
@@ -45,11 +45,6 @@ const List = () => {
 		"start",
 	];
 
-	const [list, setList] = useState([]);
-	const [status, setStatus] = useState(null);
-	const [errorMessage, setErrorMessage] = useState("");
-	const [loading, setLoading] = useState(true);
-
 	// State mapping
 	const stateMap = {
 		'submitted': 0,
@@ -64,8 +59,10 @@ const List = () => {
 
 	useEffect(() => {
 		const fetchCandidatures = async () => {
+			if (!userInfo?.token) return;
+			
 			setLoading(true);
-			const data = await listCandidatures(token, setStatus, setErrorMessage);
+			const data = await listCandidatures(userInfo.token, setStatus, setErrorMessage);
 			if (data) {
 				const formattedData = data.map(c => ({
 					id: c.id,
@@ -81,7 +78,7 @@ const List = () => {
 		};
 
 		fetchCandidatures();
-	}, [token]);	
+	}, [userInfo]);	
 
 
 	const exportList = () => {

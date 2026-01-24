@@ -4,15 +4,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useContext } from 'react';
 import { PrimaryButton, OptionButton, State, Alert, ProposalCard, StateTracker } from '../../../../components';
 import { getCandidature, updateCandidatureState, updateCandidatureProposalState } from '../../../../services';
-import { AuthContext, UserContext } from '../../../../contexts';
+import { UserContext } from '../../../../contexts';
 
 function View() {
 
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const id = searchParams.get('id');
-	const { token } = useContext(AuthContext);
-	const { userType } = useContext(UserContext);
+	const { userInfo } = useContext(UserContext);
 
 	const [candidature, setCandidature] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -43,28 +42,30 @@ function View() {
 		'finished': 'Finalizado',
 	};
 
-	const isAdmin = userType === 'admin' || userType === 'teacher';
+	const isAdmin = userInfo?.userType === 'admin' || userInfo?.userType === 'teacher';
 
 	useEffect(() => {
 		const fetchCandidature = async () => {
+			if (!userInfo?.token || !id) return;
+			
 			setLoading(true);
-			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			const data = await getCandidature(userInfo.token, id, setStatus, setErrorMessage);
 			if (data) {
 				setCandidature(data);
 			}
 			setLoading(false);
 		};
 
-		if (id) {
-			fetchCandidature();
-		}
-	}, [id, token]);
+		fetchCandidature();
+	}, [id, userInfo]);
 
 	const handleStateChange = async (newState) => {
-		const success = await updateCandidatureState(token, id, newState, setStatus, setErrorMessage);
+		if (!userInfo?.token) return;
+		
+		const success = await updateCandidatureState(userInfo.token, id, newState, setStatus, setErrorMessage);
 		if (success) {
 			// Refresh data
-			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			const data = await getCandidature(userInfo.token, id, setStatus, setErrorMessage);
 			if (data) {
 				setCandidature(data);
 			}
@@ -72,10 +73,12 @@ function View() {
 	};
 
 	const handleProposalStateChange = async (proposalId, newState) => {
-		const success = await updateCandidatureProposalState(token, id, proposalId, newState, setStatus, setErrorMessage);
+		if (!userInfo?.token) return;
+		
+		const success = await updateCandidatureProposalState(userInfo.token, id, proposalId, newState, setStatus, setErrorMessage);
 		if (success) {
 			// Refresh data
-			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			const data = await getCandidature(userInfo.token, id, setStatus, setErrorMessage);
 			if (data) {
 				setCandidature(data);
 			}
