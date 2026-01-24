@@ -33,6 +33,18 @@ class Settings(models.Model):
     student_password = models.CharField(max_length=255, null=False, blank=False)
     teacher_password = models.CharField(max_length=255, null=False, blank=False)
     representative_password = models.CharField(max_length=255, null=False, blank=False)
+    
+    # REQ-6: Notification Settings
+    notify_placement_students = models.BooleanField(default=True, help_text="Send placement notifications to students")
+    notify_placement_companies = models.BooleanField(default=True, help_text="Send placement notifications to companies")
+    notify_placement_advisors = models.BooleanField(default=True, help_text="Send placement notifications to advisors")
+    
+    class Meta:
+        verbose_name = "System Settings"
+        verbose_name_plural = "System Settings"
+    
+    def __str__(self):
+        return "System Settings"
 
 
 def validate_pdf(value):
