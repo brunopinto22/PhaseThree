@@ -1,103 +1,169 @@
 import './view.css';
 import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { PrimaryButton, OptionButton, State, Alert, ProposalCard, StateTracker } from '../../../../components';
-
-// TODO : ver se fica assim só para o ADMIN ou adaptar para ficar "igual" ao do aluno e ser clicavel os "states"
-// TODO : ao clicalr no < que Colocado tirar o colocado do state da proposta
+import { getCandidature, updateCandidatureState, updateCandidatureProposalState } from '../../../../services';
+import { AuthContext, UserContext } from '../../../../contexts';
 
 function View() {
 
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-  const id = searchParams.get('id');
+	const id = searchParams.get('id');
+	const { token } = useContext(AuthContext);
+	const { userType } = useContext(UserContext);
 
+	const [candidature, setCandidature] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [status, setStatus] = useState(null);
+	const [errorMessage, setErrorMessage] = useState("");
+	const [seeP, setSeeP] = useState(false);
 
-	const profilePicture = null;
-	const fullName = "Tiago Manuel Ferreira";
-	const parts = fullName.trim().split(" ");
-	const shortName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : fullName;
-	const number = 2020123456;
-	const idStudent = 1;
-
-	const state = 3;
-	const proposalName = "Desenvolvimento de aplicações web";
-	const companyName = "TekFusion";
-	const companyid = 1;
-
-	const [list, setList] = useState([
-		{
-			id: 1,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-		},
-		{
-			id: 2,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-		},
-		{
-			id: 3,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-		},
-	]);
-
-
-
-	const perms = {
-		Calendars: { view: true, edit: false, delete: false },
-		Course: { view: true, edit: false, delete: false },
-		Students: { view: true, edit: false, delete: false },
-		Teachers: { view: true, edit: false, delete: false },
-		Companies: { view: true, edit: false, delete: false },
-		Proposals: { view: true, edit: false, delete: false },
-		Candidatures: { view: true, edit: false, delete: false },
+	// State mapping for display
+	const stateMap = {
+		'submitted': 0,
+		'revision': 0,
+		'placed': 1,
+		'protocol_generated': 2,
+		'presidency_signature': 3,
+		'company_signature': 4,
+		'student_signature': 5,
+		'finished': 6,
 	};
 
-	// TODO : getCandidature(id)
+	const stateLabels = {
+		'submitted': 'Submetido',
+		'revision': 'Revisão',
+		'placed': 'Colocado',
+		'protocol_generated': 'Protocolo Gerado',
+		'presidency_signature': 'Assinatura ISEC',
+		'company_signature': 'Assinatura Empresa',
+		'student_signature': 'Assinatura Aluno',
+		'finished': 'Finalizado',
+	};
 
-	const isAdmin = true;
+	const isAdmin = userType === 'admin' || userType === 'teacher';
 
-	const [seeP, setSeeP] = useState(false);
+	useEffect(() => {
+		const fetchCandidature = async () => {
+			setLoading(true);
+			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			if (data) {
+				setCandidature(data);
+			}
+			setLoading(false);
+		};
+
+		if (id) {
+			fetchCandidature();
+		}
+	}, [id, token]);
+
+	const handleStateChange = async (newState) => {
+		const success = await updateCandidatureState(token, id, newState, setStatus, setErrorMessage);
+		if (success) {
+			// Refresh data
+			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			if (data) {
+				setCandidature(data);
+			}
+		}
+	};
+
+	const handleProposalStateChange = async (proposalId, newState) => {
+		const success = await updateCandidatureProposalState(token, id, proposalId, newState, setStatus, setErrorMessage);
+		if (success) {
+			// Refresh data
+			const data = await getCandidature(token, id, setStatus, setErrorMessage);
+			if (data) {
+				setCandidature(data);
+			}
+		}
+	};
+
+	if (loading) {
+		return <div className='d-flex flex-column'><Alert text='A carregar candidatura...' /></div>;
+	}
+
+	if (!candidature) {
+		return <div className='d-flex flex-column'><Alert text='Candidatura não encontrada' /></div>;
+	}
+
+	const acceptedProposal = candidature.proposals.find(p => p.state === 'accepted');
+	const student = candidature.student;
+	const fullName = student.name;
+	const parts = fullName.trim().split(" ");
+	const shortName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : fullName;
 
 	return(
 		<div id='candidature' className='d-flex flex-column'>
 
 			<div className="header d-flex flex-column">
 				<h3 className='title'>Estado da Candidatura</h3>
-				{state >= 2 && <h6>{proposalName} <span className='text-link' onClick={() => navigate("/company/view?id=" + idStudent)}>@{companyName}</span></h6>}
-				<h6 className='sub-title text-link' onClick={() => navigate("/student/view?id=" + idStudent)}>{shortName} nº{number}</h6>
+				{acceptedProposal && <h6>{acceptedProposal.title} <span className='text-link' onClick={() => navigate("/company/view?id=" + acceptedProposal.company.id)}>@{acceptedProposal.company.name}</span></h6>}
+				<h6 className='sub-title text-link' onClick={() => navigate("/student/view?id=" + student.number)}>{shortName} nº{student.number}</h6>
 			</div>
 
-			<StateTracker currentState={state} />
+			{isAdmin && (
+				<div className="d-flex flex-column gap-2 my-3">
+					<label htmlFor="state-select"><strong>Alterar Estado da Candidatura:</strong></label>
+					<select 
+						id="state-select"
+						className="form-select" 
+						value={candidature.state}
+						onChange={(e) => handleStateChange(e.target.value)}
+						style={{maxWidth: '400px'}}
+					>
+						{Object.entries(stateLabels).map(([value, label]) => (
+							<option key={value} value={value}>{label}</option>
+						))}
+					</select>
+				</div>
+			)}
+
+			<StateTracker currentState={stateMap[candidature.state] || 0} />
 
 			<div className='proposals d-flex flex-column gap-4'>
 				<div className="d-flex flex-row align-content-center">
-					<h4 className='d-flex flex-row align-items-center gap-2 noselect' style={{cursor: "default"}} onClick={() => setSeeP(!seeP)}>
+					<h4 className='d-flex flex-row align-items-center gap-2 noselect' style={{cursor: "pointer"}} onClick={() => setSeeP(!seeP)}>
 						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeP ? "0" : "-90deg"})` }}></i>
 						<span>Propostas</span>
 					</h4>
 				</div>
 				<div className={`collapsible ${seeP ? "" : "collapse"}`}>
 					<div className="d-flex flex-wrap gap-3">
-						<ProposalCard />
-						<ProposalCard state='accepted' />
-						<ProposalCard state='rejected' />
-						<ProposalCard disabled={true} />
+						{candidature.proposals.map(proposal => (
+							<div key={proposal.id} className="proposal-card-wrapper">
+								<ProposalCard 
+									id={proposal.id}
+									title={proposal.title}
+									company={proposal.company.name}
+									state={proposal.state}
+								/>
+								{isAdmin && (
+									<div className="d-flex gap-2 mt-2">
+										<button 
+											className="btn btn-sm btn-success"
+											onClick={() => handleProposalStateChange(proposal.id, 'accepted')}
+											disabled={proposal.state === 'accepted'}
+										>
+											Aceitar
+										</button>
+										<button 
+											className="btn btn-sm btn-danger"
+											onClick={() => handleProposalStateChange(proposal.id, 'rejected')}
+											disabled={proposal.state === 'rejected'}
+										>
+											Rejeitar
+										</button>
+									</div>
+								)}
+							</div>
+						))}
 					</div>
 				</div>
 			</div>
-
-			{isAdmin && (
-				<div className="col">
-					<PrimaryButton content={<h6>Editar Candidatura</h6>} action={() => navigate("/candidature/edit?id="+ id)} />
-				</div>
-			)}
 
 		</div>
 	);

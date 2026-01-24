@@ -1,11 +1,19 @@
 import './list.css';
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
+import { listCandidatures } from '../../../../services';
+import { AuthContext } from '../../../../contexts';
 
 const List = () => {
 
 	const navigate = useNavigate();
+	const { token } = useContext(AuthContext);
+
+	const [list, setList] = useState([]);
+	const [status, setStatus] = useState(null);
+	const [errorMessage, setErrorMessage] = useState("");
+	const [loading, setLoading] = useState(true);
 
 	const iconMap = [
 		"bi-arrow-clockwise",
@@ -37,65 +45,43 @@ const List = () => {
 		"start",
 	];
 
-	const [list, setList] = useState([
-		{
-      id: 1,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-    },
-		{
-      id: 2,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-    },
-		{
-      id: 3,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-    },
-		{
-      id: 4,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 4,
-    },
-		{
-      id: 5,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 5,
-    },
-		{
-      id: 6,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 6,
-    },
-		{
-      id: 7,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 7,
-    },
-  ]);
-	// TODO : pedir lista de Candidaturas	
+	const [list, setList] = useState([]);
+	const [status, setStatus] = useState(null);
+	const [errorMessage, setErrorMessage] = useState("");
+	const [loading, setLoading] = useState(true);
+
+	// State mapping
+	const stateMap = {
+		'submitted': 0,
+		'revision': 0,
+		'placed': 1,
+		'protocol_generated': 2,
+		'presidency_signature': 3,
+		'company_signature': 4,
+		'student_signature': 5,
+		'finished': 6,
+	};
+
+	useEffect(() => {
+		const fetchCandidatures = async () => {
+			setLoading(true);
+			const data = await listCandidatures(token, setStatus, setErrorMessage);
+			if (data) {
+				const formattedData = data.map(c => ({
+					id: c.id,
+					studentName: c.student.name,
+					studentNumber: c.student.number,
+					companyName: c.proposal?.company?.name || '—',
+					proposalName: c.proposal?.title || '—',
+					state: stateMap[c.state] || 0,
+				}));
+				setList(formattedData);
+			}
+			setLoading(false);
+		};
+
+		fetchCandidatures();
+	}, [token]);	
 
 
 	const exportList = () => {
@@ -147,13 +133,15 @@ const List = () => {
 
 			<div className="captions d-flex flex-row align-items-center gap-3">
 				{iconMap.map((icon,index) => (
-					<><div className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length-1 && (<p>|</p>)}</>
+					<><div key={index} className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length-1 && (<p>|</p>)}</>
 				))}
 			</div>
 
-			{list.length === 0 && <Alert text='Não existe nenhum docente de momento' />}
+			{loading && <Alert text='A carregar candidaturas...' />}
 
-			{list.length > 0 && (
+			{!loading && list.length === 0 && <Alert text='Não existe nenhuma candidatura de momento' />}
+
+			{!loading && list.length > 0 && (
 				<table>
 					<tr className='header'>
 						<th className='fit-column'><p>Estado</p></th>
