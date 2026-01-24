@@ -34,7 +34,7 @@ export async function listCandidatures(token, setStatus, setErrorMessage, filter
 		if (filters.state) queryParams.append('state', filters.state);
 		if (filters.calendar) queryParams.append('calendar', filters.calendar);
 
-		const url = `${apiUrl}/candidatures${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+		const url = queryParams.toString() ? `${apiUrl}/candidatures?${queryParams}` : `${apiUrl}/candidatures`;
 
 		const res = await fetch(url, {
 			method: "GET",
