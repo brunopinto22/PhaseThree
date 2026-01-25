@@ -66,6 +66,26 @@ class Student(models.Model):
     calendar = models.ForeignKey('Calendar', on_delete=models.SET_NULL, related_name='students_in_calendar', null=True, blank=True)
 
     active = models.BooleanField(default=True)
+    
+    # Validation fields for Academic Services approval
+    validation_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending Validation'),
+            ('approved', 'Approved'),
+            ('rejected', 'Rejected')
+        ],
+        default='pending'
+    )
+    validated_by = models.ForeignKey(
+        'Accounts', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='validated_students'
+    )
+    validated_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.student_name or f"Student {self.student_number}"

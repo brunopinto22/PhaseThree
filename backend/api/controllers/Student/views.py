@@ -5,6 +5,7 @@ import traceback
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -126,6 +127,9 @@ def listStudents(request):
                     "acronym": s.student_branch.branch_acronym if s.student_branch else None,
                     "color": s.student_branch.color if s.student_branch else None
                 },
+                "validation_status": s.validation_status,
+                "validated_at": s.validated_at.isoformat() if s.validated_at else None,
+                "rejection_reason": s.rejection_reason if s.validation_status == "rejected" else None
             })
 
         return Response(data, status=status.HTTP_200_OK)
@@ -183,13 +187,15 @@ def registerStudent(request):
         user.set_password(password)
         user.save()
 
+        # Self-registered students are pending validation by default
         student = Student.objects.create(
             user=user,
             student_number=data.get("student_number"),
             student_name=data.get("student_name"),
             student_course=course,
             student_branch=branch,
-            calendar=calendar
+            calendar=calendar,
+            validation_status="pending"  # Self-registered students need approval
         )
 
         return Response({"message": "Aluno registado com sucesso"}, status=status.HTTP_201_CREATED)
@@ -238,6 +244,14 @@ def createStudent(request):
             except Branch.DoesNotExist:
                 return Response({"message": "Ramo não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
 
+        calendar = None
+        calendar_id = data.get("student_calendar")
+        if calendar_id:
+            try:
+                calendar = Calendar.objects.get(id_calendar=calendar_id)
+            except Calendar.DoesNotExist:
+                return Response({"message": "Calendário não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+
         if Accounts.objects.filter(email=data.get("email")).exists():
             return Response({"message": "Email já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -263,6 +277,12 @@ def createStudent(request):
         user.set_password(password)
         user.save()
 
+        # Determine validation status based on who is creating the student
+        # Admin/academic_services created students are auto-approved
+        validation_status = "approved" if user_type == "admin" else "pending"
+        validated_by = Accounts.objects.get(email=user_email) if user_type == "admin" else None
+        validated_at = timezone.now() if user_type == "admin" else None
+
         student = Student.objects.create(
             user=user,
             student_number=data.get("student_number"),
@@ -280,6 +300,10 @@ def createStudent(request):
             student_course=course,
             student_branch=branch,
             student_ects=data.get("student_ects"),
+            calendar=calendar,
+            validation_status=validation_status,
+            validated_by=validated_by,
+            validated_at=validated_at
         )
 
         for subj in data.pop('subjects', []):
@@ -288,7 +312,13 @@ def createStudent(request):
         return Response({"message": "Aluno criado com sucesso"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        return Response({"message": "Internal server error",}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        import traceback
+        traceback.print_exc()
+        return Response({
+            "message": "Internal server error", 
+            "error": str(e),
+            "type": type(e).__name__
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["PUT"])
@@ -304,14 +334,14 @@ def editStudent(request, pk):
     ):
         return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    elif user_type == "student":
+    if user_type == "student":
         student = Student.objects.get(pk=pk)
-        self = Student.objects.get(user__email=user_email)
-        if student != self:
+        try:
+            self = Student.objects.get(user__email=user_email)
+            if student != self:
+                return Response({"error":"Sem permissão para para editar o Aluno"}, status=status.HTTP_403_FORBIDDEN)
+        except Student.DoesNotExist:
             return Response({"error":"Sem permissão para para editar o Aluno"}, status=status.HTTP_403_FORBIDDEN)
-
-    elif user_type not in ["admin", "teacher"]:
-        return Response({"detail": "login"}, status=HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
         teacher = Teacher.objects.get(user__email=user_email)

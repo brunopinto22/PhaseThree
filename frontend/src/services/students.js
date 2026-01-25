@@ -2,8 +2,8 @@ const apiUrl = process.env.REACT_APP_API_URL || '/api';
 
 
 export async function getStudent(token, id, setStatus, setErrorMessage) {
-	
-	try {
+
+  try {
     const res = await fetch(`${apiUrl}/student/${id}`, {
       method: "GET",
       headers: {
@@ -15,7 +15,7 @@ export async function getStudent(token, id, setStatus, setErrorMessage) {
     const data = await res.json();
     setStatus(res.status);
 
-    if(res.status !== 200) {
+    if (res.status !== 200) {
       setErrorMessage(data.message || "Erro desconhecido");
       return null;
     }
@@ -32,7 +32,7 @@ export async function getStudent(token, id, setStatus, setErrorMessage) {
 
 export async function listStudents(token, setStatus, setErrorMessage) {
 
-	try {
+  try {
     const res = await fetch(`${apiUrl}/students/`, {
       method: "GET",
       headers: {
@@ -44,7 +44,7 @@ export async function listStudents(token, setStatus, setErrorMessage) {
     const data = await res.json();
     setStatus(res.status);
 
-    if(res.status !== 200) {
+    if (res.status !== 200) {
       setErrorMessage(data.message || "Erro desconhecido");
       return null;
     }
@@ -61,19 +61,19 @@ export async function listStudents(token, setStatus, setErrorMessage) {
 
 export async function registerStudent(data, setStatus, setErrorMessage) {
 
-	try {
+  try {
 
-		const res = await fetch(`${apiUrl}/student/register`, {
+    const res = await fetch(`${apiUrl}/student/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-			body: JSON.stringify(data),
+      body: JSON.stringify(data),
     });
 
-		const responseData = await res.json();
+    const responseData = await res.json();
 
-		if (res.ok) {
+    if (res.ok) {
       setStatus(res.status);
       setErrorMessage("");
       return true;
@@ -84,30 +84,30 @@ export async function registerStudent(data, setStatus, setErrorMessage) {
       return false;
     }
 
-	} catch (error) {
+  } catch (error) {
     setStatus(500);
     setErrorMessage("Erro de rede ou servidor");
     return false;
   }
-	
+
 }
 
 export async function createStudent(token, data, setStatus, setErrorMessage) {
-	
-	try {
 
-		const res = await fetch(`${apiUrl}/student/create`, {
+  try {
+
+    const res = await fetch(`${apiUrl}/student/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": token,
       },
-			body: JSON.stringify(data),
+      body: JSON.stringify(data),
     });
 
-		const responseData = await res.json();
+    const responseData = await res.json();
 
-		if (res.ok) {
+    if (res.ok) {
       setStatus(res.status);
       setErrorMessage("");
       return true;
@@ -118,7 +118,7 @@ export async function createStudent(token, data, setStatus, setErrorMessage) {
       return false;
     }
 
-	} catch (error) {
+  } catch (error) {
     setStatus(500);
     setErrorMessage("Erro de rede ou servidor");
     return false;
@@ -128,69 +128,71 @@ export async function createStudent(token, data, setStatus, setErrorMessage) {
 
 export async function editStudent(token, id, data, setStatus, setErrorMessage) {
 
-	try {
-		const res = await fetch(`${apiUrl}/student/${id}/edit`, {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": token,
-			},
-			body: JSON.stringify(data),
-		});
+  try {
+    const res = await fetch(`${apiUrl}/student/${id}/edit`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+      body: JSON.stringify(data),
+    });
 
-		const responseData = await res.json();
-		setStatus(res.status)
-		setErrorMessage(responseData.message || "Erro ao editar aluno");
+    const responseData = await res.json();
+    setStatus(res.status);
 
-		if(res.status === 200)
-			return true;
-		return false;
+    if (res.status === 200) {
+      setErrorMessage("");
+      return true;
+    } else {
+      setErrorMessage(responseData.message || "Erro ao editar aluno");
+      return false;
+    }
 
-	} catch {
-		return false;
-	}
-
-	return false;
-	
+  } catch (error) {
+    setStatus(500);
+    setErrorMessage("Erro de rede ou servidor");
+    return false;
+  }
 }
 
 export async function deleteStudent(token, id, setStatus, setErrorMessage) {
-	
-	try {
-		const res = await fetch(`${apiUrl}/student/${id}/delete`, {
+
+  try {
+    const res = await fetch(`${apiUrl}/student/${id}/delete`, {
       method: "DELETE",
       headers: {
         "Authorization": token,
       }
     });
 
-		const data = await res.json();
+    const data = await res.json();
 
-    if(res.status === 200)
+    if (res.status === 200)
       return true;
 
-	} catch {
-		return false;
-	}
-	
-	return false;
+  } catch {
+    return false;
+  }
+
+  return false;
 }
 
 export async function addFavourite(token, id) {
-	
-	try {
 
-		const res = await fetch(`${apiUrl}/student/favorite/add/${id}`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": token,
-			}
-		});
+  try {
 
-		const responseData = await res.json();
+    const res = await fetch(`${apiUrl}/student/favorite/add/${id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      }
+    });
 
-	} catch {}
+    const responseData = await res.json();
+
+  } catch { }
 
 }
 export async function getStudentsWithInternships(token, setStatus, setErrorMessage) {
@@ -226,19 +228,19 @@ export async function getStudentsWithInternships(token, setStatus, setErrorMessa
 	}
 }
 export async function removeFavourite(token, id) {
-	
-	try {
 
-		const res = await fetch(`${apiUrl}/student/favorite/remove/${id}`, {
-			method: "DELETE",
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": token,
-			}
-		});
+  try {
 
-		const responseData = await res.json();
+    const res = await fetch(`${apiUrl}/student/favorite/remove/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      }
+    });
 
-	} catch {}
+    const responseData = await res.json();
+
+  } catch { }
 
 }

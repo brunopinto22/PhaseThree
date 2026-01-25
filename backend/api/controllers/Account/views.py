@@ -305,6 +305,7 @@ def summary(request):
 
             data = {
                 "is_missing_info": s.is_missing_info(),
+                "validation_status": s.validation_status,
                 "calendar": {
                     "id": c.id_calendar,
                     "title": str(c),
@@ -313,7 +314,8 @@ def summary(request):
                     "divulgation": c.divulgation.strftime("%d/%m/%Y"),
                     "candidatures": c.candidatures.strftime("%d/%m/%Y"),
                     "placements": c.placements.strftime("%d/%m/%Y"),
-                }
+                },
+                "nProposals": Proposal.objects.filter(calendar=c).count(),
             }
 
         elif user_type == "academic_services":

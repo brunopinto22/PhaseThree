@@ -23,8 +23,8 @@ const Dashboard = () => {
 	};
 
 	useEffect(() => {
-    if (!userInfo) return;
-  }, [userInfo, permissions, role, navigate]);
+		if (!userInfo) return;
+	}, [userInfo, permissions, role, navigate]);
 
 	const [type, setType] = useState(null);
 	const [summary, setSummary] = useState(null);
@@ -43,22 +43,93 @@ const Dashboard = () => {
 
 	const [show, setShow] = useState(false);
 
-	
-  return(
+
+	return (
 		<>
-    <div id="dashboard" className='row'>
+			<div id="dashboard" className='row'>
 
-			<div className='modules d-flex flex-column col-sm-12 col-md-8'>
-				<h3>Dashboard</h3>
+				<div className='modules d-flex flex-column col-sm-12 col-md-8'>
+					<h3>Dashboard</h3>
 
-				{summary?.is_missing_info && <Alert text='Informação em falta no Perfil' />}	
-				
-				<div className='modules-btns d-flex flex-column d-md-grid'>
+					{summary?.is_missing_info && <Alert text='Informação em falta no Perfil' />}
+					{summary?.validation_status === 'pending' && <Alert text='Aguarda validação dos Serviços Académicos' type='warning' />}
+					{summary?.validation_status === 'rejected' && <Alert text='Conta rejeitada pelos Serviços Académicos' type='error' />}
 
-					{role === 'student' &&
-						(
-							<>
+					<div className='modules-btns d-flex flex-column d-md-grid'>
+
+						{role === 'student' &&
+							(
+								<>
+									<DashButton
+										icon={<i className="bi bi-clipboard2-plus-fill"></i>} // TODO : submeter candidatura de um aluno (PÁGINAS)
+										text="Submeter Candidatura"
+										disabled={summary?.is_missing_info || summary?.validation_status !== 'approved'}
+									/>
+
+									<DashButton
+										action={() => navigate("/proposal/list")}
+										icon={<i className="bi bi-file-earmark-text-fill"></i>}
+										text="Ver Propostas"
+										disabled={summary?.is_missing_info || summary?.validation_status !== 'approved'}
+									/>
+
+									<DashButton
+										icon={<i className="bi bi-clipboard2-pulse-fill"></i>}
+										text="Candidatura"
+										action={() => navigate("/candidature/view?id=1")}
+										disabled={summary?.is_missing_info || summary?.validation_status !== 'approved'}
+									/>
+								</>
+							)
+						}
+
+						{role === 'representative' &&
+							(
+								<>
+									<DashButton
+										icon={<i className="bi bi-book-fill"></i>}
+										text="Ver Cursos"
+										action={() => navigate("/course/list")}
+									/>
+
+									<DashButton
+										action={() => navigate("/proposal/list")}
+										icon={<i className="bi bi-file-earmark-text-fill"></i>}
+										text="Ver Propostas"
+									/>
+
+									<DashButton
+										icon={<i className="bi bi-file-earmark-plus-fill"></i>}
+										text="Submeter Proposta"
+										action={() => navigate("/proposal/edit?new=true")}
+										disabled={summary?.calendars.length <= 0}
+									/>
+
+									<DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
+
+									<DashButton
+										icon={<i className="bi bi-person-plus-fill"></i>}
+										text="Convidar Representante"
+										action={() => setShow(true)}
+									/>
+								</>
+							)
+						}
+
+						{role === 'teacher' &&
+							(
+								<>
+									<DashButton icon={<i className="bi bi-file-earmark-plus-fill"></i>} text='Submeter Proposta' action={() => navigate("/proposal/edit?new=true&type=project")} disabled={summary?.calendars.length <= 0} />
+									<DashButton action={() => navigate("/proposal/list?self=true")} icon={<i className="bi bi-file-earmark-text-fill"></i>} text='As Minhas Propostas' />
+									<DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
+								</>
+							)
+						}
+
+
+						{(permissions['Docentes'] && (permissions['Docentes'].view || permissions['Docentes'].edit || permissions['Docentes'].delete) || role === 'admin') && (
 							<DashButton
+<<<<<<< Updated upstream
 								action={() => navigate("/proposal/list")}
 								icon={<i className="bi bi-file-earmark-text-fill"></i>}
 								text="Ver Propostas"
@@ -79,24 +150,57 @@ const Dashboard = () => {
 						(
 							<>
               <DashButton
+=======
+								action={() => navigate("/teacher/list")}
+								icon={<i className="bi bi-person-workspace"></i>}
+								text="Gerir Docentes"
+							/>
+						)}
+						{(permissions['Cursos'] && (permissions['Cursos'].view || permissions['Cursos'].edit || permissions['Cursos'].delete) || role === 'admin') && (
+							<DashButton
+>>>>>>> Stashed changes
 								icon={<i className="bi bi-book-fill"></i>}
-								text="Ver Cursos"
+								text="Gerir Cursos"
 								action={() => navigate("/course/list")}
 							/>
-
+						)}
+						{(permissions['Alunos'] && (permissions['Alunos'].view || permissions['Alunos'].edit || permissions['Alunos'].delete) || role === 'admin') && (
+							<DashButton
+								icon={<i className="bi bi-person-fill"></i>}
+								text="Gerir Alunos"
+								action={() => navigate("/student/list")}
+							/>
+						)}
+						{(permissions['Candidaturas'] && (permissions['Candidaturas'].view || permissions['Candidaturas'].edit || permissions['Candidaturas'].delete) || role === 'admin') && (
+							<DashButton
+								icon={<i className="bi bi-clipboard2-check-fill"></i>}
+								text="Gerir Candidaturas"
+								action={() => navigate("/candidature/list")}
+							/>
+						)}
+						{(permissions['Empresas'] && (permissions['Empresas'].view || permissions['Empresas'].edit || permissions['Empresas'].delete) || role === 'admin') && (
+							<DashButton
+								icon={<i className="bi bi-building-fill"></i>}
+								text="Gerir Empresas"
+								action={() => navigate("/company/list")}
+							/>
+						)}
+						{(permissions['Propostas'] && (permissions['Propostas'].view || permissions['Propostas'].edit || permissions['Propostas'].delete) || role === 'admin') && (
 							<DashButton
 								action={() => navigate("/proposal/list")}
 								icon={<i className="bi bi-file-earmark-text-fill"></i>}
-								text="Ver Propostas"
+								text="Gerir Propostas"
 							/>
-
+						)}
+						{role === 'admin' && (
 							<DashButton
-								icon={<i className="bi bi-file-earmark-plus-fill"></i>}
-								text="Submeter Proposta"
-								action={() => navigate("/proposal/edit?new=true")}
-								disabled={summary?.calendars.length <= 0}
+								action={() => navigate("/settings")}
+								icon={<i className="bi bi-gear-fill"></i>}
+								text='Definições'
 							/>
+						)}
 
+<<<<<<< Updated upstream
               <DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
 
 							<DashButton
@@ -198,19 +302,21 @@ const Dashboard = () => {
 						</>
 					)}
 
+=======
+					</div>
+>>>>>>> Stashed changes
 				</div>
+
+				<div className="col-sm-12 col-md-4 mt-5 m-md-0">
+					<SideBar type={userInfo.role} summary={summary} />
+				</div>
+
 			</div>
 
-			<div className="col-sm-12 col-md-4 mt-5 m-md-0">
-				<SideBar type={userInfo.role} summary={summary} />
-			</div>
-
-		</div>
-
-		<InviteModal show={show} setShow={setShow} />
+			<InviteModal show={show} setShow={setShow} />
 
 		</>
-  );
+	);
 
 }
 

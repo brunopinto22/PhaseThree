@@ -6,7 +6,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from "react-
 import {
 	Login, Dashboard, PageNotFound, Unauthorized, Settings, Authenticate, SetPassword,
 	RegisterStudent, RegisterCompany, RegisterRepresentative,
-	ListStudents, ViewStudent, EditStudent,
+	ListStudents, ViewStudent, EditStudent, PendingStudents,
 	ListCourses, ViewCourse, EditCourse,
 	ListTeachers, ViewTeacher, EditTeacher,
 	ListProposals, ViewProposal, EditProposal,
@@ -23,7 +23,7 @@ import { CompanyProvider, UserContext, UserProvider } from "./contexts";
 
 
 function App() {
-	
+
 	const d_perms = {
 		Calendários: { view: false, edit: false, delete: false },
 		Cursos: { view: false, edit: false, delete: false },
@@ -35,16 +35,16 @@ function App() {
 	};
 
 	const { setUserInfo } = useContext(UserContext);
-	
-  const [pfp, setPfp] = useState(null);
-  const [name, setName] = useState(null);
-  const [id, setId] = useState(null);
-  const [token, setToken] = useState(null);
+
+	const [pfp, setPfp] = useState(null);
+	const [name, setName] = useState(null);
+	const [id, setId] = useState(null);
+	const [token, setToken] = useState(null);
 	const [role, setRole] = useState(null);
 	const [perms, setPerms] = useState(d_perms);
 	const [company, setCompany] = useState(null);
 
-	const [loading, setLoading] = useState(true); 
+	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		const test_token = async () => {
@@ -64,7 +64,7 @@ function App() {
 				p = d_perms;
 			}
 
-			if(await testToken(storedToken)) {
+			if (await testToken(storedToken)) {
 				setPfp(storedPfp);
 				setName(storedName);
 				setId(storedId);
@@ -105,7 +105,7 @@ function App() {
 			setLoading(false)
 		};
 		test_token();
-	},[token]);
+	}, [token]);
 
 	const handlePerms = (perms) => {
 		try {
@@ -143,73 +143,105 @@ function App() {
 	return (
 		<CompanyProvider>
 
-		<Router>
-			<div className="App" style={{opacity: loading ? "0.8" : "1.0"}}>
-				<Routes>
+			<Router>
+				<div className="App" style={{ opacity: loading ? "0.8" : "1.0" }}>
+					<Routes>
 
-					{/* Login */}
-					<Route path="/login" element={<RequireNoAuth token={token} loading={loading}> <Login setToken={setToken} /> </RequireNoAuth>} />
+						{/* Login */}
+						<Route path="/login" element={<RequireNoAuth token={token} loading={loading}> <Login setToken={setToken} /> </RequireNoAuth>} />
 
-					{/* Register */}
-					<Route path="/register" element={<RequireNoAuth token={token} loading={loading}> <Outlet /> </RequireNoAuth>}>
-						<Route path="teacher" element={<RegisterTeacher />} />
-						<Route path="student" element={<RegisterStudent />} />
-						<Route path="company" element={<RegisterCompany />} />
-						<Route path="representative" element={<RegisterRepresentative />} />
-					</Route>
-
-
-					<Route path="/" element={<RequireAuth token={token} loading={loading}> <Outlet /> </RequireAuth>}>
-						<Route path="authenticate" element={<Authenticate />} />
-						<Route path="setPassword" element={<SetPassword />} />
-					</Route>
-
-
-					{/* Dashboard */}
-					<Route path="/"
-						element={
-							<RequireAuth token={token} loading={loading}>
-								<Layout setToken={setToken} />
-							</RequireAuth>
-						}
-					>
-            
-						<Route index element={<Dashboard />} />
-
-						{/* Manage Courses */}
-						<Route path="/course">
-							<Route path="list" element={<ListCourses />} />
-							<Route path="view" element={<ViewCourse />} />
-							<Route path="edit" element={<EditCourse />} />
+						{/* Register */}
+						<Route path="/register" element={<RequireNoAuth token={token} loading={loading}> <Outlet /> </RequireNoAuth>}>
+							<Route path="teacher" element={<RegisterTeacher />} />
+							<Route path="student" element={<RegisterStudent />} />
+							<Route path="company" element={<RegisterCompany />} />
+							<Route path="representative" element={<RegisterRepresentative />} />
 						</Route>
 
-						{/* Manage Calendars */}
-						<Route path="/calendar">
-							<Route path="view" element={<ViewCalendar />} />
-							<Route path="edit" element={<EditCalendar />} />
+
+						<Route path="/" element={<RequireAuth token={token} loading={loading}> <Outlet /> </RequireAuth>}>
+							<Route path="authenticate" element={<Authenticate />} />
+							<Route path="setPassword" element={<SetPassword />} />
 						</Route>
 
-						{/* Manage Students */}
-						<Route path="/student">
-							<Route path="list" element={<ListStudents />} />
-							<Route path="view" element={<ViewStudent />} />
-							<Route path="edit" element={<EditStudent />} />
+
+						{/* Dashboard */}
+						<Route path="/"
+							element={
+								<RequireAuth token={token} loading={loading}>
+									<Layout setToken={setToken} />
+								</RequireAuth>
+							}
+						>
+
+							<Route index element={<Dashboard />} />
+
+							{/* Manage Courses */}
+							<Route path="/course">
+								<Route path="list" element={<ListCourses />} />
+								<Route path="view" element={<ViewCourse />} />
+								<Route path="edit" element={<EditCourse />} />
+							</Route>
+
+							{/* Manage Calendars */}
+							<Route path="/calendar">
+								<Route path="view" element={<ViewCalendar />} />
+								<Route path="edit" element={<EditCalendar />} />
+							</Route>
+
+							{/* Manage Students */}
+							<Route path="/student">
+								<Route path="list" element={<ListStudents />} />
+								<Route path="pending" element={<PendingStudents />} />
+								<Route path="view" element={<ViewStudent />} />
+								<Route path="edit" element={<EditStudent />} />
+							</Route>
+
+							{/* Manage Teachers */}
+							<Route path="/teacher">
+								<Route path="list" element={<ListTeachers />} />
+								<Route path="view" element={<ViewTeacher />} />
+								<Route path="edit" element={<EditTeacher />} />
+							</Route>
+
+							{/* Manage Companies */}
+							<Route path="/company">
+								<Route path="list" element={<ListCompanies />} />
+								<Route path="view" element={<ViewCompany />} />
+								<Route path="edit" element={<EditCompany />} />
+							</Route>
+
+							{/* Manage Representatives */}
+							<Route path="/representative">
+								<Route path="view" element={<ViewRepresentative />} />
+								<Route path="edit" element={<EditRepresentative />} />
+							</Route>
+
+							{/* Manage Proposals */}
+							<Route path="/proposal">
+								<Route path="list" element={<ListProposals />} />
+								<Route path="view" element={<ViewProposal />} />
+								<Route path="edit" element={<EditProposal />} />
+							</Route>
+
+							{/* Manage Candidatures */}
+							<Route path="/candidature">
+								<Route path="list" element={<ListCandidatures />} />
+								<Route path="view" element={<ViewCandidature />} />
+								<Route path="edit" element={<EditCandidature />} />
+							</Route>
+
+							{/* System Settings */}
+							<Route path="/settings">
+								<Route index element={<Settings />} />
+							</Route>
 						</Route>
 
-						{/* Manage Teachers */}
-						<Route path="/teacher">
-							<Route path="list" element={<ListTeachers />} />
-							<Route path="view" element={<ViewTeacher />} />
-							<Route path="edit" element={<EditTeacher />} />
-						</Route>
 
-						{/* Manage Companies */}
-						<Route path="/company">
-							<Route path="list" element={<ListCompanies />} />
-							<Route path="view" element={<ViewCompany />} />
-							<Route path="edit" element={<EditCompany />} />
-						</Route>
+						<Route path="/unauthorized" element={<Unauthorized />} />
+						<Route path="*" element={<PageNotFound />}></Route>
 
+<<<<<<< Updated upstream
 						{/* Manage Representatives */}
 						<Route path="/representative">
 							<Route path="view" element={<ViewRepresentative />} />
@@ -248,6 +280,11 @@ function App() {
 				</Routes>
 			</div>
 		</Router>
+=======
+					</Routes>
+				</div>
+			</Router>
+>>>>>>> Stashed changes
 
 		</CompanyProvider>
 	);
