@@ -1,11 +1,25 @@
 import './list.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
+import { listCandidatures } from '../../../../services/candidatures';
+
+// Map backend state string to index/number logic expected by UI components
+const stateMap = {
+	'submitted': 0, // Pending
+	'revision': 0, // Treat as pending/revision visually? Or add new index?
+	'placed': 1,
+	'protocol_generated': 2,
+	'presidency_signature': 3,
+	'company_signature': 4,
+	'student_signature': 5,
+	'finished': 6
+};
 
 const List = () => {
 
 	const navigate = useNavigate();
+	const token = localStorage.getItem("access_token");
 
 	const iconMap = [
 		"bi-arrow-clockwise",
@@ -15,106 +29,96 @@ const List = () => {
 		"bi-building-check",
 		"bi-journal-check",
 		"bi-rocket-fill",
+		"bi-flag-fill" // finished
 	];
-		
+
 	const text = [
-		"Pendente",
-		"Colocado",
+		"Pendente", // submitted
+		"Em Revisão", // revision
+		"Colocado", // placed
 		"Protocolo Gerado",
 		"Protocolo ISEC",
 		"Protocolo Empresa",
 		"Protocolo Aluno",
-		"Em estágio",
-	]
+		"Terminado", // finished
+	];
 
 	const btnClass = [
-		"pending",
-		"accpeted",
+		"pending", // submitted/revision
+		"accpeted", // placed
 		"protocol-generated",
 		"protocol-isec",
 		"protocol-company",
 		"protocol-student",
-		"start",
+		"start", // finished
 	];
 
-	const [list, setList] = useState([
-		{
-      id: 1,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-    },
-		{
-      id: 2,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-    },
-		{
-      id: 3,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-    },
-		{
-      id: 4,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 4,
-    },
-		{
-      id: 5,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 5,
-    },
-		{
-      id: 6,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 6,
-    },
-		{
-      id: 7,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 7,
-    },
-  ]);
-	// TODO : pedir lista de Candidaturas	
+	const [list, setList] = useState([]);
+	const [loading, setLoading] = useState(true);
+	// eslint-disable-next-line
+	const [status, setStatus] = useState(0);
+	const [errorMessage, setErrorMessage] = useState("");
 
+	useEffect(() => {
+		const fetchList = async () => {
+			if (!token) return;
+			setLoading(true);
+			const data = await listCandidatures(token, setStatus, setErrorMessage);
+			if (data) {
+				const formatted = data.map(item => ({
+					...item,
+					state: stateMap[item.state] !== undefined ? stateMap[item.state] + 1 : 1
+				}));
+				setList(formatted);
+			}
+			setLoading(false);
+		};
+		fetchList();
+	}, [token]);
 
 	const exportList = () => {
+		// Implementation for export
 	}
 
+	const deleteCandidature = async (candidatureId) => {
+		if (!window.confirm('Tem certeza que deseja eliminar esta candidatura?')) {
+			return;
+		}
 
-	const Row = ({id, studentName, studentNumber, companyName, proposalName, state}) => {
-		
+		try {
+			const res = await fetch(`${process.env.REACT_APP_API_URL}/candidature/${candidatureId}/delete`, {
+				method: 'DELETE',
+				headers: {
+					'Authorization': token,
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (res.status === 200 || res.status === 204) {
+				setList(list.filter(c => c.id !== candidatureId));
+			} else {
+				const data = await res.json();
+				setErrorMessage(data.message || 'Erro ao eliminar candidatura');
+			}
+		} catch (error) {
+			setErrorMessage('Erro de rede ao eliminar candidatura');
+		}
+	};
+
+
+	const Row = ({ id, studentName, studentNumber, companyName, proposalName, state }) => {
+
 		const view = () => {
-			navigate("/candidature/view?id="+id);
+			navigate("/candidature/view?id=" + id);
 		}
 		const edit = () => {
-			navigate("/candidature/edit?id="+id);
+			navigate("/candidature/edit?id=" + id);
 		}
 		const handleDelete = () => {
-			// TODO : eliminar Candidatura
+			deleteCandidature(id);
 		}
 
-		return(
+		return (
 			<tr className='table-row'>
 				<th><State state={state} hideState={true} hideText={true} tooltip={true} /></th>
 				<th className='fit-column text-center'><p>{studentNumber}</p></th>
@@ -132,7 +136,7 @@ const List = () => {
 		);
 	}
 
-	return(
+	return (
 		<div className='candidatures-list d-flex flex-column'>
 
 			<div className="top d-flex flex-row justify-content-between">
@@ -146,28 +150,32 @@ const List = () => {
 			</div>
 
 			<div className="captions d-flex flex-row align-items-center gap-3">
-				{iconMap.map((icon,index) => (
-					<><div className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length-1 && (<p>|</p>)}</>
+				{iconMap.map((icon, index) => (
+					<div key={index} className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index] || ''}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p>{index < iconMap.length - 1 && (<p>|</p>)}</div>
 				))}
 			</div>
 
-			{list.length === 0 && <Alert text='Não existe nenhum docente de momento' />}
+			{errorMessage && <div className="alert alert-danger mx-3">{errorMessage}</div>}
+			{!loading && list.length === 0 && <Alert text='Não existem candidaturas de momento' />}
+			{loading && <div className="p-3">Loading...</div>}
 
 			{list.length > 0 && (
 				<table>
-					<tr className='header'>
-						<th className='fit-column'><p>Estado</p></th>
-						<th className='fit-column'><p>Nº aluno</p></th>
-						<th><p>Aluno</p></th>
-						<th><p>Empresa/Docente</p></th>
-						<th><p>Proposta</p></th>
-						<th className='fit-column'></th>
-					</tr>
-
-					{list.map(candidature => (
-						<Row key={candidature.id} {...candidature} />
-					))}
-					
+					<thead>
+						<tr className='header'>
+							<th className='fit-column'><p>Estado</p></th>
+							<th className='fit-column'><p>Nº aluno</p></th>
+							<th><p>Aluno</p></th>
+							<th><p>Empresa/Docente</p></th>
+							<th><p>Proposta</p></th>
+							<th className='fit-column'></th>
+						</tr>
+					</thead>
+					<tbody>
+						{list.map(candidature => (
+							<Row key={candidature.id} {...candidature} />
+						))}
+					</tbody>
 				</table>
 			)}
 
