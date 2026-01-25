@@ -25,7 +25,9 @@ class Command(BaseCommand):
             Teacher.objects.all().delete()
             Course.objects.all().delete()
             ScientificArea.objects.all().delete()
-            # Keep admin user and Settings
+            # Delete accounts except superusers (admin users)
+            Accounts.objects.filter(is_superuser=False).delete()
+            # Keep Settings
 
         self.stdout.write(self.style.SUCCESS('Starting to seed database...'))
 
