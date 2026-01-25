@@ -291,3 +291,45 @@ export async function updateCandidatureProposalState(token, candidatureId, propo
   }
 }
 
+/**
+ * Deleta uma candidatura. Para estudantes, deleta a própria. Para admin/academic, deleta pelo ID.
+ * @param {string} token - Token de autenticação
+ * @param {number|null} candidatureId - ID da candidatura (obrigatório para admin/academic service, null para estudante)
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Object|null} - Resposta de sucesso ou null em caso de erro
+ */
+export async function deleteCandidature(token, candidatureId, setStatus, setErrorMessage) {
+  try {
+    const options = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    };
+
+    // Se for admin/academic, adiciona o ID no corpo
+    if (candidatureId) {
+      options.body = JSON.stringify({ id: candidatureId });
+    }
+
+    const res = await fetch(`${apiUrl}/candidature/delete/`, options);
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao deletar candidatura");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
+

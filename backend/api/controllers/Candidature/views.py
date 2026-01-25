@@ -433,29 +433,41 @@ def deleteCandidature(request):
     if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
         return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    # 2. Verificar se é student
-    if user_type != "student":
-        return Response({"message": "Sem permissão para deletar candidatura"}, status=HTTP_401_UNAUTHORIZED)
-
+    # 2. Lógica de deleção
     try:
-        student = Student.objects.get(user__email=user_email)
-    except Student.DoesNotExist:
-        return Response({"message": "Estudante não encontrado"}, status=HTTP_404_NOT_FOUND)
+        if user_type == "student":
+            # Estudante deleta a SUA própria candidatura
+            try:
+                student = Student.objects.get(user__email=user_email)
+                candidature = Candidature.objects.get(student=student)
+            except Student.DoesNotExist:
+                return Response({"message": "Estudante não encontrado"}, status=HTTP_404_NOT_FOUND)
+            except Candidature.DoesNotExist:
+                return Response({"message": "Você não possui candidatura para deletar"}, status=HTTP_404_NOT_FOUND)
+        
+        elif user_type in ["admin", "academic_services"]:
+            # Admin/Academic deleta POR ID
+            candidature_id = request.data.get("id")
+            if not candidature_id:
+                return Response({"message": "ID da candidatura é obrigatório"}, status=HTTP_400_BAD_REQUEST)
+            
+            try:
+                candidature = Candidature.objects.get(id_candidature=candidature_id)
+            except Candidature.DoesNotExist:
+                return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+        
+        else:
+            return Response({"message": "Sem permissão para deletar candidatura"}, status=HTTP_403_FORBIDDEN)
 
-    # 3. Buscar candidatura do estudante
-    try:
-        candidature = Candidature.objects.get(student=student)
-    except Candidature.DoesNotExist:
-        return Response({"message": "Você não possui candidatura para deletar"}, status=HTTP_404_NOT_FOUND)
+        # Deletar candidatura
+        candidature.delete()
+        return Response({"message": "Candidatura deletada com sucesso"}, status=HTTP_200_OK)
 
-    # 4. Deletar candidatura (cascade vai deletar propostas e histórico relacionados)
-    candidature_id = candidature.id_candidature
-    candidature.delete()
-
-    return Response({
-        "message": "Candidatura deletada com sucesso",
-        "deleted_candidature_id": candidature_id
-    }, status=HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['GET'])

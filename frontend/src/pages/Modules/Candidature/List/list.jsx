@@ -2,7 +2,7 @@ import './list.css';
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
-import { getAllCandidatures } from '../../../../services/candidatures';
+import { getAllCandidatures, deleteCandidature } from '../../../../services/candidatures';
 import { UserContext } from '../../../../contexts';
 
 const List = () => {
@@ -12,7 +12,6 @@ const List = () => {
 
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-	const [status, setStatus] = useState(null);
 
 	const iconMap = [
 		"bi-arrow-clockwise",
@@ -46,38 +45,38 @@ const List = () => {
 
 	const [list, setList] = useState([]);
 
-	// Mapear estados do backend para números do frontend
-	const stateMap = {
-		'submitted': 1,
-		'revision': 1,
-		'placed': 2,
-		'protocol_generated': 3,
-		'presidency_signature': 4,
-		'company_signature': 5,
-		'student_signature': 6,
-		'finished': 7,
-	};
+	const fetchCandidatures = async () => {
+		setLoading(true);
+		// Mapear estados do backend para números do frontend
+		const stateMap = {
+			'submitted': 1,
+			'revision': 1,
+			'placed': 2,
+			'protocol_generated': 3,
+			'presidency_signature': 4,
+			'company_signature': 5,
+			'student_signature': 6,
+			'finished': 7,
+		};
+
+		const data = await getAllCandidatures(userInfo.token, () => { }, setError);
+
+		if (data) {
+			// Mapear dados da API para o formato do componente
+			const mappedData = data.map(candidature => ({
+				id: candidature.id,
+				studentName: candidature.studentName,
+				studentNumber: candidature.studentNumber,
+				companyName: candidature.companyName,
+				proposalName: candidature.proposalName,
+				state: stateMap[candidature.state] || 1,
+			}));
+			setList(mappedData);
+		}
+		setLoading(false);
+	}
 
 	useEffect(() => {
-		async function fetchCandidatures() {
-			setLoading(true);
-			const data = await getAllCandidatures(userInfo.token, setStatus, setError);
-
-			if (data) {
-				// Mapear dados da API para o formato do componente
-				const mappedData = data.map(candidature => ({
-					id: candidature.id,
-					studentName: candidature.studentName,
-					studentNumber: candidature.studentNumber,
-					companyName: candidature.companyName,
-					proposalName: candidature.proposalName,
-					state: stateMap[candidature.state] || 1,
-				}));
-				setList(mappedData);
-			}
-			setLoading(false);
-		}
-
 		if (userInfo?.token) {
 			fetchCandidatures();
 		}
@@ -93,8 +92,15 @@ const List = () => {
 		const edit = () => {
 			navigate("/candidature/edit?id=" + id);
 		}
-		const handleDelete = () => {
-			// TODO : eliminar Candidatura
+
+		const handleDelete = async () => {
+			if (window.confirm(`Tem a certeza que deseja apagar a candidatura do aluno ${studentNumber}? Esta ação é irreversível.`)) {
+				const res = await deleteCandidature(userInfo.token, id, () => { }, setError);
+				if (res) {
+					// Recarregar lista
+					fetchCandidatures();
+				}
+			}
 		}
 
 		return (
