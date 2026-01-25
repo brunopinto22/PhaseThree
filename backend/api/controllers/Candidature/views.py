@@ -455,3 +455,78 @@ def deleteCandidature(request):
         "message": "Candidatura deletada com sucesso",
         "deleted_candidature_id": candidature_id
     }, status=HTTP_200_OK)
+
+
+@api_view(['GET'])
+def listAllCandidatures(request):
+    """
+    Endpoint para listar todas as candidaturas.
+    Apenas admin e academic_services têm permissão.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    # 1. Autenticação
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    # 2. Verificar permissões (apenas admin e academic_services)
+    if user_type not in ["admin", "academic_services"]:
+        return Response(
+            {"message": "Sem permissão para ver lista de candidaturas"},
+            status=HTTP_403_FORBIDDEN
+        )
+
+    try:
+        # 3. Obter todas as candidaturas
+        candidatures = Candidature.objects.all().select_related(
+            'student', 
+            'student__user',
+            'student__student_course'
+        ).prefetch_related('candidature_proposals__proposal__company')
+
+        candidatures_list = []
+        for candidature in candidatures:
+            # Obter a proposta principal (aceite ou primeira da lista)
+            candidature_proposals = candidature.candidature_proposals.all()
+            
+            # Tentar encontrar proposta aceite primeiro
+            main_proposal = None
+            for cp in candidature_proposals:
+                if cp.state == 'accepted':
+                    main_proposal = cp.proposal
+                    break
+            
+            # Se não há proposta aceite, usar a primeira
+            if not main_proposal and candidature_proposals:
+                main_proposal = candidature_proposals[0].proposal
+
+            # Determinar nome da empresa/docente
+            company_name = None
+            proposal_name = None
+            if main_proposal:
+                proposal_name = main_proposal.proposal_title
+                if main_proposal.company:
+                    company_name = main_proposal.company.company_name
+                elif main_proposal.isec_advisor:
+                    company_name = main_proposal.isec_advisor.teacher_name
+                else:
+                    company_name = "ISEC"
+
+            candidatures_list.append({
+                "id": candidature.id_candidature,
+                "studentNumber": candidature.student.student_number,
+                "studentName": candidature.student.student_name,
+                "companyName": company_name,
+                "proposalName": proposal_name,
+                "state": candidature.state,
+                "submissionDate": candidature.candidature_submission_date.strftime("%d/%m/%Y")
+            })
+
+        return Response(candidatures_list, status=HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )

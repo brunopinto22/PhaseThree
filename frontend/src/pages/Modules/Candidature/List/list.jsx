@@ -1,11 +1,18 @@
 import './list.css';
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
+import { getAllCandidatures } from '../../../../services/candidatures';
+import { UserContext } from '../../../../contexts';
 
 const List = () => {
 
 	const navigate = useNavigate();
+	const { userInfo } = useContext(UserContext);
+
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+	const [status, setStatus] = useState(null);
 
 	const iconMap = [
 		"bi-arrow-clockwise",
@@ -16,7 +23,7 @@ const List = () => {
 		"bi-journal-check",
 		"bi-rocket-fill",
 	];
-		
+
 	const text = [
 		"Pendente",
 		"Colocado",
@@ -37,84 +44,63 @@ const List = () => {
 		"start",
 	];
 
-	const [list, setList] = useState([
-		{
-      id: 1,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-    },
-		{
-      id: 2,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-    },
-		{
-      id: 3,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-    },
-		{
-      id: 4,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 4,
-    },
-		{
-      id: 5,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 5,
-    },
-		{
-      id: 6,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 6,
-    },
-		{
-      id: 7,
-      studentName: "João Silva",
-      studentNumber: 2020123456,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 7,
-    },
-  ]);
-	// TODO : pedir lista de Candidaturas	
+	const [list, setList] = useState([]);
+
+	// Mapear estados do backend para números do frontend
+	const stateMap = {
+		'submitted': 1,
+		'revision': 1,
+		'placed': 2,
+		'protocol_generated': 3,
+		'presidency_signature': 4,
+		'company_signature': 5,
+		'student_signature': 6,
+		'finished': 7,
+	};
+
+	useEffect(() => {
+		async function fetchCandidatures() {
+			setLoading(true);
+			const data = await getAllCandidatures(userInfo.token, setStatus, setError);
+
+			if (data) {
+				// Mapear dados da API para o formato do componente
+				const mappedData = data.map(candidature => ({
+					id: candidature.id,
+					studentName: candidature.studentName,
+					studentNumber: candidature.studentNumber,
+					companyName: candidature.companyName,
+					proposalName: candidature.proposalName,
+					state: stateMap[candidature.state] || 1,
+				}));
+				setList(mappedData);
+			}
+			setLoading(false);
+		}
+
+		if (userInfo?.token) {
+			fetchCandidatures();
+		}
+	}, [userInfo]);
 
 
 	const exportList = () => {
 	}
 
 
-	const Row = ({id, studentName, studentNumber, companyName, proposalName, state}) => {
-		
+	const Row = ({ id, studentName, studentNumber, companyName, proposalName, state }) => {
+
 		const view = () => {
-			navigate("/candidature/view?id="+id);
+			navigate("/candidature/view?id=" + id);
 		}
 		const edit = () => {
-			navigate("/candidature/edit?id="+id);
+			navigate("/candidature/edit?id=" + id);
 		}
 		const handleDelete = () => {
 			// TODO : eliminar Candidatura
 		}
 
-		return(
+		return (
 			<tr className='table-row'>
 				<th><State state={state} hideState={true} hideText={true} tooltip={true} /></th>
 				<th className='fit-column text-center'><p>{studentNumber}</p></th>
@@ -132,7 +118,7 @@ const List = () => {
 		);
 	}
 
-	return(
+	return (
 		<div className='candidatures-list d-flex flex-column'>
 
 			<div className="top d-flex flex-row justify-content-between">
@@ -146,14 +132,16 @@ const List = () => {
 			</div>
 
 			<div className="captions d-flex flex-row align-items-center gap-3">
-				{iconMap.map((icon,index) => (
-					<><div className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length-1 && (<p>|</p>)}</>
+				{iconMap.map((icon, index) => (
+					<><div className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length - 1 && (<p>|</p>)}</>
 				))}
 			</div>
 
-			{list.length === 0 && <Alert text='Não existe nenhum docente de momento' />}
+			{loading && <Alert text='A carregar candidaturas...' />}
+			{error && <Alert text={error} />}
+			{!loading && !error && list.length === 0 && <Alert text='Não existem candidaturas de momento' />}
 
-			{list.length > 0 && (
+			{!loading && !error && list.length > 0 && (
 				<table>
 					<tr className='header'>
 						<th className='fit-column'><p>Estado</p></th>
@@ -167,7 +155,7 @@ const List = () => {
 					{list.map(candidature => (
 						<Row key={candidature.id} {...candidature} />
 					))}
-					
+
 				</table>
 			)}
 

@@ -141,3 +141,37 @@ export async function getCandidatureHistory(token, candidatureId, setStatus, set
     return null;
   }
 }
+
+/**
+ * Obtém a lista de todas as candidaturas (apenas admin e academic_services)
+ * @param {string} token - Token de autenticação
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Array|null} - Lista de candidaturas ou null em caso de erro
+ */
+export async function getAllCandidatures(token, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/list/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao obter lista de candidaturas");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
