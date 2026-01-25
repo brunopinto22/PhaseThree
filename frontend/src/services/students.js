@@ -193,7 +193,38 @@ export async function addFavourite(token, id) {
 	} catch {}
 
 }
+export async function getStudentsWithInternships(token, setStatus, setErrorMessage) {
+	try {
+		const res = await fetch(`${apiUrl}/students/internships/`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": token,
+			}
+		});
 
+		setStatus(res.status);
+
+		// 204 = sem dados; devolve lista vazia e não trata como erro
+		if (res.status === 204) {
+			return [];
+		}
+
+		const data = await res.json();
+
+		if (res.status !== 200) {
+			setErrorMessage(data.message || "Erro ao carregar estudantes");
+			return null;
+		}
+
+		return data;
+
+	} catch (error) {
+		setStatus(500);
+		setErrorMessage("Erro de rede ou servidor");
+		return null;
+	}
+}
 export async function removeFavourite(token, id) {
 	
 	try {

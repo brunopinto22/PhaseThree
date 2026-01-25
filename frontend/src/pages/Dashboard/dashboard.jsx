@@ -168,11 +168,40 @@ const Dashboard = () => {
 						/>
 					)}
 					{role === 'admin' && (
-						<DashButton
-							action={() => navigate("/settings")}
-							icon={<i className="bi bi-gear-fill"></i>}
-							text='Definições'
-						/>
+						<>
+							<DashButton
+								action={() => navigate("/settings")}
+								icon={<i className="bi bi-gear-fill"></i>}
+								text='Definições'
+							/>
+							<DashButton
+								action={() => navigate("/academic-services/internships")}
+								icon={<i className="bi bi-briefcase-fill"></i>}
+								text='Ver Alunos com Internships'
+							/>
+						</>
+					)}
+
+					{role === 'academic_services' && (
+						<>
+							<DashButton
+								action={() => navigate("/academic-services/internships")}
+								icon={<i className="bi bi-person-fill"></i>}
+								text="Ver Alunos com Internships"
+							/>
+							<DashButton
+								icon={<i className="bi bi-file-earmark-check-fill"></i>}
+								text="Validar Registos"
+							/>
+							<DashButton
+								icon={<i className="bi bi-clipboard2-check-fill"></i>}
+								text="Gerir Registos"
+							/>
+							<DashButton
+								icon={<i className="bi bi-briefcase-fill"></i>}
+								text="Ver Internships e Placements"
+							/>
+						</>
 					)}
 
 				</div>
