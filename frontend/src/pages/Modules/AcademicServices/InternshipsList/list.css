@@ -1,0 +1,54 @@
+.internships-list-container {
+  padding: 20px;
+}
+
+.internships-list-container h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.search-bar {
+  max-width: 600px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  padding: 10px;
+  font-size: 14px;
+}
+
+.search-bar small {
+  display: block;
+  margin-top: 5px;
+}
+
+.internships-table {
+  overflow-x: auto;
+}
+
+.internships-table table {
+  font-size: 0.9rem;
+}
+
+.companies-list,
+.advisors-list {
+  font-size: 0.85rem;
+}
+
+.company-item,
+.advisor-item {
+  margin-bottom: 5px;
+  padding: 5px;
+  background-color: #f5f5f5;
+  border-radius: 3px;
+}
+
+.status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.status-list .badge {
+  font-size: 0.75rem;
+}

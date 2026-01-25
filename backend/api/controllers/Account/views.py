@@ -82,6 +82,9 @@ def login(request):
             response_data["id"] = None
             response_data["company_id"] = None
 
+    elif user.user_type == "academic_services":
+        response_data["name"] = "Academic Services"
+
     return Response(response_data, status=200)
 
 
@@ -96,7 +99,8 @@ def setPassword(request):
     module_map = {
         "student": "Alunos",
         "teacher": "Docentes",
-        "representative": "Empresas"
+        "representative": "Empresas",
+        "academic_services": "Servicos Academicos"
     }
 
     data = request.data.copy()
@@ -312,6 +316,17 @@ def summary(request):
                 }
             }
 
+        elif user_type == "academic_services":
+            data = {
+                "nCourses": Course.objects.count(),
+                "nTeachers": Teacher.objects.count(),
+                "nStudents": Student.objects.count(),
+                "nCompanies": Company.objects.count(),
+                "nRepresentatives": Representative.objects.count(),
+                "nProposals": Proposal.objects.count(),
+                "nCandidatures": Candidature.objects.count(),
+            }
+
         else:
             return Response({"message": "Tipo de utilizador não reconhecido ou não encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -327,7 +342,8 @@ def changePfp(request):
     module_mapping = {
         "student": "Alunos",
         "teacher": "Docentes",
-        "representative": "Empresas"
+        "representative": "Empresas",
+        "academic_services": "Servicos Academicos"
     }
 
     auth_header = request.headers.get("Authorization")
