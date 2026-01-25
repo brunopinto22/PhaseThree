@@ -90,9 +90,6 @@ const List = () => {
 
 	const Row = ({ id, studentName, studentNumber, companyName, proposalName, state }) => {
 
-		const view = () => {
-			navigate("/candidature/view?id=" + id);
-		}
 		const edit = () => {
 			navigate("/candidature/edit?id=" + id);
 		}
@@ -109,7 +106,6 @@ const List = () => {
 				<th><p>{state > 1 ? (proposalName) : '—'}</p></th>
 				<th>
 					<div className='d-flex gap-2'>
-						<OptionButton type='view' action={view} />
 						<OptionButton type='edit' action={edit} />
 						<OptionButton type='delete' action={handleDelete} />
 					</div>
