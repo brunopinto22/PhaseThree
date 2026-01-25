@@ -1,8 +1,9 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from datetime import datetime, timedelta
 from api.models import (
     Accounts, ScientificArea, Course, Branch, Teacher, Student,
-    Company, Representative, Settings, Module, Permissions
+    Company, Representative, Settings, Module, Permissions, Calendar
 )
 
 
@@ -23,6 +24,7 @@ class Command(BaseCommand):
             Representative.objects.all().delete()
             Company.objects.all().delete()
             Teacher.objects.all().delete()
+            Calendar.objects.all().delete()
             Course.objects.all().delete()
             ScientificArea.objects.all().delete()
             # Delete accounts except superusers (admin users)
@@ -170,6 +172,59 @@ class Command(BaseCommand):
                     courses.append(course)
                     self.stdout.write(f'  Created: {c_data["name"]}')
 
+            # Create Calendars
+            self.stdout.write('Creating Calendars...')
+            calendars = []
+            today = datetime.now().date()
+            
+            # Calendar for current academic year (2025/2026)
+            calendar_data = [
+                {
+                    "year": 2025,
+                    "semester": 2,
+                    "course": courses[0] if courses else None,  # LEI
+                    "submission_start": today - timedelta(days=30),
+                    "submission_end": today + timedelta(days=60),
+                    "divulgation": today + timedelta(days=70),
+                    "registrations": today + timedelta(days=80),
+                    "candidatures": today + timedelta(days=90),
+                    "placements": today + timedelta(days=120),
+                    "min_proposals": 3,
+                    "max_proposals": 5,
+                },
+                {
+                    "year": 2025,
+                    "semester": 2,
+                    "course": courses[1] if len(courses) > 1 else None,  # MEI
+                    "submission_start": today - timedelta(days=30),
+                    "submission_end": today + timedelta(days=60),
+                    "divulgation": today + timedelta(days=70),
+                    "registrations": today + timedelta(days=80),
+                    "candidatures": today + timedelta(days=90),
+                    "placements": today + timedelta(days=120),
+                    "min_proposals": 3,
+                    "max_proposals": 5,
+                },
+            ]
+
+            for cal_data in calendar_data:
+                if cal_data["course"]:
+                    calendar = Calendar.objects.create(
+                        calendar_year=cal_data["year"],
+                        calendar_semester=cal_data["semester"],
+                        course=cal_data["course"],
+                        submission_start=cal_data["submission_start"],
+                        submission_end=cal_data["submission_end"],
+                        divulgation=cal_data["divulgation"],
+                        registrations=cal_data["registrations"],
+                        candidatures=cal_data["candidatures"],
+                        placements=cal_data["placements"],
+                        min_proposals=cal_data["min_proposals"],
+                        max_proposals=cal_data["max_proposals"],
+                    )
+                    calendars.append(calendar)
+                    self.stdout.write(f'  Created: {calendar}')
+
             # Create Students
             self.stdout.write('Creating Students...')
             student_data = [
@@ -190,6 +245,7 @@ class Command(BaseCommand):
                     "ects": 180,
                     "course": courses[0] if courses else None,
                     "branch": None,
+                    "calendar": calendars[0] if calendars else None,
                 },
                 {
                     "number": 12346,
@@ -208,6 +264,7 @@ class Command(BaseCommand):
                     "ects": 120,
                     "course": courses[0] if courses else None,
                     "branch": None,
+                    "calendar": calendars[0] if calendars else None,
                 },
             ]
 
@@ -238,6 +295,7 @@ class Command(BaseCommand):
                         student_course=s_data["course"],
                         student_branch=s_data["branch"],
                         student_ects=s_data["ects"],
+                        calendar=s_data.get("calendar"),
                         active=True,
                     )
                     self.stdout.write(f'  Created: {s_data["name"]}')
@@ -321,6 +379,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Database seeding completed successfully!'))
         self.stdout.write(self.style.SUCCESS(f'  Scientific Areas: {ScientificArea.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Courses: {Course.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'  Calendars: {Calendar.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Teachers: {Teacher.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Students: {Student.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Companies: {Company.objects.count()}'))

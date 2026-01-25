@@ -110,13 +110,17 @@ const SideBar = ({type = null, summary = null, error = null}) => {
 					<h4>Prazos</h4>
 				</div>
 				
-				<div className='d-flex flex-column gap-2'>
-					<div className='d-flex flex-row gap-2'><b>Calendário:</b><a className="text-link" href={`/calendar/view?id=${summary?.calendar.id}`}>{summary?.calendar.title}</a></div>
-					<div className='d-flex flex-row gap-2'><b>Submissão de Propostas:</b><p>{summary?.calendar.submission_start} a {summary?.calendar.submission_end}</p></div>
-					<div className='d-flex flex-row gap-2'><b>Divulgação de Projetos/Estágios:</b><p>{summary?.calendar.divulgation}</p></div>
-					<div className='d-flex flex-row gap-2'><b>Candidaturas:</b><p>{summary?.calendar.candidatures}</p></div>
-					<div className='d-flex flex-row gap-2'><b>Colocações:</b><p>{summary?.calendar.placements}</p></div>
-				</div>
+				{summary?.calendar ? (
+					<div className='d-flex flex-column gap-2'>
+						<div className='d-flex flex-row gap-2'><b>Calendário:</b><a className="text-link" href={`/calendar/view?id=${summary.calendar.id}`}>{summary.calendar.title}</a></div>
+						<div className='d-flex flex-row gap-2'><b>Submissão de Propostas:</b><p>{summary.calendar.submission_start} a {summary.calendar.submission_end}</p></div>
+						<div className='d-flex flex-row gap-2'><b>Divulgação de Projetos/Estágios:</b><p>{summary.calendar.divulgation}</p></div>
+						<div className='d-flex flex-row gap-2'><b>Candidaturas:</b><p>{summary.calendar.candidatures}</p></div>
+						<div className='d-flex flex-row gap-2'><b>Colocações:</b><p>{summary.calendar.placements}</p></div>
+					</div>
+				) : (
+					<Alert text="Nenhum calendário atribuído de momento." small />
+				)}
 
 			</>
 			}

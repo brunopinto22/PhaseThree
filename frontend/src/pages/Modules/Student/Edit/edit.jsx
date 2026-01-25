@@ -177,8 +177,8 @@ const Edit = () =>  {
 				setAverage(data.average);
 				setSubjectsDone(data.subjects_done);
 				setCourse(data.course.id);
-				setBranch(data.branch.id);
-				setCalendar(data.calendar.id);
+				setBranch(data.branch?.id || null);
+				setCalendar(data.calendar?.id || null);
 				setTodo(data.subjects);
 			});
 		}
