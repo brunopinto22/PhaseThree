@@ -67,7 +67,7 @@ const Edit = () => {
 	};
 
 	const isValid = () => {
-		return selectedProposals.length >= minProposals && 
+		return selectedProposals.length >= 1 && 
 		       selectedProposals.length <= maxProposals;
 	};
 
@@ -76,7 +76,7 @@ const Edit = () => {
 		setSuccess('');
 
 		if (!isValid()) {
-			setError(`Deve selecionar entre ${minProposals} e ${maxProposals} propostas`);
+			setError(`Deve selecionar entre 1 e ${maxProposals} propostas`);
 			return;
 		}
 
@@ -148,7 +148,7 @@ const Edit = () => {
 	}
 
 	const selectedCount = selectedProposals.length;
-	const counterClass = selectedCount < minProposals || selectedCount > maxProposals ? 'error' : 'success';
+	const counterClass = selectedCount < 1 || selectedCount > maxProposals ? 'error' : 'success';
 
 	return (
 		<div id='candidature' className='d-flex flex-column'>
@@ -160,9 +160,7 @@ const Edit = () => {
 					<h5 className={counterClass}>
 						{selectedCount} / {maxProposals} propostas selecionadas
 					</h5>
-					{selectedCount < minProposals && (
-						<Alert text={`Mínimo: ${minProposals} propostas`} type='warning' />
-					)}
+					
 					{selectedCount > maxProposals && (
 						<Alert text={`Máximo: ${maxProposals} propostas`} type='danger' />
 					)}
@@ -174,7 +172,7 @@ const Edit = () => {
 
 			<section className='p-0'>
 				<h4>Propostas Disponíveis</h4>
-				<p className='text-muted'>Selecione entre {minProposals} e {maxProposals} propostas</p>
+				<p className='text-muted'>Selecione entre 1 e {maxProposals} propostas</p>
 
 				{proposals.length === 0 && (
 					<Alert text='Não existem propostas disponíveis no momento' type='danger' />

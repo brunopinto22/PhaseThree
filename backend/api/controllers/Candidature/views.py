@@ -66,9 +66,12 @@ def submitCandidature(request):
 
         # 8. Validar quantidade de propostas (min/max)
         num_proposals = len(proposal_ids)
-        if num_proposals < calendar.min_proposals or num_proposals > calendar.max_proposals:
+        min_required = 1  # Mínimo sempre 1
+        max_allowed = calendar.max_proposals
+        
+        if num_proposals < min_required or num_proposals > max_allowed:
             return Response(
-                {"message": f"Deve selecionar entre {calendar.min_proposals} e {calendar.max_proposals} propostas"},
+                {"message": f"Deve selecionar entre {min_required} e {max_allowed} propostas"},
                 status=HTTP_400_BAD_REQUEST
             )
 
@@ -198,9 +201,12 @@ def updateCandidature(request, pk):
 
         # 9. Validar quantidade de propostas (min/max)
         num_proposals = len(proposal_ids)
-        if num_proposals < calendar.min_proposals or num_proposals > calendar.max_proposals:
+        min_required = 1  # Mínimo sempre 1
+        max_allowed = calendar.max_proposals
+        
+        if num_proposals < min_required or num_proposals > max_allowed:
             return Response(
-                {"message": f"Deve selecionar entre {calendar.min_proposals} e {calendar.max_proposals} propostas"},
+                {"message": f"Deve selecionar entre {min_required} e {max_allowed} propostas"},
                 status=HTTP_400_BAD_REQUEST
             )
 
