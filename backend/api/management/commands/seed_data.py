@@ -26,6 +26,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing data...'))
+            # Delete in proper order to avoid foreign key constraints
+            CandidatureProposal.objects.all().delete()
+            Candidature.objects.all().delete()
+            Proposal.objects.all().delete()
+            Calendar.objects.all().delete()
             Student.objects.all().delete()
             Representative.objects.all().delete()
             Company.objects.all().delete()
@@ -405,13 +410,16 @@ class Command(BaseCommand):
         
         company = Company.objects.filter(company_email=company_email).first()
         if not company:
-            rep_account = Accounts.objects.create(
-                username=rep_email,
-                email=rep_email,
-                user_type="representative"
-            )
-            rep_account.set_password("rep@123")
-            rep_account.save()
+            # Check if representative account already exists
+            rep_account = Accounts.objects.filter(email=rep_email).first()
+            if not rep_account:
+                rep_account = Accounts.objects.create(
+                    username=rep_email,
+                    email=rep_email,
+                    user_type="representative"
+                )
+                rep_account.set_password("rep@123")
+                rep_account.save()
             
             company = Company.objects.create(
                 company_name="Empresa de Testes Lda",

@@ -12,21 +12,21 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             sql="""
-                ALTER TABLE api_candidaturehistory 
-                DROP CONSTRAINT IF EXISTS api_candidaturehisto_candidature_id_2d56cc3f_fk_api_candi;
+                ALTER TABLE api_candidaturestatushistory 
+                DROP CONSTRAINT IF EXISTS api_candidaturestatu_candidature_id_2d56cc3f_fk_api_candi;
                 
-                ALTER TABLE api_candidaturehistory
-                ADD CONSTRAINT api_candidaturehisto_candidature_id_2d56cc3f_fk_api_candi
+                ALTER TABLE api_candidaturestatushistory
+                ADD CONSTRAINT api_candidaturestatu_candidature_id_2d56cc3f_fk_api_candi
                 FOREIGN KEY (candidature_id) 
                 REFERENCES api_candidature(id_candidature) 
                 ON DELETE CASCADE;
             """,
             reverse_sql="""
-                ALTER TABLE api_candidaturehistory 
-                DROP CONSTRAINT IF EXISTS api_candidaturehisto_candidature_id_2d56cc3f_fk_api_candi;
+                ALTER TABLE api_candidaturestatushistory 
+                DROP CONSTRAINT IF EXISTS api_candidaturestatu_candidature_id_2d56cc3f_fk_api_candi;
                 
-                ALTER TABLE api_candidaturehistory
-                ADD CONSTRAINT api_candidaturehisto_candidature_id_2d56cc3f_fk_api_candi
+                ALTER TABLE api_candidaturestatushistory
+                ADD CONSTRAINT api_candidaturestatu_candidature_id_2d56cc3f_fk_api_candi
                 FOREIGN KEY (candidature_id) 
                 REFERENCES api_candidature(id_candidature);
             """
