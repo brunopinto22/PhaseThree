@@ -1,0 +1,271 @@
+.my-candidates-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.my-candidates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.my-candidates-header h1 {
+  font-size: 2rem;
+  color: #333;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+}
+
+.proposals-list h2,
+.candidates-section h2 {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+
+.proposals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.proposal-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.proposal-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.proposal-card h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.proposal-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.metadata-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.metadata-row i {
+  color: #9D0B0E;
+  font-size: 1rem;
+  width: 18px;
+  text-align: center;
+}
+
+.metadata-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.proposal-card p {
+  margin: 0.5rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.view-candidates-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #9D0B0E;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 0.95rem;
+  transition: background-color 0.3s;
+}
+
+.view-candidates-btn:hover {
+  background-color: #CF3134;
+}
+
+.proposal-timeline {
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+}
+
+.proposal-timeline h4 {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.timeline-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.timeline-label {
+  color: #666;
+}
+
+.timeline-date {
+  color: #9D0B0E;
+  font-weight: 600;
+}
+
+.proposal-info {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.proposal-info h2 {
+  margin-bottom: 1rem;
+}
+
+.proposal-info-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.info-section h3 {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dates-grid {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  min-width: 180px;
+}
+
+.date-item i {
+  font-size: 1.5rem;
+  color: #9D0B0E;
+}
+
+.date-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.date-item strong {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.date-item span {
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.slots-info {
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+.slots-available {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.slots-full {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.warning-text {
+  color: #dc3545;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.no-data {
+  text-align: center;
+  color: #999;
+  font-size: 1.1rem;
+  padding: 3rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .my-candidates-container {
+    padding: 1rem;
+  }
+
+  .my-candidates-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .proposals-grid {
+    grid-template-columns: 1fr;
+  }
+}

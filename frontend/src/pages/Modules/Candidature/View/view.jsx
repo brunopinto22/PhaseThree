@@ -180,7 +180,7 @@ function View() {
 					</section>
 
 					<section className='p-0'>
-						<h4>Propostas Selecionadas ({candidature.proposals.length} / {calendar.max})</h4>
+						<h4 className="mb-4">Propostas Selecionadas ({candidature.proposals.length} / {calendar.max})</h4>
 						
 						{candidature.proposals.length === 0 ? (
 							<Alert text='Nenhuma proposta selecionada' type='warning' />

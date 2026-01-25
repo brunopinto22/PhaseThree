@@ -8,12 +8,14 @@ from io import BytesIO
 import unicodedata
 from django.core.mail import send_mail
 from django.db.models import F, Value, IntegerField, Case, When
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
+from django.utils import timezone
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import *
+from rest_framework.decorators import api_view
 from docxtpl import DocxTemplate
 from docx2pdf import convert
 
@@ -202,6 +204,11 @@ def listProposals(request):
                 "calendar": {
                     "id": p.calendar.id_calendar,
                     "title": p.calendar.__str__(),
+                    "submission_start": p.calendar.submission_start.strftime("%d/%m/%Y"),
+                    "submission_end": p.calendar.submission_end.strftime("%d/%m/%Y"),
+                    "divulgation": p.calendar.divulgation.strftime("%d/%m/%Y"),
+                    "candidatures": p.calendar.candidatures.strftime("%d/%m/%Y"),
+                    "placements": p.calendar.placements.strftime("%d/%m/%Y"),
                 },
                 "course": {
                     "id": p.course.id_course,
@@ -563,3 +570,276 @@ def generatePdf(request, pk):
 
     except Exception as e:
         return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def getProposalCandidates(request, proposal_id):
+    """
+    Endpoint para representative ver candidatos de uma proposta.
+    Retorna lista de alunos que se candidataram com seus dados.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+        user_email == "Expired Token."
+        or user_email == "Invalid Token"
+        or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type != "representative":
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        representative = Representative.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
+
+        # Validar que representative é company_advisor da proposta
+        if proposal.company_advisor != representative:
+            return Response(
+                {"message": "Apenas o company advisor pode ver candidatos desta proposta"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # Buscar candidaturas relacionadas à proposta
+        candidature_proposals = CandidatureProposal.objects.filter(
+            proposal=proposal
+        ).select_related(
+            'candidature', 
+            'candidature__student',
+            'candidature__student__user',
+            'candidature__student__student_course',
+            'candidature__student__student_branch'
+        ).order_by('candidature__candidature_submission_date')
+
+        # Contar candidatos aceites
+        accepted_count = candidature_proposals.filter(state='accepted').count()
+
+        # Montar lista de candidatos
+        candidates = []
+        for cp in candidature_proposals:
+            student = cp.candidature.student
+            candidates.append({
+                "student_number": student.student_number,
+                "student_name": student.student_name,
+                "student_email": student.user.email,
+                "course": student.student_course.course_name if student.student_course else None,
+                "branch": student.student_branch.branch_name if student.student_branch else None,
+                "curriculum_url": request.build_absolute_uri(student.curriculum.url) if student.curriculum else None,
+                "submission_date": cp.candidature.candidature_submission_date.strftime("%d/%m/%Y"),
+                "state": cp.state,
+                "can_change": date.today() <= proposal.calendar.placements
+            })
+
+        data = {
+            "proposal_id": proposal.id_proposal,
+            "proposal_title": proposal.proposal_title,
+            "slots": proposal.slots,
+            "accepted_count": accepted_count,
+            "calendar": {
+                "title": proposal.calendar.__str__(),
+                "submission_start": proposal.calendar.submission_start.strftime("%d/%m/%Y"),
+                "submission_end": proposal.calendar.submission_end.strftime("%d/%m/%Y"),
+                "divulgation": proposal.calendar.divulgation.strftime("%d/%m/%Y"),
+                "candidatures": proposal.calendar.candidatures.strftime("%d/%m/%Y"),
+                "placements": proposal.calendar.placements.strftime("%d/%m/%Y"),
+            },
+            "candidates": candidates
+        }
+
+        return JsonResponse(data, status=status.HTTP_200_OK)
+
+    except Representative.DoesNotExist:
+        return Response({"message": "Representative não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposta não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["PUT"])
+def acceptCandidate(request, proposal_id, student_number):
+    """
+    Endpoint para representative aceitar um candidato.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+        user_email == "Expired Token."
+        or user_email == "Invalid Token"
+        or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type != "representative":
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        representative = Representative.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
+        student = Student.objects.get(student_number=student_number)
+
+        # Validar que representative é company_advisor
+        if proposal.company_advisor != representative:
+            return Response(
+                {"message": "Apenas o company advisor pode aceitar candidatos"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # Validar data (antes de placements)
+        if date.today() > proposal.calendar.placements:
+            return Response(
+                {"message": "Período de seleção encerrado"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar candidatura do aluno
+        candidature = Candidature.objects.get(student=student)
+        
+        # Buscar CandidatureProposal
+        candidature_proposal = CandidatureProposal.objects.get(
+            candidature=candidature,
+            proposal=proposal
+        )
+
+        # Validar estado (deve estar pending ou rejected - permitir reverter rejeição)
+        if candidature_proposal.state == 'accepted':
+            return Response(
+                {"message": "Candidato já está aceite"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # Validar slots disponíveis
+        accepted_count = CandidatureProposal.objects.filter(
+            proposal=proposal,
+            state='accepted'
+        ).count()
+
+        if accepted_count >= proposal.slots:
+            return Response(
+                {"message": "Não há vagas disponíveis nesta proposta"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # Verificar se aluno já foi aceite em outra proposta
+        already_accepted = CandidatureProposal.objects.filter(
+            candidature__student=student,
+            state='accepted'
+        ).exclude(proposal=proposal).exists()
+
+        if already_accepted:
+            return Response(
+                {"message": "Aluno já foi aceite em outra proposta"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # Aceitar candidato
+        candidature_proposal.state = 'accepted'
+        candidature_proposal.state_changed_at = timezone.now()
+        candidature_proposal.save()
+
+        return Response(
+            {"message": "Candidato aceite com sucesso"},
+            status=HTTP_200_OK
+        )
+
+    except Representative.DoesNotExist:
+        return Response({"message": "Representative não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposta não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Candidature.DoesNotExist:
+        return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except CandidatureProposal.DoesNotExist:
+        return Response({"message": "Aluno não se candidatou a esta proposta"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["PUT"])
+def rejectCandidate(request, proposal_id, student_number):
+    """
+    Endpoint para representative rejeitar um candidato.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+        user_email == "Expired Token."
+        or user_email == "Invalid Token"
+        or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type != "representative":
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        representative = Representative.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
+        student = Student.objects.get(student_number=student_number)
+
+        # Validar que representative é company_advisor
+        if proposal.company_advisor != representative:
+            return Response(
+                {"message": "Apenas o company advisor pode rejeitar candidatos"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # Validar data (antes de placements)
+        if date.today() > proposal.calendar.placements:
+            return Response(
+                {"message": "Período de seleção encerrado"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar candidatura do aluno
+        candidature = Candidature.objects.get(student=student)
+        
+        # Buscar CandidatureProposal
+        candidature_proposal = CandidatureProposal.objects.get(
+            candidature=candidature,
+            proposal=proposal
+        )
+
+        # Validar estado (pending ou accepted)
+        if candidature_proposal.state not in ['pending', 'accepted']:
+            return Response(
+                {"message": f"Candidato já está em estado '{candidature_proposal.state}'"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # Rejeitar candidato
+        candidature_proposal.state = 'rejected'
+        candidature_proposal.state_changed_at = timezone.now()
+        candidature_proposal.save()
+
+        return Response(
+            {"message": "Candidato rejeitado com sucesso"},
+            status=HTTP_200_OK
+        )
+
+    except Representative.DoesNotExist:
+        return Response({"message": "Representative não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposta não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Candidature.DoesNotExist:
+        return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except CandidatureProposal.DoesNotExist:
+        return Response({"message": "Aluno não se candidatou a esta proposta"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
