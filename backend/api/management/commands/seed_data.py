@@ -1,8 +1,10 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from datetime import date, datetime, timedelta
 from api.models import (
     Accounts, ScientificArea, Course, Branch, Teacher, Student,
-    Company, Representative, Settings, Module, Permissions
+    Company, Representative, Settings, Module, Permissions,
+    Calendar, Proposal, Candidature, CandidatureProposal
 )
 
 
@@ -14,6 +16,11 @@ class Command(BaseCommand):
             '--clear',
             action='store_true',
             help='Clear existing data before seeding',
+        )
+        parser.add_argument(
+            '--with-test-data',
+            action='store_true',
+            help='Also create test calendars, proposals, and candidatures',
         )
 
     def handle(self, *args, **options):
@@ -338,11 +345,190 @@ class Command(BaseCommand):
 
                     self.stdout.write(f'  Created: {c_data["name"]}')
 
-        self.stdout.write(self.style.SUCCESS('Database seeding completed successfully!'))
+            # Create test data if requested
+            if options.get('with_test_data'):
+                self.stdout.write(self.style.SUCCESS('\n=== Creating test data (calendars, proposals, candidatures) ==='))
+                self._create_test_data(courses)
+
+        self.stdout.write(self.style.SUCCESS('\n=== Database seeding completed successfully! ==='))
         self.stdout.write(self.style.SUCCESS(f'  Scientific Areas: {ScientificArea.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Courses: {Course.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Teachers: {Teacher.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Students: {Student.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Companies: {Company.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Representatives: {Representative.objects.count()}'))
+        if options.get('with_test_data'):
+            self.stdout.write(self.style.SUCCESS(f'  Calendars: {Calendar.objects.count()}'))
+            self.stdout.write(self.style.SUCCESS(f'  Proposals: {Proposal.objects.count()}'))
+            self.stdout.write(self.style.SUCCESS(f'  Candidatures: {Candidature.objects.count()}'))
+
+    def _create_test_data(self, courses):
+        """Create test calendars, proposals, and candidatures"""
+        
+        # 1. Create or activate calendar
+        self.stdout.write('Creating/activating calendar...')
+        course = courses[0] if courses else Course.objects.first()
+        
+        if not course:
+            self.stdout.write(self.style.WARNING('  No course found, skipping test data'))
+            return
+        
+        calendar = Calendar.objects.first()
+        if not calendar:
+            today = date.today()
+            calendar = Calendar.objects.create(
+                calendar_year=today.year,
+                calendar_semester=1 if today.month <= 6 else 2,
+                submission_start=today - timedelta(days=10),
+                submission_end=today + timedelta(days=30),
+                divulgation=today + timedelta(days=40),
+                candidatures=today + timedelta(days=50),
+                placements=today + timedelta(days=60),
+                course=course
+            )
+            self.stdout.write(f'  Created: {calendar.calendar_year}/{calendar.calendar_year+1} - {calendar.calendar_semester}º Sem')
+        else:
+            # Activate existing calendar
+            today = date.today()
+            calendar.submission_start = today - timedelta(days=10)
+            calendar.submission_end = today + timedelta(days=30)
+            calendar.divulgation = today + timedelta(days=40)
+            calendar.candidatures = today + timedelta(days=50)
+            calendar.placements = today + timedelta(days=60)
+            calendar.save()
+            self.stdout.write(f'  Activated: {calendar}')
+        
+        # 2. Create test company and representative
+        self.stdout.write('Creating test company...')
+        company_email = "empresa.teste@example.com"
+        rep_email = "rep.teste@example.com"
+        
+        company = Company.objects.filter(company_email=company_email).first()
+        if not company:
+            rep_account = Accounts.objects.create(
+                username=rep_email,
+                email=rep_email,
+                user_type="representative"
+            )
+            rep_account.set_password("rep@123")
+            rep_account.save()
+            
+            company = Company.objects.create(
+                company_name="Empresa de Testes Lda",
+                company_email=company_email,
+                company_address="Rua de Testes, 123",
+                company_postal_code="3000-000",
+                company_nipc=999888777,
+                company_contact="912345678",
+                company_website="https://empresa-testes.pt",
+                company_linkedin="empresa-testes"
+            )
+            
+            representative = Representative.objects.create(
+                user=rep_account,
+                representative_name="João Representante",
+                representative_role="Director de RH",
+                representative_contact="912345679",
+                company=company
+            )
+            
+            company.company_admin = representative
+            company.save()
+            self.stdout.write(f'  Created: {company.company_name}')
+        else:
+            representative = company.representatives.first()
+            self.stdout.write(f'  Using existing: {company.company_name}')
+        
+        # 3. Create test proposal
+        self.stdout.write('Creating test proposal...')
+        proposal_title = "Estágio de Testes em Desenvolvimento Web"
+        proposal = Proposal.objects.filter(proposal_title=proposal_title).first()
+        
+        if not proposal:
+            proposal = Proposal.objects.create(
+                proposal_title=proposal_title,
+                proposal_description="Desenvolvimento de aplicações web usando React e Django",
+                proposal_technologies="React, Django, PostgreSQL",
+                proposal_methodologies="Agile, Scrum",
+                proposal_scheduling="40 horas semanais durante 6 meses",
+                proposal_selection_method="Entrevista técnica e avaliação de currículo",
+                proposal_conditions="Bolsa de estágio, subsídio de alimentação",
+                proposal_type=1,  # Estágio
+                course=course,
+                calendar=calendar,
+                work_format="1",  # On-site
+                location="Coimbra",
+                schedule="9h-18h",
+                slots=3,
+                proposal_objectives="Desenvolver competências em desenvolvimento full-stack",
+                company=company,
+                company_advisor=representative,
+                proposal_submission_date=datetime.now().date()
+            )
+            self.stdout.write(f'  Created: {proposal.proposal_title}')
+        else:
+            self.stdout.write(f'  Using existing: {proposal.proposal_title}')
+        
+        # 4. Create test students and candidatures
+        self.stdout.write('Creating test students with candidatures...')
+        test_students = [
+            {
+                "email": "teste.aluno1@isec.pt",
+                "number": 2020111111,
+                "name": "Maria Teste Candidata",
+                "state": "pending"
+            },
+            {
+                "email": "teste.aluno2@isec.pt",
+                "number": 2021222222,
+                "name": "João Teste Candidato",
+                "state": "pending"
+            },
+        ]
+        
+        for s_data in test_students:
+            student_account = Accounts.objects.filter(email=s_data["email"]).first()
+            if not student_account:
+                student_account = Accounts.objects.create(
+                    username=s_data["email"],
+                    email=s_data["email"],
+                    user_type="student"
+                )
+                student_account.set_password("aluno@123")
+                student_account.save()
+            
+            student = Student.objects.filter(user=student_account).first()
+            if not student:
+                student = Student.objects.create(
+                    user=student_account,
+                    student_number=s_data["number"],
+                    student_name=s_data["name"],
+                    nationality="Portuguesa",
+                    address="Rua dos Testes, 10",
+                    contact="912000000",
+                    current_year=3,
+                    student_course=course,
+                    student_ects=150
+                )
+            
+            # Create candidature
+            candidature = Candidature.objects.filter(student=student).first()
+            if not candidature:
+                candidature = Candidature.objects.create(
+                    student=student,
+                    state=s_data["state"],
+                    candidature_submission_date=datetime.now().date()
+                )
+            
+            # Link to proposal
+            if not CandidatureProposal.objects.filter(candidature=candidature, proposal=proposal).exists():
+                CandidatureProposal.objects.create(
+                    candidature=candidature,
+                    proposal=proposal,
+                    state=s_data["state"]
+                )
+            
+            self.stdout.write(f'  Created: {student.student_name} ({s_data["state"]})')
+        
+        self.stdout.write(self.style.SUCCESS('\n✅ Test data created successfully!'))
 
