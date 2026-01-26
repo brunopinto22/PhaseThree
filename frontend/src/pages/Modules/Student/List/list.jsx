@@ -16,13 +16,13 @@ const List = () => {
 
 	const [list, setList] = useState(null);
 	useEffect(() => {
-    const fetchStudents = async () => {
+		const fetchStudents = async () => {
 			const students = await listStudents(userInfo.token, setStatus, setError);
 			setList(students);
-    };
+		};
 
-    fetchStudents();
-  }, [userInfo, reload]);
+		fetchStudents();
+	}, [userInfo, reload]);
 
 	useEffect(() => {
 		if (status === 401) {
@@ -76,8 +76,8 @@ const List = () => {
 				(filters.id === null || item.student_number.toString().includes(filters.id.toString())) &&
 				(filters.name === null || item.name.toLowerCase().includes(filters.name.toLowerCase())) &&
 				(filters.email === null || item.email.toLowerCase().includes(filters.email.toLowerCase())) &&
-				(filters.course === null || 
-					item.course.toLowerCase().includes(filters.course.toLowerCase()) || 
+				(filters.course === null ||
+					item.course.toLowerCase().includes(filters.course.toLowerCase()) ||
 					item.course_acronym.toLowerCase().includes(filters.course.toLowerCase())
 				) &&
 				(filters.acronym === null || item.branch.acronym.toLowerCase().includes(filters.acronym.toLowerCase()))
@@ -88,10 +88,10 @@ const List = () => {
 	useLayoutEffect(() => {
 		const filteredList = getFilteredList();
 		if (filteredList.length === 0 && spanRef.current) {
-				const width = spanRef.current.offsetWidth;
-				setInputWidth(width);
+			const width = spanRef.current.offsetWidth;
+			setInputWidth(width);
 		}
-		else if(filteredList.length > 0 && spanRef.current)
+		else if (filteredList.length > 0 && spanRef.current)
 			setInputWidth(null)
 	}, [debouncedId, name, email, course, acronym, list]);
 
@@ -101,26 +101,31 @@ const List = () => {
 	}
 
 
-	const Row = ({active, studentName, num, email, course, branch}) => {
-		
+	const Row = ({ active, studentName, num, email, course, branch, validation_status }) => {
+
 		const view = () => {
-			navigate("/student/view?id="+num);
+			navigate("/student/view?id=" + num);
 		}
 		const edit = () => {
-			navigate("/student/edit?id="+num);
+			navigate("/student/edit?id=" + num);
 		}
 		const handleDelete = async () => {
 			await deleteStudent(userInfo.token, num, setStatus, setError);
 			setReload(prev => !prev);
 		}
 
-		return(
+		return (
 			<tr className={`table-row ${active ? "" : "disabled"}`}>
 				<th className='fit-column text-center'><p>{num}</p></th>
 				<th><p>{studentName}</p></th>
-				<th><p><a href={`mailto:`+ email}>{email}</a></p></th>
+				<th><p><a href={`mailto:` + email}>{email}</a></p></th>
 				<th><p>{course}</p></th>
-				<th style={{width: 0}}>{branch ? <Pill text={branch.acronym} color={branch.color} tooltip={branch.name} tooltipPosition='left' /> : "—"}</th>
+				<th style={{ width: 0 }}>{branch ? <Pill text={branch.acronym} color={branch.color} tooltip={branch.name} tooltipPosition='left' /> : "—"}</th>
+				<th>
+					{validation_status === 'validated' && <Pill text="Validado" color="green" />}
+					{validation_status === 'pending' && <Pill text="Pendente" color="orange" />}
+					{validation_status === 'rejected' && <Pill text="Rejeitado" color="red" />}
+				</th>
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
@@ -132,7 +137,7 @@ const List = () => {
 		);
 	}
 
-	return(
+	return (
 		<div className='students-list d-flex flex-column'>
 
 			<div className="top d-flex flex-row justify-content-between">
@@ -175,17 +180,18 @@ const List = () => {
 								{id !== null && id !== undefined ? id : 'Nº aluno'}
 							</span>
 						</th>
-						<th><p><input placeholder='Nome do Aluno' onChange={(e) => setName(e.target.value)}/></p></th>
-						<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)}/></p></th>
-						<th><p><input placeholder='Curso' onChange={(e) => setCourse(e.target.value)}/></p></th>
-						<th><p><input style={{width:"100%", minWidth: "1vw"}}placeholder='Ramo' onChange={(e) => setAcronym(e.target.value)}/></p></th>
+						<th><p><input placeholder='Nome do Aluno' onChange={(e) => setName(e.target.value)} /></p></th>
+						<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)} /></p></th>
+						<th><p><input placeholder='Curso' onChange={(e) => setCourse(e.target.value)} /></p></th>
+						<th><p><input style={{ width: "100%", minWidth: "1vw" }} placeholder='Ramo' onChange={(e) => setAcronym(e.target.value)} /></p></th>
+						<th><p>Estado</p></th>
 						<th className='fit-column'></th>
 					</tr>
 
 					{getFilteredList().map(student => (
-						<Row key={student.student_number} studentName={student.name} num={student.student_number} email={student.email} course={student.course} branch={student.branch} active={student.active} />
+						<Row key={student.student_number} studentName={student.name} num={student.student_number} email={student.email} course={student.course} branch={student.branch} active={student.active} validation_status={student.validation_status} />
 					))}
-					
+
 				</table>
 			)}
 			{list?.length > 0 && getFilteredList()?.length === 0 && <Alert text='Não foi encontrado nenhum aluno' />}

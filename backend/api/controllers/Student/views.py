@@ -37,6 +37,7 @@ def getStudent(request, pk):
             "is_missing_info": student.is_missing_info(),
             "pfp": request.build_absolute_uri(student.user.photo.url) if student.user.photo else None,
             "active": student.active,
+            "validation_status": student.validation_status,
             "name": student.student_name,
             "student_number": student.student_number,
             "email": student.user.email,
@@ -116,6 +117,7 @@ def listStudents(request):
                 "is_missing_info": s.is_missing_info(),
                 "pfp": s.user.photo.url if s.user.photo else None,
                 "active": s.active,
+                "validation_status": s.validation_status,
                 "student_number": s.student_number,
                 "name": s.student_name,
                 "email": s.user.email,
@@ -328,7 +330,9 @@ def editStudent(request, pk):
         student = Student.objects.get(student_number=pk)
         course = Course.objects.get(id_course=data.get("student_course"))
         branch = Branch.objects.get(id_branch=data.get("student_branch")) if data.get("student_branch") else None
-        calendar = Calendar.objects.get(id_calendar=data.get("student_calendar"))
+        
+        calendar_id = data.get("student_calendar")
+        calendar = Calendar.objects.get(id_calendar=calendar_id) if calendar_id else None
 
         if Accounts.objects.filter(email=data["email"]).exclude(pk=student.user.pk).exists():
             return Response({"message": "Este email já está em uso"}, status=status.HTTP_400_BAD_REQUEST)
@@ -341,6 +345,9 @@ def editStudent(request, pk):
 
         if user_type == "admin" or (user_type == "teacher" and has_permission):
             student.active = data['active']
+
+        if user_type == "admin" or user_type == "academic_services":
+            student.validation_status = data.get('validation_status', student.validation_status)
 
         student.user.email = data["email"]
         student.user.save()

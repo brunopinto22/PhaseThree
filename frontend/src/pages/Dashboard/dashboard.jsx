@@ -195,14 +195,6 @@ const Dashboard = () => {
 									action={() => navigate("/candidature/list")}
 								/>
 								<DashButton
-									icon={<i className="bi bi-file-earmark-check-fill"></i>}
-									text="Validar Registos"
-								/>
-								<DashButton
-									icon={<i className="bi bi-clipboard2-check-fill"></i>}
-									text="Gerir Registos"
-								/>
-								<DashButton
 									icon={<i className="bi bi-briefcase-fill"></i>}
 									text="Ver Internships e Placements"
 								/>
