@@ -294,6 +294,91 @@ def createStudent(request):
         return Response({"message": "Internal server error",}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(["POST"])
+def importStudents(request):
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type not in ["admin", "teacher", "academic_services"]:
+        return Response({"message": "Sem permissão para importar alunos"}, status=HTTP_401_UNAUTHORIZED)
+
+    students_data = request.data
+    if not isinstance(students_data, list):
+        return Response({"message": "Dados inválidos. Esperada uma lista de alunos."}, status=HTTP_400_BAD_REQUEST)
+
+    success_count = 0
+    errors = []
+    settings = Settings.objects.first()
+    default_password = settings.student_password if settings else "aluno@123"
+
+    for idx, data in enumerate(students_data):
+        try:
+            with transaction.atomic():
+                email = data.get("email")
+                student_number = data.get("student_number")
+
+                if not email or not student_number:
+                    errors.append(f"Linha {idx+1}: Email e número de aluno são obrigatórios.")
+                    continue
+
+                if Accounts.objects.filter(email=email).exists():
+                    errors.append(f"Linha {idx+1}: Email {email} já registado.")
+                    continue
+
+                if Student.objects.filter(student_number=student_number).exists():
+                    errors.append(f"Linha {idx+1}: Número {student_number} já registado.")
+                    continue
+
+                course_id = data.get("student_course")
+                course = Course.objects.filter(id_course=course_id).first()
+                if not course:
+                    errors.append(f"Linha {idx+1}: Curso ID {course_id} não encontrado.")
+                    continue
+
+                calendar_id = data.get("student_calendar")
+                calendar = Calendar.objects.filter(id_calendar=calendar_id).first() if calendar_id else None
+
+                user = Accounts.objects.create_user(
+                    username=email,
+                    email=email,
+                    user_type="student",
+                )
+                user.set_password(default_password)
+                user.save()
+
+                Student.objects.create(
+                    user=user,
+                    student_number=student_number,
+                    student_name=data.get("student_name"),
+                    nationality=data.get("nationality", ""),
+                    ident_type=data.get("ident_type"),
+                    ident_doc=data.get("ident_doc"),
+                    nif=data.get("nif"),
+                    gender=data.get("gender"),
+                    address=data.get("address"),
+                    contact=data.get("contact"),
+                    current_year=data.get("year"),
+                    average=data.get("average"),
+                    subjects_done=data.get("subjects_done"),
+                    student_course=course,
+                    calendar=calendar,
+                    student_ects=data.get("student_ects"),
+                    validation_status=data.get("validation_status", "pending")
+                )
+                success_count += 1
+        except Exception as e:
+            errors.append(f"Linha {idx+1}: Erro inesperado: {str(e)}")
+
+    return Response({
+        "message": f"Processamento concluído. {success_count} alunos importados.",
+        "success_count": success_count,
+        "errors": errors
+    }, status=status.HTTP_200_OK if success_count > 0 else status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(["PUT"])
 def editStudent(request, pk):
     auth_header = request.headers.get("Authorization")

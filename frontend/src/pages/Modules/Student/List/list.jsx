@@ -2,7 +2,7 @@ import './list.css';
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButton, SecundaryButton, Alert, Pill, CheckBox } from '../../../../components';
-import { deleteStudent, listStudents } from '../../../../services';
+import { deleteStudent, listStudents, importStudents } from '../../../../services';
 import { useDebounce } from '../../../../utils';
 import { UserContext } from '../../../../contexts';
 
@@ -11,8 +11,10 @@ const List = () => {
 	const { userInfo } = useContext(UserContext);
 	const [status, setStatus] = useState(0);
 	const [error, setError] = useState("");
+	const [success, setSuccess] = useState("");
 
 	const [reload, setReload] = useState(false);
+	const fileInputRef = useRef(null);
 
 	const [list, setList] = useState(null);
 	useEffect(() => {
@@ -71,7 +73,7 @@ const List = () => {
 		if (!list) return [];
 		return list.filter((item) => {
 			if (filters.pendingOnly && item.validation_status !== 'pending') return false;
-			if (!filters.pendingOnly && !item.active) return false; // Mantém o comportamento de esconder inativos por padrão se não estiver a filtrar por pendentes
+			if (!filters.pendingOnly && !item.active) return false;
 
 			return (
 				(filters.id === null || item.student_number.toString().includes(filters.id.toString())) &&
@@ -101,6 +103,49 @@ const List = () => {
 		navigate("/student/edit?new=true");
 	}
 
+	const handleImportClick = () => {
+		fileInputRef.current.click();
+	};
+
+	const handleFileChange = async (event) => {
+		const file = event.target.files[0];
+		if (!file) return;
+
+		setError("");
+		setSuccess("");
+
+		const reader = new FileReader();
+		reader.onload = async (e) => {
+			try {
+				const json = JSON.parse(e.target.result);
+				console.log("Importing JSON:", json);
+
+				const response = await importStudents(userInfo.token, json, setStatus, (msg) => {
+					console.error("Import Error Message:", msg);
+					setError(msg);
+				});
+
+				console.log("Import Response:", response);
+
+				if (response) {
+					if (response.success_count > 0) {
+						setSuccess(response.message);
+						setReload(prev => !prev);
+					}
+					if (response.errors && response.errors.length > 0) {
+						setError(prev => prev + (prev ? "\n" : "") + `Erros no processamento:\n${response.errors.join('\n')}`);
+					}
+				}
+			} catch (err) {
+				console.error("JSON Parse Error:", err);
+				setError("Erro ao ler o ficheiro JSON. Certifique-se que o formato está correto.");
+			}
+		};
+		reader.readAsText(file);
+		// Reset input
+		event.target.value = '';
+	};
+
 
 	const Row = ({ active, studentName, num, email, course, branch, validation_status }) => {
 
@@ -124,7 +169,7 @@ const List = () => {
 				<th style={{ width: 0 }}>{branch ? <Pill text={branch.acronym} color={branch.color} tooltip={branch.name} tooltipPosition='left' /> : "—"}</th>
 				<th>
 					{validation_status === 'validated' && <Pill text="Validado" color="green" />}
-					{validation_status === 'pending' && <Pill text="Pendente" color="orange" />}
+					{validation_status === 'pending' && <Pill text="Por Validar" color="orange" />}
 					{validation_status === 'rejected' && <Pill text="Rejeitado" color="red" />}
 				</th>
 				<th>
@@ -151,10 +196,24 @@ const List = () => {
 				</div>
 
 				<div className="options d-flex flex-row gap-3">
-					<SecundaryButton small content={<div className='d-flex flex-row gap-2'><i className="bi bi-cloud-upload"></i><p>Importar alunos</p></div>} />
+					<input
+						type="file"
+						ref={fileInputRef}
+						style={{ display: 'none' }}
+						accept=".json"
+						onChange={handleFileChange}
+					/>
+					<SecundaryButton
+						small
+						action={handleImportClick}
+						content={<div className='d-flex flex-row gap-2'><i className="bi bi-cloud-upload"></i><p>Importar alunos</p></div>}
+					/>
 					<PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar aluno</p></div>} />
 				</div>
 			</div>
+
+			{success && <Alert text={success} type='success' />}
+			{error && <Alert text={error} type='danger' />}
 
 			{(list === null || list.length === 0) && <Alert text='Não existe nenhum aluno de momento' />}
 
