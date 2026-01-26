@@ -7,4 +7,5 @@ urlpatterns = [
     path('teacher/create', createTeacher),
     path('teacher/<int:pk>/edit', editTeacher),
     path('teacher/<int:pk>/delete', deleteTeacher),
+    path('teacher/<int:pk>/supervised-students/', getSupervisedStudents),
 ]

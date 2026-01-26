@@ -16,6 +16,8 @@ import {
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
 } from './pages';
+import TeacherOrientation from './pages/Modules/Teacher/Orientation/orientation';
+import RepresentativeOrientation from './pages/Modules/Representative/Orientation/orientation';
 import { Layout } from "./components";
 import { testToken } from "./services";
 import { CompanyProvider, UserContext, UserProvider } from "./contexts";
@@ -200,6 +202,7 @@ function App() {
 							<Route path="list" element={<ListTeachers />} />
 							<Route path="view" element={<ViewTeacher />} />
 							<Route path="edit" element={<EditTeacher />} />
+							<Route path=":id/orientation" element={<TeacherOrientation />} />
 						</Route>
 
 						{/* Manage Companies */}
@@ -214,6 +217,7 @@ function App() {
 							<Route path="view" element={<ViewRepresentative />} />
 							<Route path="edit" element={<EditRepresentative />} />
 							<Route path="candidates" element={<MyCandidates />} />
+							<Route path=":id/orientation" element={<RepresentativeOrientation />} />
 						</Route>
 
 						{/* Manage Proposals */}

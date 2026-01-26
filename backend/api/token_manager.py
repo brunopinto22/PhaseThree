@@ -29,17 +29,27 @@ def decode_token(token):
                If the payload does not contain required fields, returns ("Payload error", None, None).
     """
     try:
+        # Remove "Bearer " prefix if present
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        
+        if not token:
+            return "No token provided", None, None
+            
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        user_id = payload['user_id']
-        email = payload['email']
-        type = payload['type']
-        return user_id, email, type
+        user_id = payload.get('user_id')
+        email = payload.get('email')
+        user_type = payload.get('type')
+        
+        return user_id, email, user_type
     except jwt.ExpiredSignatureError:
         return "Expired Token.", None, None
     except jwt.InvalidTokenError:
         return "Invalid Token", None, None
     except KeyError:
         return "Payload does not contain 'user_id'.", None, None
+    except Exception as e:
+        return f"Token decode error: {str(e)}", None, None
 
 
 def verify_token(token):

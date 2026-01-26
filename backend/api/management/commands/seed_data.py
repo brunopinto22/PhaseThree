@@ -3,7 +3,8 @@ from django.db import transaction
 from datetime import datetime, timedelta
 from api.models import (
     Accounts, ScientificArea, Course, Branch, Teacher, Student,
-    Company, Representative, Settings, Module, Permissions, Calendar, Proposal
+    Company, Representative, Settings, Module, Permissions, Calendar, Proposal,
+    Candidature, CandidatureProposal
 )
 
 
@@ -502,6 +503,33 @@ class Command(BaseCommand):
                         proposal.branches.set(p_data["branches"])
                     
                     self.stdout.write(f'  Created: {p_data["title"][:50]}...')
+
+            # Create Candidatures and CandidatureProposals for testing Orientation
+            self.stdout.write('Creating test Candidatures with accepted proposals...')
+            proposals_list = Proposal.objects.all()
+            students_list = Student.objects.all()
+
+            if proposals_list.exists() and students_list.exists():
+                # Create a few accepted candidatures for testing
+                for i, proposal in enumerate(proposals_list[:3]):
+                    if i < len(students_list):
+                        student = students_list[i]
+                        
+                        # Create candidature
+                        candidature = Candidature.objects.create(
+                            student=student,
+                            state='placed',
+                            candidature_submission_date=today - timedelta(days=10)
+                        )
+                        
+                        # Create accepted candidature proposal
+                        CandidatureProposal.objects.create(
+                            candidature=candidature,
+                            proposal=proposal,
+                            state='accepted'
+                        )
+                        
+                        self.stdout.write(f'  Created accepted candidature: {student.student_name} → {proposal.proposal_title[:40]}...')
 
         self.stdout.write(self.style.SUCCESS('Database seeding completed successfully!'))
         self.stdout.write(self.style.SUCCESS(f'  Scientific Areas: {ScientificArea.objects.count()}'))
