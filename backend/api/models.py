@@ -474,8 +474,8 @@ class Proposal(models.Model):
 class Candidature(models.Model):
     STATE_CHOICES = [
         ('submitted', 'Submitted'),
-        ('revision', 'Revision'),
         ('placed', 'Placed'),
+        ('revision', 'Revision'),
         ('protocol_generated', 'Protocol Generated'),
         ('presidency_signature', 'ISEC Signature'),
         ('company_signature', 'Company Signature'),
