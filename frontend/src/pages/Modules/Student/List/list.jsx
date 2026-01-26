@@ -55,7 +55,7 @@ const List = () => {
 	}, [debouncedId, debouncedName, debouncedEmail, debouncedCourse, debouncedAcronym]);
 
 	const [filters, setFilters] = useState({
-		active: false,
+		pendingOnly: false,
 		id: null,
 		name: null,
 		acronym: null,
@@ -70,7 +70,8 @@ const List = () => {
 	const getFilteredList = () => {
 		if (!list) return [];
 		return list.filter((item) => {
-			if (filters.active === false && !item.active) return false;
+			if (filters.pendingOnly && item.validation_status !== 'pending') return false;
+			if (!filters.pendingOnly && !item.active) return false; // Mantém o comportamento de esconder inativos por padrão se não estiver a filtrar por pendentes
 
 			return (
 				(filters.id === null || item.student_number.toString().includes(filters.id.toString())) &&
@@ -146,7 +147,7 @@ const List = () => {
 
 			<div className="d-flex flex-row justify-content-between align-items-end">
 				<div className="filters">
-					<CheckBox label={<p>Inativos</p>} value={filters.active} setValue={(e) => updateFilter("active", e)} />
+					<CheckBox label={<p>Alunos por verificar</p>} value={filters.pendingOnly} setValue={(e) => updateFilter("pendingOnly", e)} />
 				</div>
 
 				<div className="options d-flex flex-row gap-3">
