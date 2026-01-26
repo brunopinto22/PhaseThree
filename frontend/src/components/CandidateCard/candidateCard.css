@@ -17,6 +17,7 @@
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #eee;
+  gap: 1rem;
 }
 
 .candidate-info h3 {
@@ -29,6 +30,42 @@
   color: #666;
   font-size: 0.9rem;
   margin: 0;
+}
+
+.candidate-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.average-badge,
+.priority-badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.average-badge {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.average-badge i {
+  color: #ffc107;
+}
+
+.priority-badge {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.priority-badge i {
+  color: #9c27b0;
 }
 
 .state-badge {
@@ -52,6 +89,16 @@
 .badge-rejected {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+.badge-placed {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
+.badge-skipped {
+  background-color: #e2e3e5;
+  color: #41464b;
 }
 
 .candidate-details {
@@ -187,6 +234,10 @@
   .candidate-header {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .candidate-badges {
+    align-items: flex-start;
   }
 
   .action-buttons {

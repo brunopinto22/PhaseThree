@@ -160,13 +160,24 @@ function MyCandidates() {
                 <h2>{candidatesData.proposal_title}</h2>
                 <div className="proposal-info-grid">
                   <div className="info-section">
-                    <h3>Vagas</h3>
+                    <h3>Vagas e Colocações</h3>
                     <div className="slots-info">
-                      <span className={candidatesData.accepted_count >= candidatesData.slots ? 'slots-full' : 'slots-available'}>
-                        {candidatesData.accepted_count} / {candidatesData.slots} preenchidas
-                      </span>
+                      <div className="slots-row">
+                        <span className="slots-label">Total de vagas:</span>
+                        <span className="slots-value">{candidatesData.slots}</span>
+                      </div>
+                      <div className="slots-row">
+                        <span className="slots-label">Alunos colocados:</span>
+                        <span className="slots-value placed">{candidatesData.placed_count || 0}</span>
+                      </div>
+                      <div className="slots-row">
+                        <span className="slots-label">Já aceitos:</span>
+                        <span className={`slots-value ${candidatesData.accepted_count >= candidatesData.slots ? 'full' : 'available'}`}>
+                          {candidatesData.accepted_count}
+                        </span>
+                      </div>
                       {candidatesData.accepted_count >= candidatesData.slots && (
-                        <span className="warning-text"> (Vagas esgotadas)</span>
+                        <span className="warning-text">⚠️ Vagas esgotadas</span>
                       )}
                     </div>
                   </div>
@@ -198,12 +209,23 @@ function MyCandidates() {
                     </div>
                   </div>
                 </div>
+
+                <div className="info-banner">
+                  <i className="bi bi-info-circle"></i>
+                  <p>Você vê apenas alunos <strong>colocados automaticamente</strong> nesta proposta pelo sistema com base em suas médias e prioridades.</p>
+                </div>
               </div>
 
               {candidatesData.candidates.length === 0 ? (
-                <p className="no-data">Nenhum candidato se candidatou a esta proposta.</p>
+                <div className="no-data-box">
+                  <i className="bi bi-inbox"></i>
+                  <p>Nenhum aluno foi colocado nesta proposta.</p>
+                  <small>Aguarde a data de colocações ou verifique se há candidaturas submetidas.</small>
+                </div>
               ) : (
                 <div className="candidates-list">
+                  <h3>Candidatos Colocados ({candidatesData.candidates.length})</h3>
+                  <p className="candidates-subtitle">Alunos colocados automaticamente por ordem de média acadêmica</p>
                   {candidatesData.candidates.map((candidate) => (
                     <CandidateCard
                       key={candidate.student_number}

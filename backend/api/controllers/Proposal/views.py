@@ -602,19 +602,21 @@ def getProposalCandidates(request, proposal_id):
                 status=HTTP_403_FORBIDDEN
             )
 
-        # Buscar candidaturas relacionadas à proposta
+        # NOVO SISTEMA: Buscar apenas candidatos COLOCADOS ou ACEITOS nesta proposta
         candidature_proposals = CandidatureProposal.objects.filter(
-            proposal=proposal
+            proposal=proposal,
+            state__in=['placed', 'accepted']  # Apenas colocados ou aceitos
         ).select_related(
             'candidature', 
             'candidature__student',
             'candidature__student__user',
             'candidature__student__student_course',
             'candidature__student__student_branch'
-        ).order_by('candidature__candidature_submission_date')
+        ).order_by('-candidature__student__average', 'candidature__candidature_submission_date')
 
-        # Contar candidatos aceites
+        # Contar candidatos aceites e colocados
         accepted_count = candidature_proposals.filter(state='accepted').count()
+        placed_count = candidature_proposals.filter(state='placed').count()
 
         # Montar lista de candidatos
         candidates = []
@@ -624,12 +626,14 @@ def getProposalCandidates(request, proposal_id):
                 "student_number": student.student_number,
                 "student_name": student.student_name,
                 "student_email": student.user.email,
+                "student_average": student.average,  # NOVO: Incluir média
                 "course": student.student_course.course_name if student.student_course else None,
                 "branch": student.student_branch.branch_name if student.student_branch else None,
                 "curriculum_url": request.build_absolute_uri(student.curriculum.url) if student.curriculum else None,
                 "submission_date": cp.candidature.candidature_submission_date.strftime("%d/%m/%Y"),
+                "priority": cp.priority,  # NOVO: Incluir prioridade da proposta para o aluno
                 "state": cp.state,
-                "can_change": date.today() <= proposal.calendar.placements
+                "can_change": cp.state == 'placed'  # Só pode mudar se ainda estiver 'placed'
             })
 
         data = {
@@ -637,6 +641,7 @@ def getProposalCandidates(request, proposal_id):
             "proposal_title": proposal.proposal_title,
             "slots": proposal.slots,
             "accepted_count": accepted_count,
+            "placed_count": placed_count,  # NOVO
             "calendar": {
                 "title": proposal.calendar.__str__(),
                 "submission_start": proposal.calendar.submission_start.strftime("%d/%m/%Y"),
@@ -664,7 +669,8 @@ def getProposalCandidates(request, proposal_id):
 @api_view(["PUT"])
 def acceptCandidate(request, proposal_id, student_number):
     """
-    Endpoint para representative aceitar um candidato.
+    Endpoint para representative aceitar um candidato COLOCADO.
+    Novo sistema: empresa só pode aceitar/rejeitar candidatos já colocados pelo sistema.
     """
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
@@ -691,13 +697,6 @@ def acceptCandidate(request, proposal_id, student_number):
                 status=HTTP_403_FORBIDDEN
             )
 
-        # Validar data (antes de placements)
-        if date.today() > proposal.calendar.placements:
-            return Response(
-                {"message": "Período de seleção encerrado"},
-                status=HTTP_400_BAD_REQUEST
-            )
-
         # Buscar candidatura do aluno
         candidature = Candidature.objects.get(student=student)
         
@@ -707,41 +706,39 @@ def acceptCandidate(request, proposal_id, student_number):
             proposal=proposal
         )
 
-        # Validar estado (deve estar pending ou rejected - permitir reverter rejeição)
-        if candidature_proposal.state == 'accepted':
+        # VALIDAR: Candidato deve estar 'placed' nesta proposta
+        if candidature_proposal.state != 'placed':
             return Response(
-                {"message": "Candidato já está aceite"},
+                {"message": "Candidato não está colocado nesta proposta"},
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # Validar slots disponíveis
-        accepted_count = CandidatureProposal.objects.filter(
-            proposal=proposal,
-            state='accepted'
-        ).count()
-
-        if accepted_count >= proposal.slots:
-            return Response(
-                {"message": "Não há vagas disponíveis nesta proposta"},
-                status=HTTP_400_BAD_REQUEST
-            )
-
-        # Verificar se aluno já foi aceite em outra proposta
-        already_accepted = CandidatureProposal.objects.filter(
-            candidature__student=student,
-            state='accepted'
-        ).exclude(proposal=proposal).exists()
-
-        if already_accepted:
-            return Response(
-                {"message": "Aluno já foi aceite em outra proposta"},
-                status=HTTP_400_BAD_REQUEST
-            )
-
-        # Aceitar candidato
+        # ACEITAR CANDIDATO
         candidature_proposal.state = 'accepted'
         candidature_proposal.state_changed_at = timezone.now()
         candidature_proposal.save()
+
+        # Atualizar estado da candidatura
+        candidature.state = 'accepted'
+        candidature.save()
+
+        # Registrar no histórico
+        candidature.change_state(
+            new_state='accepted',
+            changed_by=representative.user,
+            notes=f'Aceito pela empresa {proposal.company.company_name}'
+        )
+
+        # Marcar todas as outras propostas como 'skipped'
+        CandidatureProposal.objects.filter(
+            candidature=candidature
+        ).exclude(id=candidature_proposal.id).update(
+            state='skipped',
+            state_changed_at=timezone.now()
+        )
+
+        # Adicionar student à proposta
+        proposal.students.add(student)
 
         return Response(
             {"message": "Candidato aceite com sucesso"},
@@ -768,7 +765,8 @@ def acceptCandidate(request, proposal_id, student_number):
 @api_view(["PUT"])
 def rejectCandidate(request, proposal_id, student_number):
     """
-    Endpoint para representative rejeitar um candidato.
+    Endpoint para representative rejeitar um candidato COLOCADO.
+    Novo sistema: após rejeição, tenta recolocar na próxima proposta da lista.
     """
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
@@ -795,13 +793,6 @@ def rejectCandidate(request, proposal_id, student_number):
                 status=HTTP_403_FORBIDDEN
             )
 
-        # Validar data (antes de placements)
-        if date.today() > proposal.calendar.placements:
-            return Response(
-                {"message": "Período de seleção encerrado"},
-                status=HTTP_400_BAD_REQUEST
-            )
-
         # Buscar candidatura do aluno
         candidature = Candidature.objects.get(student=student)
         
@@ -811,20 +802,80 @@ def rejectCandidate(request, proposal_id, student_number):
             proposal=proposal
         )
 
-        # Validar estado (pending ou accepted)
-        if candidature_proposal.state not in ['pending', 'accepted']:
+        # VALIDAR: Candidato deve estar 'placed' nesta proposta
+        if candidature_proposal.state != 'placed':
             return Response(
-                {"message": f"Candidato já está em estado '{candidature_proposal.state}'"},
+                {"message": "Candidato não está colocado nesta proposta"},
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # Rejeitar candidato
+        # REJEITAR nesta proposta
         candidature_proposal.state = 'rejected'
         candidature_proposal.state_changed_at = timezone.now()
         candidature_proposal.save()
 
+        # TENTAR RECOLOCAR na próxima proposta da lista
+        next_proposals = CandidatureProposal.objects.filter(
+            candidature=candidature,
+            state='pending',
+            priority__gt=candidature_proposal.priority
+        ).select_related('proposal').order_by('priority')
+
+        recolocado = False
+        
+        for next_prop in next_proposals:
+            # Verificar vagas disponíveis
+            slots_ocupados = CandidatureProposal.objects.filter(
+                proposal=next_prop.proposal,
+                state='placed'
+            ).count()
+            
+            if next_prop.proposal.slots > slots_ocupados:
+                # RECOLOCAR
+                candidature.placed_proposal = next_prop.proposal
+                candidature.placement_attempt += 1
+                candidature.save()
+                
+                next_prop.state = 'placed'
+                next_prop.state_changed_at = timezone.now()
+                next_prop.save()
+                
+                # Registrar no histórico
+                candidature.change_state(
+                    new_state='placed',
+                    changed_by=representative.user,
+                    notes=f'Rejeitado em {proposal.proposal_title}, recolocado em {next_prop.proposal.proposal_title} (prioridade {next_prop.priority})'
+                )
+                
+                recolocado = True
+                break
+        
+        if not recolocado:
+            # SEM MAIS OPÇÕES - marcar como rejected
+            candidature.state = 'rejected'
+            candidature.placed_proposal = None
+            candidature.save()
+            
+            # Marcar todas as propostas restantes como rejected
+            candidature.candidature_proposals.filter(
+                state='pending'
+            ).update(state='rejected', state_changed_at=timezone.now())
+            
+            # Registrar no histórico
+            candidature.change_state(
+                new_state='rejected',
+                changed_by=representative.user,
+                notes=f'Rejeitado em {proposal.proposal_title}. Sem vagas nas propostas restantes.'
+            )
+
+        message = "Candidato rejeitado"
+        if recolocado:
+            message += " e recolocado na próxima proposta da lista"
+        else:
+            message += ". Sem vagas nas propostas restantes."
+
         return Response(
-            {"message": "Candidato rejeitado com sucesso"},
+            {"message": message, "recolocado": recolocado},
             status=HTTP_200_OK
         )
 

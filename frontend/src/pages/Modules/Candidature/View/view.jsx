@@ -22,6 +22,8 @@ function View() {
 		const labels = {
 			'submitted': 'Submetida',
 			'placed': 'Colocado',
+			'accepted': 'Aceite pela Empresa',
+			'rejected': 'Rejeitado',
 			'revision': 'Em Revisão',
 			'protocol_generated': 'Protocolo Gerado',
 			'presidency_signature': 'Aguardando Assinatura ISEC',
@@ -34,8 +36,10 @@ function View() {
 
 	const getStateDescription = (state) => {
 		const descriptions = {
-			'submitted': 'Sua candidatura foi submetida com sucesso e está aguardando colocação.',
-			'placed': 'Parabéns! Você foi colocado numa proposta de estágio.',
+			'submitted': 'Sua candidatura foi submetida com sucesso e está aguardando a data de colocação automática.',
+			'placed': 'Parabéns! Você foi colocado numa proposta de estágio com base na sua média e prioridades. Aguarde a análise da empresa.',
+			'accepted': 'Excelente! A empresa aceitou sua candidatura. O processo de estágio prosseguirá.',
+			'rejected': 'Infelizmente sua candidatura foi rejeitada. O sistema tentou recolocá-lo em outras propostas de sua lista.',
 			'revision': 'Sua candidatura está sendo analisada pelos serviços académicos.',
 			'protocol_generated': 'O protocolo de estágio foi gerado e está pronto para assinatura.',
 			'presidency_signature': 'O protocolo aguarda assinatura da presidência do ISEC.',
@@ -48,9 +52,11 @@ function View() {
 
 	const getNextSteps = (state) => {
 		const nextSteps = {
-			'submitted': 'Aguarde a colocação.',
-			'revision': 'Aguarde a revisão pelos serviços acadêmicos.',
-			'placed': 'Aguarde a geração do protocolo de estágio.',
+			'submitted': 'Aguarde a data de colocação automática.',
+			'placed': 'Aguarde a empresa aceitar ou rejeitar sua candidatura.',
+			'accepted': 'Aguarde a validação pelos serviços acadêmicos.',
+			'rejected': 'Entre em contato com os serviços acadêmicos se necessário.',
+			'revision': 'Aguarde a geração do protocolo de estágio.',
 			'protocol_generated': 'Aguarde a assinatura da presidência.',
 			'presidency_signature': 'Aguarde a empresa assinar o protocolo.',
 			'company_signature': 'Assine o protocolo assim que possível.',
@@ -98,21 +104,29 @@ function View() {
 		navigate('/candidature/edit');
 	};
 
-	const ProposalRow = ({ proposal, priority }) => {
+	const ProposalRow = ({ proposal, priority, isPlaced }) => {
 		const stateMap = {
 			'pending': { text: 'Pendente', class: 'warning' },
 			'accepted': { text: 'Aceite', class: 'success' },
-			'rejected': { text: 'Rejeitada', class: 'danger' }
+			'rejected': { text: 'Rejeitada', class: 'danger' },
+			'placed': { text: 'Colocado', class: 'info' },
+			'skipped': { text: 'Ignorada', class: 'secondary' }
 		};
 		
 		const stateInfo = stateMap[proposal.state] || stateMap['pending'];
+		const rowClass = isPlaced ? 'table-row placed-row' : 'table-row';
 
 		return (
-			<tr className='table-row'>
+			<tr className={rowClass}>
 				<td>
 					<div className="priority-badge-small">{priority}ª</div>
 				</td>
-				<td><p>{proposal.title}</p></td>
+				<td>
+					<p>
+						{proposal.title}
+						{isPlaced}
+					</p>
+				</td>
 				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
 				<td>
 					<span className={`badge badge-${stateInfo.class}`}>{stateInfo.text}</span>
@@ -162,25 +176,6 @@ function View() {
 						</div>
 					</section>
 
-					<section className='candidature-details p-0'>
-						<h4>Detalhes da Candidatura</h4>
-						<div className='details-grid'>
-							<div className='detail-item'>
-								<strong>Estado:</strong> 
-								<span className='state'> {getStateLabel(candidature.state)}</span>
-							</div>
-							<div className='detail-item'>
-								<strong>Submetida em:</strong> {candidature.submission_date}
-							</div>
-							<div className='detail-item'>
-								<strong>Criada em:</strong> {candidature.created_at}
-							</div>
-							<div className='detail-item'>
-								<strong>Última atualização:</strong> {candidature.last_updated}
-							</div>
-						</div>
-					</section>
-
 					<section className='p-0'>
 						<h4 className="mb-4">Propostas Selecionadas (por ordem de prioridade)</h4>
 						
@@ -200,7 +195,12 @@ function View() {
 									{candidature.proposals
 										.sort((a, b) => a.priority - b.priority)
 										.map(proposal => (
-											<ProposalRow key={proposal.id} proposal={proposal} priority={proposal.priority} />
+											<ProposalRow 
+												key={proposal.id} 
+												proposal={proposal} 
+												priority={proposal.priority}
+												isPlaced={candidature.placed_proposal?.id === proposal.id}
+											/>
 										))}
 								</tbody>
 							</table>

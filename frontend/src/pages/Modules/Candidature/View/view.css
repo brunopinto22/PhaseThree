@@ -111,6 +111,16 @@
 	color: #721c24;
 }
 
+.badge-info {
+	background-color: #cfe2ff;
+	color: #084298;
+}
+
+.badge-secondary {
+	background-color: #e2e3e5;
+	color: #41464b;
+}
+
 .no-candidature {
 	text-align: center;
 	padding: var(--spacing-xl);
@@ -140,4 +150,29 @@
 
 .table-row td {
 	vertical-align: middle;
+}
+
+/* Placed proposal highlighting */
+.placed-row {
+	background-color: #e3f2fd;
+	border-left: 4px solid #1976d2;
+}
+
+.placed-indicator {
+	color: #1976d2;
+	font-weight: 600;
+	margin-left: 8px;
+	font-size: 0.9rem;
+}
+
+.detail-item.placed-proposal {
+	grid-column: 1 / -1;
+	background-color: #e3f2fd;
+	padding: 12px;
+	border-radius: 8px;
+	border-left: 4px solid #1976d2;
+}
+
+.detail-item.placed-proposal strong {
+	color: #1565c0;
 }

@@ -463,6 +463,8 @@ class Candidature(models.Model):
         ('submitted', 'Submitted'),
         ('revision', 'Revision'),
         ('placed', 'Placed'),
+        ('accepted', 'Accepted'),  # Empresa aceitou o aluno
+        ('rejected', 'Rejected'),  # Sem colocação (rejeitado ou sem vagas)
         ('protocol_generated', 'Protocol Generated'),
         ('presidency_signature', 'ISEC Signature'),
         ('company_signature', 'Company Signature'),
@@ -477,6 +479,20 @@ class Candidature(models.Model):
     candidature_submission_date = models.DateField()
     last_updated = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Campos para colocação automática
+    placed_proposal = models.ForeignKey(
+        'Proposal', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='placed_candidatures',
+        help_text="Proposta na qual o aluno está atualmente colocado"
+    )
+    placement_attempt = models.PositiveIntegerField(
+        default=0,
+        help_text="Número de tentativas de colocação (0=não colocado ainda, 1=1ª tentativa, etc.)"
+    )
 
     def __str__(self):
         return f"Candidature {self.id_candidature}"
@@ -520,9 +536,11 @@ class Candidature(models.Model):
 
 class CandidatureProposal(models.Model):
     STATE_CHOICES = [
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('rejected', 'Rejected'),
+        ('pending', 'Pending'),      # Aguardando colocação automática
+        ('placed', 'Placed'),        # Aluno colocado nesta proposta (aguardando decisão empresa)
+        ('accepted', 'Accepted'),    # Empresa aceitou
+        ('rejected', 'Rejected'),    # Empresa rejeitou OU passou para próxima
+        ('skipped', 'Skipped'),      # Pulado (aluno aceito em proposta de maior prioridade)
     ]
 
     candidature = models.ForeignKey('Candidature', on_delete=models.CASCADE, related_name='candidature_proposals')

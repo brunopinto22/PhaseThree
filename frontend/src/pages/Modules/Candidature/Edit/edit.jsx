@@ -156,7 +156,7 @@ const Edit = () => {
 				<td><p>{proposal.title}</p></td>
 				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
 				<td><p>{proposal.location}</p></td>
-				<td><p>{proposal.type}</p></td>
+				<td><p>{proposal.type === 1 ? 'Estágio' : proposal.type === 2 ? 'Projeto' : proposal.type}</p></td>
 			</tr>
 		);
 	};

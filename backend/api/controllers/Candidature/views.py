@@ -381,7 +381,7 @@ def getMyCandidature(request):
                 })
 
             # Candidatura existe
-            return Response({
+            response_data = {
                 "has_candidature": True,
                 "id_candidature": candidature.id_candidature,
                 "state": candidature.state,
@@ -394,7 +394,21 @@ def getMyCandidature(request):
                     "max": calendar.max_proposals,
                     "candidatures_deadline": calendar.candidatures.strftime("%d/%m/%Y")
                 }
-            }, status=HTTP_200_OK)
+            }
+            
+            # NOVO: Adicionar informação sobre proposta colocada (se houver)
+            if candidature.placed_proposal:
+                response_data["placed_proposal"] = {
+                    "id": candidature.placed_proposal.id_proposal,
+                    "title": candidature.placed_proposal.proposal_title,
+                    "company": {
+                        "id": candidature.placed_proposal.company.id_company if candidature.placed_proposal.company else None,
+                        "name": candidature.placed_proposal.company.company_name if candidature.placed_proposal.company else "ISEC"
+                    }
+                }
+                response_data["placement_attempt"] = candidature.placement_attempt
+            
+            return Response(response_data, status=HTTP_200_OK)
 
         except Candidature.DoesNotExist:
             # Não tem candidatura

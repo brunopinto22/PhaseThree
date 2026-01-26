@@ -1,10 +1,14 @@
 from django.utils import timezone
+from django.db.models import Count, Q
 from api.models import *
 
-def handle_placements(calendar_id):
+def handle_automatic_placements(calendar_id):
     """
-    Consolida APENAS decisões manuais dos representatives.
-    Vagas não preenchidas manualmente ficam vazias.
+    Sistema de colocação automática baseado em:
+    1. Média do aluno (maior média = maior prioridade)
+    2. Data de submissão da candidatura (desempate)
+    3. Prioridade das propostas do aluno (1ª, 2ª, 3ª escolha)
+    4. Vagas disponíveis nas propostas
     """
     calendar = None
     try:
@@ -13,54 +17,101 @@ def handle_placements(calendar_id):
         print(f">> Calendar with id {calendar_id} not found.")
         return
     
-    print(f">> Processando placements para {calendar.__str__()}")
+    print(f">> Iniciando colocação automática para {calendar.__str__()}")
     
-    # 1. Buscar todas as propostas do calendário
-    proposals = Proposal.objects.filter(calendar=calendar)
+    # 1. Buscar todas as candidaturas submetidas do calendário
+    candidatures = Candidature.objects.filter(
+        student__calendar=calendar,
+        state='submitted'
+    ).select_related('student').order_by(
+        '-student__average',  # Maior média primeiro
+        'candidature_submission_date'  # Data mais antiga como desempate
+    )
     
-    # 2. Rejeitar todos os candidatos que ficaram 'pending'
-    # (empresas não tomaram decisão = rejeição automática)
-    for proposal in proposals:
-        pending_count = CandidatureProposal.objects.filter(
-            proposal=proposal,
-            state='pending'
-        ).update(state='rejected', state_changed_at=timezone.now())
-        
-        if pending_count > 0:
-            print(f"   >> Proposta {proposal.id_proposal}: {pending_count} candidatos rejeitados automaticamente")
+    total_candidatures = candidatures.count()
+    print(f"   >> Total de candidaturas: {total_candidatures}")
     
-    # 3. Processar candidaturas: atualizar estados e adicionar students
-    candidatures = Candidature.objects.filter(student__calendar=calendar)
     placed_count = 0
     rejected_count = 0
     
+    # 2. Processar cada candidatura em ordem de prioridade
     for candidature in candidatures:
-        # Buscar proposta aceite (decisão manual da empresa)
-        accepted_proposal = CandidatureProposal.objects.filter(
-            candidature=candidature,
-            state='accepted'
-        ).select_related('proposal').first()
+        student = candidature.student
+        print(f"   >> Processando: {student.student_name} (média: {student.average})")
         
-        if accepted_proposal:
-            # Aluno foi colocado
-            candidature.change_state(
-                new_state='placed',
-                changed_by=None,
-                notes=f'Colocado na proposta {accepted_proposal.proposal.proposal_title}'
-            )
+        # 3. Obter propostas da candidatura ordenadas por prioridade
+        proposals = candidature.candidature_proposals.filter(
+            state='pending'
+        ).select_related('proposal').order_by('priority')
+        
+        colocado = False
+        
+        # 4. Tentar colocar em cada proposta (por ordem de prioridade)
+        for candidature_proposal in proposals:
+            proposal = candidature_proposal.proposal
             
-            # Adicionar aluno à proposta
-            accepted_proposal.proposal.students.add(candidature.student)
-            placed_count += 1
-            print(f"   >> Aluno {candidature.student.student_number} colocado na proposta {accepted_proposal.proposal.id_proposal}")
-        else:
-            # Aluno não foi aceite em nenhuma proposta
+            # Verificar vagas disponíveis
+            slots_ocupados = CandidatureProposal.objects.filter(
+                proposal=proposal,
+                state='placed'
+            ).count()
+            
+            vagas_disponiveis = proposal.slots - slots_ocupados
+            
+            if vagas_disponiveis > 0:
+                # COLOCAR ALUNO
+                candidature.state = 'placed'
+                candidature.placed_proposal = proposal
+                candidature.placement_attempt += 1
+                candidature.save()
+                
+                # Marcar esta proposta como 'placed'
+                candidature_proposal.state = 'placed'
+                candidature_proposal.state_changed_at = timezone.now()
+                candidature_proposal.save()
+                
+                # Registrar no histórico
+                candidature.change_state(
+                    new_state='placed',
+                    changed_by=None,
+                    notes=f'Colocado automaticamente na proposta {proposal.proposal_title} (prioridade {candidature_proposal.priority})'
+                )
+                
+                placed_count += 1
+                colocado = True
+                print(f"      ✓ Colocado na proposta {proposal.id_proposal} (prioridade {candidature_proposal.priority})")
+                break  # Sair do loop - aluno já foi colocado
+            else:
+                print(f"      ✗ Sem vagas na proposta {proposal.id_proposal} (prioridade {candidature_proposal.priority})")
+        
+        # 5. Se não conseguiu colocar em nenhuma proposta
+        if not colocado:
+            candidature.state = 'rejected'
+            candidature.save()
+            
+            # Marcar todas as propostas como rejected
+            candidature.candidature_proposals.filter(
+                state='pending'
+            ).update(state='rejected', state_changed_at=timezone.now())
+            
+            # Registrar no histórico
             candidature.change_state(
                 new_state='rejected',
                 changed_by=None,
-                notes='Não foi aceite em nenhuma proposta'
+                notes='Sem vagas disponíveis em nenhuma das propostas selecionadas'
             )
+            
             rejected_count += 1
+            print(f"      ✗ Não colocado (sem vagas)")
     
-    print(f">> Placements concluídos para {calendar.__str__()}")
-    print(f"   >> Total: {placed_count} alunos colocados, {rejected_count} alunos não colocados")
+    print(f">> Colocação automática concluída para {calendar.__str__()}")
+    print(f"   >> Total: {placed_count} alunos colocados, {rejected_count} alunos sem colocação")
+
+
+def handle_placements(calendar_id):
+    """
+    FUNÇÃO LEGADA - Mantida para retrocompatibilidade.
+    Agora apenas chama a colocação automática.
+    """
+    print(">> AVISO: Usando novo sistema de colocação automática")
+    handle_automatic_placements(calendar_id)

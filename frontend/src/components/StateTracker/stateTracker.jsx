@@ -6,13 +6,20 @@ const StateTracker = ({ currentState }) => {
 	const states = [
 		{ key: 'submitted', label: 'Submetida', description: 'Candidatura submetida' },
 		{ key: 'placed', label: 'Colocado', description: 'Aluno colocado' },
-		{ key: 'revision', label: 'Em Revisão', description: 'Análise pelos serviços acadêmicos' },
+		{ key: 'accepted', label: 'Aceite Empresa', description: 'Aceito pela empresa' },
+		{ key: 'revision', label: 'Em Revisão', description: 'Análise serviços acadêmicos' },
 		{ key: 'protocol_generated', label: 'Protocolo', description: 'Protocolo gerado' },
 		{ key: 'presidency_signature', label: 'ISEC', description: 'Assinatura ISEC' },
 		{ key: 'company_signature', label: 'Empresa', description: 'Assinatura empresa' },
 		{ key: 'student_signature', label: 'Aluno', description: 'Assinatura aluno' },
 		{ key: 'finished', label: 'Concluído', description: 'Processo completo' }
 	];
+
+	// Se o estado atual é 'rejected', mostrar no lugar de 'accepted'
+	if (currentState === 'rejected') {
+		const placedIndex = states.findIndex(s => s.key === 'placed');
+		states[placedIndex + 1] = { key: 'rejected', label: 'Rejeitado', description: 'Empresa rejeitou' };
+	}
 
 	const currentIndex = states.findIndex(s => s.key === currentState);
 
