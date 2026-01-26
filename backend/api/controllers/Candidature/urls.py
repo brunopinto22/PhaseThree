@@ -10,6 +10,7 @@ urlpatterns = [
     path('candidature/<int:pk>/state/', views.updateCandidatureState, name='update_candidature_state'),
     path('candidature/proposal/state/', views.updateCandidatureProposalState, name='update_candidature_proposal_state'),
     path('candidature/<int:pk>/history/', views.getCandidatureHistory, name='get_candidature_history'),
+    path('candidature/active/', views.getActiveInternships, name='get_active_internships'),
     path('candidature/delete/', views.deleteCandidature, name='delete_candidature'),
 ]
 

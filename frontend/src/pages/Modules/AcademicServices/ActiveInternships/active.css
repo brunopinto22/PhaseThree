@@ -1,0 +1,77 @@
+.active-internships {
+    gap: var(--spacing-xl);
+}
+
+.active-internships .filters-container {
+    padding: var(--spacing-lg);
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    flex-wrap: wrap;
+    border: 1px solid #dee2e6;
+}
+
+.active-internships .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.active-internships .filter-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #495057;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.active-internships .filter-group input,
+.active-internships .filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.active-internships .filter-group input:focus,
+.active-internships .filter-group select:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.active-internships table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 var(--spacing-sm);
+}
+
+.active-internships .header th {
+    padding: var(--spacing-md);
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: left;
+}
+
+.active-internships .table-row {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s;
+}
+
+.active-internships .table-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.active-internships .table-row th {
+    padding: var(--spacing-md);
+    vertical-align: middle;
+}
+
+.active-internships .table-row p {
+    margin: 0;
+    font-weight: 500;
+}

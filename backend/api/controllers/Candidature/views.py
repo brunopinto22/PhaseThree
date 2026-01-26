@@ -827,3 +827,85 @@ def updateCandidatureProposalState(request):
             status=HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
+@api_view(['GET'])
+def getActiveInternships(request):
+    """
+    Endpoint para academic_services e admin visualizarem todos os estágios ativos.
+    Considera estados: placed, protocol_generated, presidency_signature, company_signature, student_signature, finished.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type not in ["admin", "academic_services"]:
+        return Response(
+            {"message": "Sem permissão para ver estágios ativos"},
+            status=HTTP_403_FORBIDDEN
+        )
+
+    try:
+        active_states = [
+            'placed', 'protocol_generated', 'presidency_signature', 
+            'company_signature', 'student_signature', 'finished'
+        ]
+        
+        candidatures = Candidature.objects.filter(
+            state__in=active_states
+        ).select_related(
+            'student', 
+            'student__user',
+            'student__student_course'
+        ).prefetch_related('candidature_proposals__proposal__company')
+
+        internships_list = []
+        for candidature in candidatures:
+            # Obter a proposta aceite
+            proposal = None
+            c_proposal = candidature.candidature_proposals.filter(state='accepted').first()
+            if c_proposal:
+                proposal = c_proposal.proposal
+            
+            # Se não houver aceite (teoricamente deveria haver logo que passa de 'submitted'), 
+            # tenta a primeira da lista como fallback
+            if not proposal:
+                c_proposal = candidature.candidature_proposals.first()
+                if c_proposal:
+                    proposal = c_proposal.proposal
+
+            company_name = "N/A"
+            proposal_title = "N/A"
+            if proposal:
+                proposal_title = proposal.proposal_title
+                if proposal.company:
+                    company_name = proposal.company.company_name
+                elif proposal.isec_advisor:
+                    company_name = proposal.isec_advisor.teacher_name
+                else:
+                    company_name = "ISEC"
+
+            internships_list.append({
+                "id": candidature.id_candidature,
+                "student": {
+                    "number": candidature.student.student_number,
+                    "name": candidature.student.student_name,
+                    "course": candidature.student.student_course.course_name if candidature.student.student_course else "N/A",
+                    "course_acronym": candidature.student.student_course.course_acronym if candidature.student.student_course else "N/A",
+                    "email": candidature.student.user.email
+                },
+                "companyName": company_name,
+                "proposalName": proposal_title,
+                "state": candidature.state,
+                "submissionDate": candidature.candidature_submission_date.strftime("%d/%m/%Y")
+            })
+
+        return Response(internships_list, status=HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+

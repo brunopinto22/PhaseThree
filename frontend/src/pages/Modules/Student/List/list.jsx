@@ -192,7 +192,7 @@ const List = () => {
 
 			<div className="d-flex flex-row justify-content-between align-items-end">
 				<div className="filters">
-					<CheckBox label={<p>Alunos por verificar</p>} value={filters.pendingOnly} setValue={(e) => updateFilter("pendingOnly", e)} />
+					<CheckBox label="Alunos por validar" value={filters.pendingOnly} setValue={(e) => updateFilter("pendingOnly", e)} />
 				</div>
 
 				<div className="options d-flex flex-row gap-3">

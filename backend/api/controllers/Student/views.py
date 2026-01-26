@@ -108,7 +108,7 @@ def listStudents(request):
     try:
         students = Student.objects.all()
         if not students.exists():
-            return Response({"message": "Nenhum aluno encontrado"},status=status.HTTP_204_NO_CONTENT)
+            return Response([], status=status.HTTP_200_OK)
 
         data = []
 
@@ -332,14 +332,27 @@ def importStudents(request):
                     errors.append(f"Linha {idx+1}: Número {student_number} já registado.")
                     continue
 
-                course_id = data.get("student_course")
-                course = Course.objects.filter(id_course=course_id).first()
+                # Resolução inteligente do Curso (por ID ou Nome)
+                course_val = data.get("student_course")
+                course = None
+                if isinstance(course_val, int):
+                    course = Course.objects.filter(id_course=course_val).first()
+                if not course and course_val:
+                    course = Course.objects.filter(course_name__icontains=str(course_val)).first()
+                
                 if not course:
-                    errors.append(f"Linha {idx+1}: Curso ID {course_id} não encontrado.")
+                    errors.append(f"Linha {idx+1}: Curso '{course_val}' não encontrado.")
                     continue
 
-                calendar_id = data.get("student_calendar")
-                calendar = Calendar.objects.filter(id_calendar=calendar_id).first() if calendar_id else None
+                # Resolução inteligente do Calendário (ID ou automático para o mais recente do curso)
+                calendar_val = data.get("student_calendar")
+                calendar = None
+                if isinstance(calendar_val, int):
+                    calendar = Calendar.objects.filter(id_calendar=calendar_val).first()
+                
+                if not calendar:
+                    # Fallback: Usar o calendário mais recente associado a este curso
+                    calendar = Calendar.objects.filter(course=course).order_by('-id_calendar').first()
 
                 user = Accounts.objects.create_user(
                     username=email,
@@ -499,8 +512,13 @@ def deleteStudent(request, pk):
 
     try:
         student = Student.objects.get(pk=pk)
-        student.active = False
-        student.save()
+        user = student.user
+        
+        with transaction.atomic():
+            student.delete()
+            if user:
+                user.delete()
+                
         return Response({"message": "Aluno eliminado com sucesso"}, status=status.HTTP_200_OK)
     except Student.DoesNotExist:
         return Response({"message": "Aluno não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
@@ -607,7 +625,7 @@ def listStudentsWithInternships(request):
         ).distinct()
 
         if not students_with_internships.exists():
-            return Response({"message": "Nenhum estudante com internship encontrado"}, status=status.HTTP_204_NO_CONTENT)
+            return Response([], status=status.HTTP_200_OK)
 
         data = []
 

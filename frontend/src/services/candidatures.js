@@ -159,8 +159,13 @@ export async function getAllCandidatures(token, setStatus, setErrorMessage) {
       },
     });
 
-    const data = await res.json();
     setStatus(res.status);
+
+    if (res.status === 204) {
+      return [];
+    }
+
+    const data = await res.json();
 
     if (res.status !== 200) {
       setErrorMessage(data.message || "Erro ao obter lista de candidaturas");
@@ -333,3 +338,37 @@ export async function deleteCandidature(token, candidatureId, setStatus, setErro
   }
 }
 
+
+/**
+ * Obtém a lista de estágios e colocações ativos (apenas admin e academic_services)
+ * @param {string} token - Token de autenticação
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Array|null} - Lista de estágios ativos ou null em caso de erro
+ */
+export async function getActiveInternships(token, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/active/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao obter lista de estágios ativos");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}

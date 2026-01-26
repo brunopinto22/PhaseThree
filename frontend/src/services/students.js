@@ -41,8 +41,13 @@ export async function listStudents(token, setStatus, setErrorMessage) {
 			},
 		});
 
-		const data = await res.json();
 		setStatus(res.status);
+
+		if (res.status === 204) {
+			return [];
+		}
+
+		const data = await res.json();
 
 		if (res.status !== 200) {
 			setErrorMessage(data.message || "Erro desconhecido");

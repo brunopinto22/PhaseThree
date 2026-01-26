@@ -37,6 +37,10 @@ class Command(BaseCommand):
             Teacher.objects.all().delete()
             Course.objects.all().delete()
             ScientificArea.objects.all().delete()
+            # Clear all non-superuser accounts to avoid email conflicts on re-run
+            Accounts.objects.filter(is_superuser=False).delete()
+            # Kept for backward compatibility if needed, but the line above handles most
+            self.stdout.write(self.style.SUCCESS('  Non-admin accounts cleared.'))
             # Keep admin user and Settings
 
         self.stdout.write(self.style.SUCCESS('Starting to seed database...'))
