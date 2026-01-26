@@ -97,11 +97,6 @@ const Dashboard = () => {
 								disabled={summary?.calendars.length <= 0}
 							/>
 
-							<DashButton
-								icon={<i className="bi bi-people-fill"></i>}
-								text="Meus Candidatos"
-								action={() => navigate("/representative/candidates")}
-							/>
 
               <DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
 

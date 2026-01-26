@@ -38,9 +38,8 @@ function CandidateCard({ candidate, onAccept, onReject, slotsAvailable, loading 
         </div>
         <div className="candidate-badges">
           {candidate.student_average && (
-            <span className="average-badge">
-              <i className="bi bi-star-fill"></i>
-              Média: {candidate.student_average}
+            <span className="average-badge">  
+              Média do aluno: {candidate.student_average}
             </span>
           )}
           {candidate.priority && (

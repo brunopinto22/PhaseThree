@@ -1,0 +1,6 @@
+.decide-container { padding: 16px; }
+.decide-container .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.back-button { background:transparent; border:none; cursor:pointer; }
+.proposal-summary { margin-bottom:12px; }
+.candidates-list { display:flex; flex-direction:column; gap:12px; }
+.no-data { padding:12px; background:#f8f9fa; border-radius:6px; }

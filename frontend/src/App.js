@@ -9,9 +9,9 @@ import {
 	ListStudents, ViewStudent, EditStudent,
 	ListCourses, ViewCourse, EditCourse,
 	ListTeachers, ViewTeacher, EditTeacher,
-	ListProposals, ViewProposal, EditProposal,
+	ListProposals, ViewProposal, EditProposal, DecideProposal,
 	ListCompanies, ViewCompany, EditCompany,
-	ViewRepresentative, EditRepresentative, MyCandidates,
+	ViewRepresentative, EditRepresentative,
 	ListCandidatures, ViewCandidature, EditCandidature,
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
@@ -213,13 +213,13 @@ function App() {
 						<Route path="/representative">
 							<Route path="view" element={<ViewRepresentative />} />
 							<Route path="edit" element={<EditRepresentative />} />
-							<Route path="candidates" element={<MyCandidates />} />
 						</Route>
 
 						{/* Manage Proposals */}
 						<Route path="/proposal">
 							<Route path="list" element={<ListProposals />} />
 							<Route path="view" element={<ViewProposal />} />
+							<Route path="decide" element={<DecideProposal />} />
 							<Route path="edit" element={<EditProposal />} />
 						</Route>
 

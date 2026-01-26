@@ -240,11 +240,12 @@ function View() {
 					<div className="btns d-flex flex-column">
 						<PrimaryButton small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><p>Proposta</p><i className="bi bi-download"></i></div>} action={async () => getPdf(userInfo.token, id)} />
 						{(canEdit || role === "admin") && <PrimaryButton small content={<p>Editar Proposta</p>} action={() => navigate("/proposal/edit?id="+id)} disabled={!canEdit} />}
+						{role === 'representative' && <PrimaryButton small content={<p>Gerir Candidatos</p>} action={() => navigate('/proposal/decide?id='+id)} />}
 					</div>
 				</div>
 
 				<div className="slots d-flex flex-column">
-					<h5 className='title'>Colocações:</h5>
+					<h5 className='title'>Aceites:</h5>
 					{Array.from({ length: slots }).map((_, idx) => {
 						const s = students[idx];
 						return s ? (
