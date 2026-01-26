@@ -193,9 +193,16 @@ export async function addFavourite(token, id) {
 	} catch {}
 
 }
-export async function getStudentsWithInternships(token, setStatus, setErrorMessage) {
+export async function getStudentsWithInternships(token, setStatus, setErrorMessage, calendarId = null) {
 	try {
-		const res = await fetch(`${apiUrl}/students/internships/`, {
+		let url = `${apiUrl}/students/internships/`;
+		
+		// Se calendarId for fornecido, adiciona como query param
+		if (calendarId) {
+			url += `?calendar_id=${calendarId}`;
+		}
+		
+		const res = await fetch(url, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",

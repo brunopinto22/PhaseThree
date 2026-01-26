@@ -1,6 +1,33 @@
 const apiUrl = process.env.REACT_APP_API_URL || '/api';
 
 
+export async function listCalendars(token, setStatus, setErrorMessage) {
+	try {
+		const res = await fetch(`${apiUrl}/calendars/`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": token,
+			},
+		});
+
+		const data = await res.json();
+		setStatus(res.status);
+
+		if(res.status !== 200) {
+			setErrorMessage(data.message || "Erro desconhecido");
+			return null;
+		}
+
+		return data;
+
+	} catch (error) {
+		setErrorMessage("Erro de rede ou servidor");
+		return null;
+	}
+}
+
+
 export async function getCalendar(token, id, setStatus, setErrorMessage) {
 
 	try {

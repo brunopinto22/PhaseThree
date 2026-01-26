@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '../../../../components';
 import { getStudentsWithInternships } from '../../../../services/students';
+import { listCalendars } from '../../../../services/calendars';
 import { UserContext } from '../../../../contexts';
 
 const InternshipsList = () => {
@@ -13,11 +14,35 @@ const InternshipsList = () => {
 	const [list, setList] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [calendars, setCalendars] = useState([]);
+	const [selectedCalendar, setSelectedCalendar] = useState("");
+	const [sortColumn, setSortColumn] = useState(null);
+	const [sortDirection, setSortDirection] = useState('asc');
 
+	// Carregar calendários ao montar o componente
+	useEffect(() => {
+		const fetchCalendars = async () => {
+			const cals = await listCalendars(userInfo.token, setStatus, setError);
+			if (cals) {
+				setCalendars(cals);
+			}
+		};
+
+		if (userInfo?.token) {
+			fetchCalendars();
+		}
+	}, [userInfo]);
+
+	// Carregar estudantes (filtrados ou não)
 	useEffect(() => {
 		const fetchStudents = async () => {
 			setLoading(true);
-			const students = await getStudentsWithInternships(userInfo.token, setStatus, setError);
+			const students = await getStudentsWithInternships(
+				userInfo.token, 
+				setStatus, 
+				setError, 
+				selectedCalendar || null
+			);
 			setList(students);
 			setLoading(false);
 		};
@@ -25,7 +50,7 @@ const InternshipsList = () => {
 		if (userInfo?.token) {
 			fetchStudents();
 		}
-	}, [userInfo]);
+	}, [userInfo, selectedCalendar]);
 
 	useEffect(() => {
 		if (status === 401) {
@@ -45,6 +70,18 @@ const InternshipsList = () => {
 		return <Alert text="Nenhum estudante com internship encontrado" />;
 	}
 
+	// Handler para ordenação
+	const handleSort = (column) => {
+		if (sortColumn === column) {
+			// Se já está ordenado por esta coluna, inverte a direção
+			setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+		} else {
+			// Nova coluna, começa com ascendente
+			setSortColumn(column);
+			setSortDirection('asc');
+		}
+	};
+
 	// Filtrar lista com base no termo de pesquisa
 	const filteredList = list.filter(student => {
 		const search = searchTerm.toLowerCase();
@@ -57,47 +94,118 @@ const InternshipsList = () => {
 		);
 	});
 
+	// Ordenar lista filtrada
+	const sortedList = [...filteredList].sort((a, b) => {
+		if (!sortColumn) return 0;
+
+		let aValue, bValue;
+
+		switch (sortColumn) {
+			case 'number':
+				aValue = a.student_number;
+				bValue = b.student_number;
+				break;
+			case 'name':
+				aValue = a.name.toLowerCase();
+				bValue = b.name.toLowerCase();
+				break;
+			case 'email':
+				aValue = a.email.toLowerCase();
+				bValue = b.email.toLowerCase();
+				break;
+			case 'contact':
+				aValue = a.contact || '';
+				bValue = b.contact || '';
+				break;
+			case 'course':
+				aValue = a.course.toLowerCase();
+				bValue = b.course.toLowerCase();
+				break;
+			case 'status':
+				// Ordena pelo primeiro estado ou string vazia
+				aValue = (a.internship_status && a.internship_status[0]) ? a.internship_status[0].toLowerCase() : '';
+				bValue = (b.internship_status && b.internship_status[0]) ? b.internship_status[0].toLowerCase() : '';
+				break;
+			default:
+				return 0;
+		}
+
+		if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+		if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+		return 0;
+	});
+
 	return (
 		<div className="internships-list-container">
 			<h2>Estudantes com Internships</h2>
 			
-			<div className="search-bar mb-3">
-				<input
-					type="text"
-					className="form-control"
-					placeholder="Pesquisar por número, nome, email, curso ou empresa..."
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-				/>
-				{searchTerm && (
-					<small className="text-muted">
-						{filteredList.length} resultado(s) de {list.length} total
-					</small>
-				)}
+			<div className="filters-section mb-3">
+				<div className="row">
+					<div className="col-md-4 mb-2">
+						<label htmlFor="calendar-filter" className="form-label">Filtrar por Calendário:</label>
+						<select
+							id="calendar-filter"
+							className="form-select"
+							value={selectedCalendar}
+							onChange={(e) => setSelectedCalendar(e.target.value)}
+						>
+							<option value="">Todos os calendários</option>
+							{calendars.map((cal) => (
+								<option key={cal.id} value={cal.id}>
+									{cal.title} - {cal.course_name}
+								</option>
+							))}
+						</select>
+					</div>
+					<div className="col-md-8">
+						<label htmlFor="search-input" className="form-label">Pesquisar:</label>
+						<input
+							id="search-input"
+							type="text"
+							className="form-control"
+							placeholder="Pesquisar por número, nome, email, curso ou empresa..."
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+						/>
+						{searchTerm && (
+							<small className="text-muted">
+								{sortedList.length} resultado(s) de {list.length} total
+							</small>
+						)}
+					</div>
+				</div>
 			</div>
 			
 			<div className="internships-table">
 				<table className="table table-striped">
 					<thead>
 						<tr>
-							<th>Número</th>
-							<th>Nome</th>
-							<th>Email</th>
-							<th>Contacto</th>
-							<th>Curso</th>
+							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('number')}>
+								Número {sortColumn === 'number' && (sortDirection === 'asc' ? '↑' : '↓')}
+							</th>
+							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('name')}>
+								Nome {sortColumn === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+							</th>
+							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
+								Email {sortColumn === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
+							</th>
+							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('contact')}>
+								Contacto {sortColumn === 'contact' && (sortDirection === 'asc' ? '↑' : '↓')}
+							</th>
 							<th>Empresas</th>
 							<th>Orientadores</th>
-							<th>Estado</th>
+							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('status')}>
+								Estado {sortColumn === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
-						{filteredList.map((student, index) => (
+						{sortedList.map((student, index) => (
 							<tr key={index}>
 								<td>{student.student_number}</td>
 								<td>{student.name}</td>
 								<td>{student.email}</td>
 								<td>{student.contact || '-'}</td>
-								<td>{student.course}</td>
 								<td>
 									<div className="companies-list">
 										{student.companies && student.companies.length > 0 ? (
@@ -105,9 +213,9 @@ const InternshipsList = () => {
 												<div key={idx} className="company-item">
 													<strong>{company.company_name}</strong>
 													<br />
-													<small>Contact: {company.company_contact || '-'}</small>
+													<span>Contacto: {company.company_contact || '-'}</span>
 													<br />
-													<small>Email: {company.company_email || '-'}</small>
+													<span>Email: {company.company_email || '-'}</span>
 												</div>
 											))
 										) : '-'}
@@ -120,10 +228,10 @@ const InternshipsList = () => {
 												<div key={idx} className="advisor-item">
 													<strong>{advisor.name}</strong>
 													<br />
-													<small>{advisor.email}</small>
+													<span>Contacto: {advisor.contact || '-'}</span>
 													<br />
-													<small>{advisor.contact || '-'}</small>
-												</div>
+													<span>Email: {advisor.email}</span>
+													</div>
 											))
 										) : '-'}
 									</div>

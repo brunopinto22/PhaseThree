@@ -490,6 +490,8 @@ def listStudentsWithInternships(request):
     """
     Endpoint para Academic Services ver estudantes com internships ativos.
     Retorna estudantes que têm candidaturas com estado 'placed' ou 'protocol_generated'.
+    Query Params:
+        - calendar_id (opcional): filtra estudantes por calendário específico
     """
     auth_header = request.headers.get("Authorization")
     user_id, user_email, user_type = decode_token(auth_header)
@@ -506,12 +508,23 @@ def listStudentsWithInternships(request):
         return Response({"message": "Sem permissão para ver estudantes com internships"}, status=HTTP_401_UNAUTHORIZED)
 
     try:
+        # Obter calendar_id opcional dos query params
+        calendar_id = request.GET.get('calendar_id', None)
+        
         # Filtrar estudantes que têm candidaturas com estado de internship ativo
         internship_states = ['placed', 'protocol_generated', 'presidency_signature', 'company_signature', 'student_signature', 'finished']
         
-        students_with_internships = Student.objects.filter(
+        students_query = Student.objects.filter(
             students_candidatures__state__in=internship_states
-        ).distinct()
+        )
+        
+        # Se calendar_id foi fornecido, filtrar por calendário através das proposals
+        if calendar_id:
+            students_query = students_query.filter(
+                students_candidatures__candidature_proposals__proposal__calendar__id_calendar=calendar_id
+            )
+        
+        students_with_internships = students_query.distinct()
 
         if not students_with_internships.exists():
             return Response({"message": "Nenhum estudante com internship encontrado"}, status=status.HTTP_204_NO_CONTENT)
