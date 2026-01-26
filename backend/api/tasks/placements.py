@@ -1,6 +1,6 @@
 from django.utils import timezone
 from django.db.models import Count, Q
-from api.models import *
+from api.models import Calendar, Candidature, CandidatureProposal, CandidatureStatusHistory
 
 def handle_automatic_placements(calendar_id):
     """
@@ -71,10 +71,12 @@ def handle_automatic_placements(calendar_id):
                 candidature_proposal.save()
                 
                 # Registrar no histórico
-                candidature.change_state(
+                CandidatureStatusHistory.objects.create(
+                    candidature=candidature,
+                    old_state='submitted',
                     new_state='placed',
                     changed_by=None,
-                    notes=f'Colocado automaticamente na proposta {proposal.proposal_title} (prioridade {candidature_proposal.priority})'
+                    notes=f'Colocado automaticamente na proposta "{proposal.proposal_title}" (prioridade {candidature_proposal.priority}, tentativa {candidature.placement_attempt})'
                 )
                 
                 placed_count += 1
@@ -95,7 +97,9 @@ def handle_automatic_placements(calendar_id):
             ).update(state='rejected', state_changed_at=timezone.now())
             
             # Registrar no histórico
-            candidature.change_state(
+            CandidatureStatusHistory.objects.create(
+                candidature=candidature,
+                old_state='submitted',
                 new_state='rejected',
                 changed_by=None,
                 notes='Sem vagas disponíveis em nenhuma das propostas selecionadas'

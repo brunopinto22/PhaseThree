@@ -718,11 +718,7 @@ def acceptCandidate(request, proposal_id, student_number):
         candidature_proposal.state_changed_at = timezone.now()
         candidature_proposal.save()
 
-        # Atualizar estado da candidatura
-        candidature.state = 'accepted'
-        candidature.save()
-
-        # Registrar no histórico
+        # Atualizar estado da candidatura E registrar no histórico
         candidature.change_state(
             new_state='accepted',
             changed_by=representative.user,
@@ -834,13 +830,12 @@ def rejectCandidate(request, proposal_id, student_number):
                 # RECOLOCAR
                 candidature.placed_proposal = next_prop.proposal
                 candidature.placement_attempt += 1
-                candidature.save()
                 
                 next_prop.state = 'placed'
                 next_prop.state_changed_at = timezone.now()
                 next_prop.save()
                 
-                # Registrar no histórico
+                # Atualizar estado E registrar no histórico
                 candidature.change_state(
                     new_state='placed',
                     changed_by=representative.user,
@@ -852,16 +847,14 @@ def rejectCandidate(request, proposal_id, student_number):
         
         if not recolocado:
             # SEM MAIS OPÇÕES - marcar como rejected
-            candidature.state = 'rejected'
             candidature.placed_proposal = None
-            candidature.save()
             
             # Marcar todas as propostas restantes como rejected
             candidature.candidature_proposals.filter(
                 state='pending'
             ).update(state='rejected', state_changed_at=timezone.now())
             
-            # Registrar no histórico
+            # Atualizar estado E registrar no histórico
             candidature.change_state(
                 new_state='rejected',
                 changed_by=representative.user,

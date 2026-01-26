@@ -3,7 +3,8 @@ from django.db import transaction
 from datetime import datetime, timedelta
 from api.models import (
     Accounts, ScientificArea, Course, Branch, Teacher, Student,
-    Company, Representative, Settings, Module, Permissions, Calendar, Proposal
+    Company, Representative, Settings, Module, Permissions, Calendar, Proposal,
+    Candidature, CandidatureProposal, CandidatureStatusHistory
 )
 
 
@@ -787,6 +788,123 @@ class Command(BaseCommand):
                     
                     self.stdout.write(f'  Created: {p_data["title"][:50]}...')
 
+            # Create Candidatures
+            self.stdout.write('Creating Candidatures...')
+            
+            all_proposals = list(Proposal.objects.filter(calendar=calendars[0]))
+            students_list = list(Student.objects.filter(student_course=courses[0]))
+            
+            if students_list and all_proposals:
+                # Candidatura 1: Aluno com 3 propostas - será colocado na 1ª
+                if len(students_list) > 0 and len(all_proposals) >= 3:
+                    student1 = students_list[0]
+                    candidature1 = Candidature.objects.create(
+                        student=student1,
+                        state='submitted',
+                        candidature_submission_date=today - timedelta(days=10)
+                    )
+                    
+                    # Adicionar 3 propostas com prioridades
+                    for i, proposal in enumerate(all_proposals[:3], start=1):
+                        CandidatureProposal.objects.create(
+                            candidature=candidature1,
+                            proposal=proposal,
+                            priority=i,
+                            state='pending'
+                        )
+                    
+                    # Criar histórico inicial
+                    CandidatureStatusHistory.objects.create(
+                        candidature=candidature1,
+                        old_state=None,
+                        new_state='submitted',
+                        changed_by=student1.user,
+                        notes='Candidatura submetida com 3 propostas selecionadas'
+                    )
+                    
+                    self.stdout.write(f'  Created candidature for {student1.user.email}')
+                
+                # Candidatura 2: Aluno com 4 propostas - será colocado na 2ª depois de rejeição
+                if len(students_list) > 1 and len(all_proposals) >= 4:
+                    student2 = students_list[1]
+                    candidature2 = Candidature.objects.create(
+                        student=student2,
+                        state='submitted',
+                        candidature_submission_date=today - timedelta(days=9)
+                    )
+                    
+                    for i, proposal in enumerate(all_proposals[:4], start=1):
+                        CandidatureProposal.objects.create(
+                            candidature=candidature2,
+                            proposal=proposal,
+                            priority=i,
+                            state='pending'
+                        )
+                    
+                    CandidatureStatusHistory.objects.create(
+                        candidature=candidature2,
+                        old_state=None,
+                        new_state='submitted',
+                        changed_by=student2.user,
+                        notes='Candidatura submetida com 4 propostas selecionadas'
+                    )
+                    
+                    self.stdout.write(f'  Created candidature for {student2.user.email}')
+                
+                # Candidatura 3: Aluno com 2 propostas - ficará sem vaga
+                if len(students_list) > 2 and len(all_proposals) >= 2:
+                    student3 = students_list[2]
+                    candidature3 = Candidature.objects.create(
+                        student=student3,
+                        state='submitted',
+                        candidature_submission_date=today - timedelta(days=8)
+                    )
+                    
+                    for i, proposal in enumerate(all_proposals[:2], start=1):
+                        CandidatureProposal.objects.create(
+                            candidature=candidature3,
+                            proposal=proposal,
+                            priority=i,
+                            state='pending'
+                        )
+                    
+                    CandidatureStatusHistory.objects.create(
+                        candidature=candidature3,
+                        old_state=None,
+                        new_state='submitted',
+                        changed_by=student3.user,
+                        notes='Candidatura submetida com 2 propostas selecionadas'
+                    )
+                    
+                    self.stdout.write(f'  Created candidature for {student3.user.email}')
+                
+                # Candidatura 4: Aluno com 5 propostas (máximo)
+                if len(students_list) > 3 and len(all_proposals) >= 5:
+                    student4 = students_list[3]
+                    candidature4 = Candidature.objects.create(
+                        student=student4,
+                        state='submitted',
+                        candidature_submission_date=today - timedelta(days=7)
+                    )
+                    
+                    for i, proposal in enumerate(all_proposals[:5], start=1):
+                        CandidatureProposal.objects.create(
+                            candidature=candidature4,
+                            proposal=proposal,
+                            priority=i,
+                            state='pending'
+                        )
+                    
+                    CandidatureStatusHistory.objects.create(
+                        candidature=candidature4,
+                        old_state=None,
+                        new_state='submitted',
+                        changed_by=student4.user,
+                        notes='Candidatura submetida com 5 propostas selecionadas (máximo)'
+                    )
+                    
+                    self.stdout.write(f'  Created candidature for {student4.user.email}')
+
         self.stdout.write(self.style.SUCCESS('Database seeding completed successfully!'))
         self.stdout.write(self.style.SUCCESS(f'  Scientific Areas: {ScientificArea.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Courses: {Course.objects.count()}'))
@@ -796,4 +914,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'  Companies: {Company.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Representatives: {Representative.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Proposals: {Proposal.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'  Candidatures: {Candidature.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'  Candidature History Entries: {CandidatureStatusHistory.objects.count()}'))
 

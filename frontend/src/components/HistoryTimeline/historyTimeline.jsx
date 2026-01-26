@@ -13,13 +13,15 @@ const HistoryTimeline = ({ history }) => {
   const getStateLabel = (state) => {
     const labels = {
       'submitted': 'Submetida',
-      'revision': 'Em revisão',
-      'placed': 'Colocado',
-      'accepted': 'Aceite',
+      'placed': 'Colocado Automaticamente',
+      'accepted': 'Aceite pela Empresa',
       'rejected': 'Rejeitado',
-      'pending_approval': 'Aprovação pendente',
-      'in_progress': 'Em progresso',
-      'completed': 'Concluído'
+      'revision': 'Em Revisão',
+      'protocol_generated': 'Protocolo Gerado',
+      'presidency_signature': 'Assinatura ISEC',
+      'company_signature': 'Assinatura Empresa',
+      'student_signature': 'Assinatura Aluno',
+      'finished': 'Concluído'
     };
     return labels[state] || state;
   };
@@ -27,13 +29,15 @@ const HistoryTimeline = ({ history }) => {
   const getStateIcon = (state) => {
     const icons = {
       'submitted': '📝',
-      'revision': '🔍',
-      'placed': '📍',
+      'placed': '🎯',
       'accepted': '✅',
       'rejected': '❌',
-      'pending_approval': '⏳',
-      'in_progress': '🔄',
-      'completed': '🎓'
+      'revision': '🔍',
+      'protocol_generated': '📄',
+      'presidency_signature': '🏛️',
+      'company_signature': '🏢',
+      'student_signature': '👤',
+      'finished': '🎓'
     };
     return icons[state] || '•';
   };
