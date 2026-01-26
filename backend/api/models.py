@@ -33,6 +33,12 @@ class Settings(models.Model):
     student_password = models.CharField(max_length=255, null=False, blank=False)
     teacher_password = models.CharField(max_length=255, null=False, blank=False)
     representative_password = models.CharField(max_length=255, null=False, blank=False)
+    
+    # REQ-15: Calendar Notification Settings
+    notify_companies_new_calendars = models.BooleanField(
+        default=True,
+        help_text="Notify companies when new calendars are created"
+    )
 
 
 def validate_pdf(value):
