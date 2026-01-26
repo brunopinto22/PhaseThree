@@ -1,154 +1,210 @@
 import './edit.css';
-import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
 
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSearchParams } from "react-router-dom";
-import { PrimaryButton, SecundaryButton, TextInput, Dropdown, CheckBox, Alert, OptionButton } from '../../../../components';
+import { PrimaryButton, SecundaryButton, Alert, CheckBox } from '../../../../components';
+import { UserContext } from '../../../../contexts';
+import { getMyCandidature, submitCandidature, updateCandidature } from '../../../../services';
+import { listProposals } from '../../../../services/proposals';
 
-const Edit = () =>  {
+const Edit = () => {
 
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
+	const { userInfo } = useContext(UserContext);
+	const [status, setStatus] = useState(null);
+	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
 
-	const id = searchParams.get("id");
-  const isNew = searchParams.get("new");
-	
-	const [state, setState] = useState(null);
-	const [list, setList] = useState([
-		{
-			id: 1,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-		},
-		{
-			id: 2,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-		},
-		{
-			id: 3,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-		},
-	]);
+	const [candidature, setCandidature] = useState(null);
+	const [proposals, setProposals] = useState([]);
+	const [selectedProposals, setSelectedProposals] = useState([]);
+	const [minProposals, setMinProposals] = useState(1);
+	const [maxProposals, setMaxProposals] = useState(6);
+	const [loading, setLoading] = useState(true);
 
-	const [perms, setPerms] = useState({
-		Calendars: { view: true, edit: false, delete: false },
-		Course: { view: true, edit: false, delete: false },
-		Students: { view: true, edit: false, delete: false },
-		Teachers: { view: true, edit: false, delete: false },
-		Companies: { view: true, edit: false, delete: false },
-		Proposals: { view: true, edit: false, delete: false },
-		Candidatures: { view: true, edit: false, delete: false },
-	});
+	useEffect(() => {
+		const fetchData = async () => {
+			// Buscar todas as propostas disponíveis usando o serviço correto
+			const allProposals = await listProposals(userInfo.token, setStatus, setError);
+			setProposals(allProposals);
+			
+			// Depois obter candidatura para ver quais já estão selecionadas
+			const data = await getMyCandidature(userInfo.token, setStatus, setError);
+			
+			if (data) {
+				// Extrair limites do calendário
+				setMinProposals(data.calendar.min);
+				setMaxProposals(data.calendar.max);
 
-	// TODO : verificar se é o Admin~
-	const canEdit = true;
+				if (data.has_candidature) {
+					// Já tem candidatura - modo edição
+					setCandidature(data);
+					// Extrair IDs das propostas já selecionadas
+					const selectedIds = data.proposals.map(p => p.id);
+					setSelectedProposals(selectedIds);
+				}
+			}
 
-	if(isNew == null || !isNew) {
-		// TODO : pedir info API
-	}
+			setLoading(false);
+		};
 
+		fetchData();
+	}, [userInfo.token]);
 
-	const submit = () => {
-			// TODO : submit editar
-	}
-	
+	const toggleProposal = (proposalId) => {
+		setSelectedProposals(prev => {
+			if (prev.includes(proposalId)) {
+				// Remover proposta
+				return prev.filter(id => id !== proposalId);
+			} else {
+				// Adicionar proposta se não ultrapassar o máximo
+				if (prev.length < maxProposals) {
+					return [...prev, proposalId];
+				}
+				return prev;
+			}
+		});
+	};
+
+	const isValid = () => {
+		return selectedProposals.length >= 1 && 
+		       selectedProposals.length <= maxProposals;
+	};
+
+	const submit = async () => {
+		setError('');
+		setSuccess('');
+
+		if (!isValid()) {
+			setError(`Deve selecionar entre 1 e ${maxProposals} propostas`);
+			return;
+		}
+
+		if (candidature) {
+			// Atualizar candidatura existente
+			const result = await updateCandidature(
+				userInfo.token, 
+				candidature.id_candidature, 
+				selectedProposals,
+				setStatus,
+				setError
+			);
+			
+			if (result) {
+				setSuccess('Candidatura atualizada com sucesso!');
+				setTimeout(() => navigate('/candidature/view'), 1500);
+			}
+		} else {
+			// Criar nova candidatura
+			const result = await submitCandidature(
+				userInfo.token, 
+				selectedProposals,
+				setStatus,
+				setError
+			);
+			
+			if (result) {
+				setSuccess('Candidatura submetida com sucesso!');
+				setTimeout(() => navigate('/candidature/view'), 1500);
+			}
+		}
+	};
+
 	const cancel = () => {
 		if (window.history.length > 2)
 			navigate(-1);
 		else
 			navigate('/');
-	}
+	};
 
+	const ProposalRow = ({ proposal }) => {
+		const isSelected = selectedProposals.includes(proposal.id);
+		const isDisabled = !isSelected && selectedProposals.length >= maxProposals;
 
-	const Row = ({id, companyName, proposalName, state}) => {
-		
-		const view = () => {
-			navigate("/proposal/view?id="+id);
-		}
-		const edit = () => {
-			// TODO : mudar estado
-		}
-		const handleDelete = () => {
-			// TODO : remover Proposta da Candidatura
-		}
-
-		return(
-			<tr className='table-row'>
-				<th><p>{id}</p></th>
-				<th><p>{proposalName}</p></th>
-				<th><p>{companyName}</p></th>
-				<th>
-					<Dropdown text=''>
-						<option>Pendente</option>
-						<option>Colocado</option>
-						<option>Rejeitado</option>
-					</Dropdown>
-				</th>
-				<th>
-					<div className='d-flex gap-2'>
-						<OptionButton type='view' action={view} />
-						<OptionButton type='remove' action={handleDelete} />
-					</div>
-				</th>
+		return (
+			<tr className={`table-row ${isSelected ? 'selected' : ''}`}>
+				<td>
+					<CheckBox 
+						value={isSelected}
+						setValue={() => toggleProposal(proposal.id)}
+						disabled={isDisabled}
+					/>
+				</td>
+				<td><p>{proposal.proposal_number || proposal.id}</p></td>
+				<td><p>{proposal.title}</p></td>
+				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
+				<td><p>{proposal.location}</p></td>
+				<td><p>{proposal.type}</p></td>
 			</tr>
+		);
+	};
+
+	if (loading) {
+		return (
+			<div id='candidature' className='d-flex flex-column'>
+				<h4>A carregar...</h4>
+			</div>
 		);
 	}
 
+	const selectedCount = selectedProposals.length;
+	const counterClass = selectedCount < 1 || selectedCount > maxProposals ? 'error' : 'success';
 
-	return(
+	return (
 		<div id='candidature' className='d-flex flex-column'>
 
 			<section className='row p-0'>
-				<h4>Editar Candidatura</h4>
-				<div className='d-flex flex-column gap-3'>
+				<h4>{candidature ? 'Editar Candidatura' : 'Submeter Candidatura'}</h4>
+				
+				<div className='candidature-counter'>
+					<h5 className={counterClass}>
+						{selectedCount} / {maxProposals} propostas selecionadas
+					</h5>
 					
-					<div className="row">
-						<Dropdown className='col-4' text='Estado da Candidatura' setValue={setState}>
-							<option>Submetido</option>
-							<option>Revisão</option>
-							<option>Colocado</option>
-							<option>Protocolo ISEC</option>
-							<option>Protocolo Empresa</option>
-							<option>Protocolo Aluno</option>
-							<option>Pode iniciar Estágio</option>
-						</Dropdown>
-					</div>
-
+					{selectedCount > maxProposals && (
+						<Alert text={`Máximo: ${maxProposals} propostas`} type='danger' />
+					)}
 				</div>
+
+				{error && <Alert text={error} type='danger' />}
+				{success && <Alert text={success} type='success' />}
 			</section>
 
 			<section className='p-0'>
-				<h4>Propostas</h4>
+				<h4>Propostas Disponíveis</h4>
+				<p className='text-muted'>Selecione entre 1 e {maxProposals} propostas</p>
 
-				{list.length === 0 && <Alert text='Não existe nenhum docente de momento' type='danger' />}
+				{proposals.length === 0 && (
+					<Alert text='Não existem propostas disponíveis no momento' type='danger' />
+				)}
 
-				{list.length > 0 && (
+				{proposals.length > 0 && (
 					<table>
-						<tr className='header'>
-							<th><p>#</p></th>
-							<th><p>Proposta</p></th>
-							<th><p>Empresa/Docente</p></th>
-							<th><p>Estado</p></th>
-							<th></th>
-						</tr>
-
-						{list.map(proposal => (
-							<Row key={proposal.id} {...proposal} />
-						))}
-						
+						<thead>
+							<tr className='header'>
+								<th></th>
+								<th><p>#</p></th>
+								<th><p>Título</p></th>
+								<th><p>Empresa</p></th>
+								<th><p>Localização</p></th>
+								<th><p>Tipo</p></th>
+							</tr>
+						</thead>
+						<tbody>
+							{proposals.map(proposal => (
+								<ProposalRow key={proposal.id} proposal={proposal} />
+							))}
+						</tbody>
 					</table>
 				)}
-				
 			</section>
 
 			<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-5 p-0">
-				<PrimaryButton action={submit} content={<h6>Guardar</h6>} />
+				<PrimaryButton 
+					action={submit} 
+					content={<h6>{candidature ? 'Atualizar' : 'Submeter'}</h6>}
+					disabled={!isValid()}
+				/>
 				<SecundaryButton action={cancel} content={<h6>Cancelar</h6>} />
 			</section>
 		</div>

@@ -59,12 +59,6 @@ const Dashboard = () => {
 						(
 							<>
 							<DashButton
-								icon={<i className="bi bi-clipboard2-plus-fill"></i>} // TODO : submeter candidatura de um aluno (PÁGINAS)
-								text="Submeter Candidatura"
-								disabled={summary?.is_missing_info}
-							/>
-							
-							<DashButton
 								action={() => navigate("/proposal/list")}
 								icon={<i className="bi bi-file-earmark-text-fill"></i>}
 								text="Ver Propostas"
@@ -74,7 +68,7 @@ const Dashboard = () => {
 							<DashButton
 								icon={<i className="bi bi-clipboard2-pulse-fill"></i>}
 								text="Candidatura"
-								action={() => navigate("/candidature/view?id=1")}
+								action={() => navigate("/candidature/view")}
 								disabled={summary?.is_missing_info}
 							/>
 							</>
@@ -101,6 +95,12 @@ const Dashboard = () => {
 								text="Submeter Proposta"
 								action={() => navigate("/proposal/edit?new=true")}
 								disabled={summary?.calendars.length <= 0}
+							/>
+
+							<DashButton
+								icon={<i className="bi bi-people-fill"></i>}
+								text="Meus Candidatos"
+								action={() => navigate("/representative/candidates")}
 							/>
 
               <DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />

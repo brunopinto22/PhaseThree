@@ -1,102 +1,247 @@
 import './view.css';
-import default_pfp from './../../../../assets/imgs/default_pfp.jpg';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useState } from 'react';
-import { PrimaryButton, OptionButton, State, Alert, ProposalCard, StateTracker } from '../../../../components';
-
-// TODO : ver se fica assim só para o ADMIN ou adaptar para ficar "igual" ao do aluno e ser clicavel os "states"
-// TODO : ao clicalr no < que Colocado tirar o colocado do state da proposta
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { PrimaryButton, SecundaryButton, Alert, StateTracker } from '../../../../components';
+import HistoryTimeline from '../../../../components/HistoryTimeline/historyTimeline';
+import { UserContext } from '../../../../contexts';
+import { getMyCandidature, getCandidatureHistory } from '../../../../services';
 
 function View() {
 
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
-  const id = searchParams.get('id');
+	const { userInfo } = useContext(UserContext);
+	const [status, setStatus] = useState(null);
+	const [error, setError] = useState('');
+	const [loading, setLoading] = useState(true);
 
+	const [candidature, setCandidature] = useState(null);
+	const [calendar, setCalendar] = useState(null);
+	const [history, setHistory] = useState([]);
 
-	const profilePicture = null;
-	const fullName = "Tiago Manuel Ferreira";
-	const parts = fullName.trim().split(" ");
-	const shortName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : fullName;
-	const number = 2020123456;
-	const idStudent = 1;
-
-	const state = 3;
-	const proposalName = "Desenvolvimento de aplicações web";
-	const companyName = "TekFusion";
-	const companyid = 1;
-
-	const [list, setList] = useState([
-		{
-			id: 1,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 1,
-		},
-		{
-			id: 2,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 2,
-		},
-		{
-			id: 3,
-			companyName: "TekFusion",
-      proposalName: "Desenvolvimento de aplicações web",
-			state: 3,
-		},
-	]);
-
-
-
-	const perms = {
-		Calendars: { view: true, edit: false, delete: false },
-		Course: { view: true, edit: false, delete: false },
-		Students: { view: true, edit: false, delete: false },
-		Teachers: { view: true, edit: false, delete: false },
-		Companies: { view: true, edit: false, delete: false },
-		Proposals: { view: true, edit: false, delete: false },
-		Candidatures: { view: true, edit: false, delete: false },
+	const getStateLabel = (state) => {
+		const labels = {
+			'submitted': 'Submetida',
+			'revision': 'Em Revisão',
+			'placed': 'Colocado',
+			'protocol_generated': 'Protocolo Gerado',
+			'presidency_signature': 'Aguardando Assinatura ISEC',
+			'company_signature': 'Aguardando Assinatura Empresa',
+			'student_signature': 'Aguardando Sua Assinatura',
+			'finished': 'Concluído'
+		};
+		return labels[state] || state;
 	};
 
-	// TODO : getCandidature(id)
+	const getStateDescription = (state) => {
+		const descriptions = {
+			'submitted': 'Sua candidatura foi submetida com sucesso e está aguardando análise.',
+			'revision': 'Sua candidatura está sendo analisada pelos serviços académicos.',
+			'placed': 'Parabéns! Você foi colocado numa proposta de estágio.',
+			'protocol_generated': 'O protocolo de estágio foi gerado e está pronto para assinatura.',
+			'presidency_signature': 'O protocolo aguarda assinatura da presidência do ISEC.',
+			'company_signature': 'O protocolo aguarda assinatura da empresa.',
+			'student_signature': 'O protocolo aguarda sua assinatura. Por favor, assine o documento.',
+			'finished': 'Processo concluído! Seu estágio está oficialmente iniciado.'
+		};
+		return descriptions[state] || 'Estado desconhecido';
+	};
 
-	const isAdmin = true;
+	const getNextSteps = (state) => {
+		const nextSteps = {
+			'submitted': 'Aguarde a análise dos serviços académicos.',
+			'revision': 'Aguarde o processo de colocação.',
+			'placed': 'Aguarde a geração do protocolo de estágio.',
+			'protocol_generated': 'Aguarde a assinatura da presidência.',
+			'presidency_signature': 'Aguarde a empresa assinar o protocolo.',
+			'company_signature': 'Assine o protocolo assim que possível.',
+			'student_signature': 'Aguarde finalização do processo.',
+			'finished': 'Processo completo. Bom estágio!'
+		};
+		return nextSteps[state] || '';
+	};
 
-	const [seeP, setSeeP] = useState(false);
+	useEffect(() => {
+		const fetchData = async () => {
+			const data = await getMyCandidature(userInfo.token, setStatus, setError);
+			
+			if (data) {
+				setCalendar(data.calendar);
+				
+				if (data.has_candidature) {
+					setCandidature(data);
+					
+					// Buscar histórico da candidatura
+					const historyData = await getCandidatureHistory(
+						userInfo.token,
+						data.id_candidature,
+						setStatus,
+						setError
+					);
+					
+					if (historyData && historyData.history) {
+						setHistory(historyData.history);
+					}
+				}
+			}
+			
+			setLoading(false);
+		};
+
+		fetchData();
+	}, [userInfo.token]);
+
+	const handleSubmit = () => {
+		navigate('/candidature/edit');
+	};
+
+	const handleEdit = () => {
+		navigate('/candidature/edit');
+	};
+
+	const ProposalRow = ({ proposal }) => {
+		const stateMap = {
+			'pending': { text: 'Pendente', class: 'warning' },
+			'accepted': { text: 'Aceite', class: 'success' },
+			'rejected': { text: 'Rejeitada', class: 'danger' }
+		};
+		
+		const stateInfo = stateMap[proposal.state] || stateMap['pending'];
+
+		return (
+			<tr className='table-row'>
+				<td><p>{proposal.id}</p></td>
+				<td><p>{proposal.title}</p></td>
+				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
+				<td>
+					<span className={`badge badge-${stateInfo.class}`}>{stateInfo.text}</span>
+				</td>
+			</tr>
+		);
+	};
+
+	if (loading) {
+		return (
+			<div id='candidature' className='d-flex flex-column'>
+				<h3>A carregar...</h3>
+			</div>
+		);
+	}
+
+	const hasCandidature = candidature !== null;
+	const canEdit = hasCandidature && candidature.state === 'submitted';
 
 	return(
 		<div id='candidature' className='d-flex flex-column'>
 
-			<div className="header d-flex flex-column">
-				<h3 className='title'>Estado da Candidatura</h3>
-				{state >= 2 && <h6>{proposalName} <span className='text-link' onClick={() => navigate("/company/view?id=" + idStudent)}>@{companyName}</span></h6>}
-				<h6 className='sub-title text-link' onClick={() => navigate("/student/view?id=" + idStudent)}>{shortName} nº{number}</h6>
-			</div>
+			<section className='row p-0'>
+				<h3>Minha Candidatura</h3>
+				
+				{error && <Alert text={error} type='danger' />}
 
-			<StateTracker currentState={state} />
-
-			<div className='proposals d-flex flex-column gap-4'>
-				<div className="d-flex flex-row align-content-center">
-					<h4 className='d-flex flex-row align-items-center gap-2 noselect' style={{cursor: "default"}} onClick={() => setSeeP(!seeP)}>
-						<i className={`toggle-collapse bi bi-chevron-down`} style={{ transform: `rotateZ(${seeP ? "0" : "-90deg"})` }}></i>
-						<span>Propostas</span>
-					</h4>
-				</div>
-				<div className={`collapsible ${seeP ? "" : "collapse"}`}>
-					<div className="d-flex flex-wrap gap-3">
-						<ProposalCard />
-						<ProposalCard state='accepted' />
-						<ProposalCard state='rejected' />
-						<ProposalCard disabled={true} />
+				{calendar && (
+					<div className='calendar-info'>
+						<h5>Informações do Calendário</h5>
+						<p><strong>Limites:</strong> Entre {calendar.min} e {calendar.max} propostas</p>
+						<p><strong>Prazo de Candidaturas:</strong> {calendar.candidatures_deadline}</p>
 					</div>
-				</div>
-			</div>
+				)}
+			</section>
 
-			{isAdmin && (
-				<div className="col">
-					<PrimaryButton content={<h6>Editar Candidatura</h6>} action={() => navigate("/candidature/edit?id="+ id)} />
-				</div>
+			{hasCandidature ? (
+				<>
+					<section className='state-progress p-0'>
+						<h4>Progresso da Candidatura</h4>
+						<StateTracker currentState={candidature.state} />
+						
+						<div className='current-state-info'>
+							<h5>Estado Atual: {getStateLabel(candidature.state)}</h5>
+							<p className='state-description'>{getStateDescription(candidature.state)}</p>
+							<p className='next-steps'><strong>Próximos Passos:</strong> {getNextSteps(candidature.state)}</p>
+						</div>
+					</section>
+
+					<section className='candidature-details p-0'>
+						<h4>Detalhes da Candidatura</h4>
+						<div className='details-grid'>
+							<div className='detail-item'>
+								<strong>Estado:</strong> 
+								<span className='state'> {getStateLabel(candidature.state)}</span>
+							</div>
+							<div className='detail-item'>
+								<strong>Submetida em:</strong> {candidature.submission_date}
+							</div>
+							<div className='detail-item'>
+								<strong>Criada em:</strong> {candidature.created_at}
+							</div>
+							<div className='detail-item'>
+								<strong>Última atualização:</strong> {candidature.last_updated}
+							</div>
+						</div>
+					</section>
+
+					<section className='p-0'>
+						<h4 className="mb-4">Propostas Selecionadas ({candidature.proposals.length} / {calendar.max})</h4>
+						
+						{candidature.proposals.length === 0 ? (
+							<Alert text='Nenhuma proposta selecionada' type='warning' />
+						) : (
+							<table>
+								<thead>
+									<tr className='header'>
+										<th><p>#</p></th>
+										<th><p>Título</p></th>
+										<th><p>Empresa</p></th>
+										<th><p>Estado</p></th>
+									</tr>
+								</thead>
+								<tbody>
+									{candidature.proposals.map(proposal => (
+										<ProposalRow key={proposal.id} proposal={proposal} />
+									))}
+								</tbody>
+							</table>
+						)}
+					</section>
+
+					<HistoryTimeline history={history} />
+
+					<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-6 p-0">
+						<SecundaryButton 
+							action={handleSubmit}
+							content={
+								<div className='d-flex flex-column align-items-center'>
+									<h6>Submeter Candidatura</h6>
+									<small className='text-muted'>Só é possível ter uma candidatura ativa</small>
+								</div>
+							}
+							disabled={true}
+						/>
+						<PrimaryButton 
+							action={handleEdit}
+							content={<h6>Editar Candidatura</h6>}
+							disabled={!canEdit}
+						/>
+					</section>
+				</>
+			) : (
+				<>
+					<section className='no-candidature p-0'>
+						<Alert text='Você ainda não submeteu uma candidatura' type='info' />
+						<p>Clique no botão abaixo para selecionar suas propostas e submeter sua candidatura.</p>
+					</section>
+
+					<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-6 p-0">
+						<PrimaryButton 
+							action={handleSubmit}
+							content={<h6>Submeter Candidatura</h6>}
+						/>
+						<SecundaryButton 
+							action={handleEdit}
+							content={<h6>Editar Candidatura</h6>}
+							disabled={true}
+						/>
+					</section>
+				</>
 			)}
 
 		</div>

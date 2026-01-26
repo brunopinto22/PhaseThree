@@ -9,3 +9,23 @@ section {
 .buttons button {
 	width: 100%;
 }
+
+.candidature-counter {
+	margin: var(--spacing-lg) 0;
+}
+
+.candidature-counter h5.success {
+	color: var(--success-color, #28a745);
+}
+
+.candidature-counter h5.error {
+	color: var(--danger-color, #dc3545);
+}
+
+.table-row.selected {
+	background-color: var(--primary-light, #e3f2fd);
+}
+
+.table-row td {
+	vertical-align: middle;
+}

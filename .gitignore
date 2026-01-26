@@ -27,3 +27,4 @@ backend/celerybeat-schedule-wal
 
 /docs-agente
 /backend/venv
+/venv

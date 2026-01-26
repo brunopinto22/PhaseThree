@@ -327,7 +327,7 @@ def editStudent(request, pk):
         student = Student.objects.get(student_number=pk)
         course = Course.objects.get(id_course=data.get("student_course"))
         branch = Branch.objects.get(id_branch=data.get("student_branch")) if data.get("student_branch") else None
-        calendar = Calendar.objects.get(id_calendar=data.get("student_calendar"))
+        calendar = Calendar.objects.get(id_calendar=data.get("student_calendar")) if data.get("student_calendar") else None
 
         if Accounts.objects.filter(email=data["email"]).exclude(pk=student.user.pk).exists():
             return Response({"message": "Este email já está em uso"}, status=status.HTTP_400_BAD_REQUEST)

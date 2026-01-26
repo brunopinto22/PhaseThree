@@ -27,3 +27,5 @@ export { default as StateTracker } from './StateTracker/stateTracker';
 export { default as Pill } from './Pill/pill';
 
 export { default as Favourite } from './Favourite/favourite';
+
+export { default as CandidateCard } from './CandidateCard/candidateCard';

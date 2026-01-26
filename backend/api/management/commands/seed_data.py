@@ -1,8 +1,9 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from datetime import datetime, timedelta
 from api.models import (
     Accounts, ScientificArea, Course, Branch, Teacher, Student,
-    Company, Representative, Settings, Module, Permissions
+    Company, Representative, Settings, Module, Permissions, Calendar, Proposal
 )
 
 
@@ -19,13 +20,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing data...'))
+            Proposal.objects.all().delete()
             Student.objects.all().delete()
             Representative.objects.all().delete()
             Company.objects.all().delete()
             Teacher.objects.all().delete()
+            Calendar.objects.all().delete()
             Course.objects.all().delete()
             ScientificArea.objects.all().delete()
-            # Keep admin user and Settings
+            # Delete accounts except superusers (admin users)
+            Accounts.objects.filter(is_superuser=False).delete()
+            # Keep Settings
 
         self.stdout.write(self.style.SUCCESS('Starting to seed database...'))
 
@@ -168,6 +173,60 @@ class Command(BaseCommand):
                     courses.append(course)
                     self.stdout.write(f'  Created: {c_data["name"]}')
 
+            # Create Calendars
+            self.stdout.write('Creating Calendars...')
+            calendars = []
+            today = datetime.now().date()
+            
+            # Calendar for current academic year (2025/2026)
+            # Setting divulgation in the past so students can see proposals
+            calendar_data = [
+                {
+                    "year": 2025,
+                    "semester": 2,
+                    "course": courses[0] if courses else None,  # LEI
+                    "submission_start": today - timedelta(days=60),
+                    "submission_end": today + timedelta(days=30),
+                    "divulgation": today - timedelta(days=10),  # Already happened
+                    "registrations": today - timedelta(days=5),
+                    "candidatures": today + timedelta(days=30),
+                    "placements": today + timedelta(days=60),
+                    "min_proposals": 3,
+                    "max_proposals": 5,
+                },
+                {
+                    "year": 2025,
+                    "semester": 2,
+                    "course": courses[1] if len(courses) > 1 else None,  # MEI
+                    "submission_start": today - timedelta(days=60),
+                    "submission_end": today + timedelta(days=30),
+                    "divulgation": today - timedelta(days=10),  # Already happened
+                    "registrations": today - timedelta(days=5),
+                    "candidatures": today + timedelta(days=30),
+                    "placements": today + timedelta(days=60),
+                    "min_proposals": 3,
+                    "max_proposals": 5,
+                },
+            ]
+
+            for cal_data in calendar_data:
+                if cal_data["course"]:
+                    calendar = Calendar.objects.create(
+                        calendar_year=cal_data["year"],
+                        calendar_semester=cal_data["semester"],
+                        course=cal_data["course"],
+                        submission_start=cal_data["submission_start"],
+                        submission_end=cal_data["submission_end"],
+                        divulgation=cal_data["divulgation"],
+                        registrations=cal_data["registrations"],
+                        candidatures=cal_data["candidatures"],
+                        placements=cal_data["placements"],
+                        min_proposals=cal_data["min_proposals"],
+                        max_proposals=cal_data["max_proposals"],
+                    )
+                    calendars.append(calendar)
+                    self.stdout.write(f'  Created: {calendar}')
+
             # Create Students
             self.stdout.write('Creating Students...')
             student_data = [
@@ -188,6 +247,7 @@ class Command(BaseCommand):
                     "ects": 180,
                     "course": courses[0] if courses else None,
                     "branch": None,
+                    "calendar": calendars[0] if calendars else None,
                 },
                 {
                     "number": 12346,
@@ -206,6 +266,7 @@ class Command(BaseCommand):
                     "ects": 120,
                     "course": courses[0] if courses else None,
                     "branch": None,
+                    "calendar": calendars[0] if calendars else None,
                 },
             ]
 
@@ -236,6 +297,7 @@ class Command(BaseCommand):
                         student_course=s_data["course"],
                         student_branch=s_data["branch"],
                         student_ects=s_data["ects"],
+                        calendar=s_data.get("calendar"),
                         active=True,
                     )
                     self.stdout.write(f'  Created: {s_data["name"]}')
@@ -316,11 +378,138 @@ class Command(BaseCommand):
 
                     self.stdout.write(f'  Created: {c_data["name"]}')
 
+            # Create Proposals
+            self.stdout.write('Creating Proposals...')
+            if calendars and courses and len(Company.objects.all()) > 0:
+                companies_list = list(Company.objects.all())
+                teachers_list = list(Teacher.objects.all())
+                
+                # Get branches for the first course
+                lei_branches = list(courses[0].branches.all()) if courses else []
+                
+                proposal_data = [
+                    {
+                        "title": "Desenvolvimento de Plataforma Web para Gestão de Projetos",
+                        "description": "Desenvolvimento de uma aplicação web moderna para gestão de projetos ágeis, utilizando tecnologias como React, Node.js e MongoDB. O estagiário terá a oportunidade de trabalhar em todas as fases do desenvolvimento, desde o design até a implementação.",
+                        "selection_method": "Entrevista técnica e análise de currículo",
+                        "conditions": "Subsídio de alimentação e transporte",
+                        "scheduling": "Segunda a Sexta, 9h-18h",
+                        "technologies": "React, Node.js, MongoDB, Git",
+                        "methodologies": "Scrum, Git Flow",
+                        "objectives": "Desenvolver competências em desenvolvimento full-stack e metodologias ágeis",
+                        "type": 1,  # Internship
+                        "course": courses[0],
+                        "branches": lei_branches[:1] if lei_branches else [],  # DS branch
+                        "work_format": 3,  # Hybrid
+                        "location": "Coimbra",
+                        "schedule": "9h-18h",
+                        "slots": 2,
+                        "company": companies_list[0],
+                        "company_advisor": companies_list[0].company_admin,
+                        "isec_advisor": teachers_list[0] if teachers_list else None,
+                        "calendar": calendars[0],
+                    },
+                    {
+                        "title": "Implementação de Sistema de Segurança em Redes Corporativas",
+                        "description": "Projeto focado na implementação e configuração de sistemas de segurança em ambientes corporativos. Inclui firewalls, VPNs, sistemas de detecção de intrusão e políticas de segurança.",
+                        "selection_method": "Análise de histórico académico e entrevista",
+                        "conditions": "Possibilidade de contratação após conclusão",
+                        "scheduling": "Horário flexível",
+                        "technologies": "Cisco, Fortinet, Linux, Python",
+                        "methodologies": "ITIL, ISO 27001",
+                        "objectives": "Adquirir experiência prática em segurança de redes e sistemas",
+                        "type": 1,  # Internship
+                        "course": courses[0],
+                        "branches": lei_branches[1:2] if len(lei_branches) > 1 else [],  # SR branch
+                        "work_format": 1,  # On-site
+                        "location": "Coimbra",
+                        "schedule": "9h-17h30",
+                        "slots": 1,
+                        "company": companies_list[1] if len(companies_list) > 1 else companies_list[0],
+                        "company_advisor": companies_list[1].company_admin if len(companies_list) > 1 else companies_list[0].company_admin,
+                        "isec_advisor": teachers_list[1] if len(teachers_list) > 1 else teachers_list[0],
+                        "calendar": calendars[0],
+                    },
+                    {
+                        "title": "Desenvolvimento de Aplicação Mobile para IoT",
+                        "description": "Criação de aplicação mobile (iOS e Android) para controlo e monitorização de dispositivos IoT. Utilização de React Native e integração com APIs REST.",
+                        "selection_method": "Portfolio de projetos e entrevista técnica",
+                        "conditions": "Formação inicial de 2 semanas, equipamento fornecido",
+                        "scheduling": "Horário flexível com 2 dias de trabalho remoto",
+                        "technologies": "React Native, TypeScript, REST API, Firebase",
+                        "methodologies": "Agile, TDD",
+                        "objectives": "Desenvolver competências em desenvolvimento mobile e IoT",
+                        "type": 1,  # Internship
+                        "course": courses[0],
+                        "branches": lei_branches[:1] if lei_branches else [],  # DS branch
+                        "work_format": 3,  # Hybrid
+                        "location": "Lisboa (remoto disponível)",
+                        "schedule": "Flexível",
+                        "slots": 1,
+                        "company": companies_list[0],
+                        "company_advisor": companies_list[0].company_admin,
+                        "isec_advisor": teachers_list[2] if len(teachers_list) > 2 else teachers_list[0],
+                        "calendar": calendars[0],
+                    },
+                    {
+                        "title": "Sistema de Análise de Dados em Tempo Real",
+                        "description": "Desenvolvimento de sistema para análise e visualização de grandes volumes de dados em tempo real, utilizando tecnologias de Big Data e Machine Learning.",
+                        "selection_method": "Teste técnico e entrevista",
+                        "conditions": "Bolsa de estágio competitiva, acesso a formações",
+                        "scheduling": "Segunda a Sexta, horário flexível",
+                        "technologies": "Python, Apache Kafka, Spark, Elasticsearch, Kibana",
+                        "methodologies": "Kanban, DevOps",
+                        "objectives": "Aprender tecnologias de Big Data e desenvolver soluções escaláveis",
+                        "type": 2,  # Project
+                        "course": courses[0],
+                        "branches": [],  # All branches
+                        "work_format": 2,  # Remote
+                        "location": "Remoto",
+                        "schedule": "Flexível",
+                        "slots": 2,
+                        "company": companies_list[1] if len(companies_list) > 1 else companies_list[0],
+                        "company_advisor": companies_list[1].company_admin if len(companies_list) > 1 else companies_list[0].company_admin,
+                        "isec_advisor": teachers_list[0] if teachers_list else None,
+                        "calendar": calendars[0],
+                    },
+                ]
+
+                for p_data in proposal_data:
+                    proposal = Proposal.objects.create(
+                        proposal_title=p_data["title"],
+                        proposal_description=p_data["description"],
+                        proposal_selection_method=p_data["selection_method"],
+                        proposal_conditions=p_data["conditions"],
+                        proposal_scheduling=p_data["scheduling"],
+                        proposal_technologies=p_data.get("technologies"),
+                        proposal_methodologies=p_data.get("methodologies"),
+                        proposal_objectives=p_data.get("objectives"),
+                        proposal_type=p_data["type"],
+                        course=p_data["course"],
+                        work_format=p_data["work_format"],
+                        location=p_data["location"],
+                        schedule=p_data["schedule"],
+                        slots=p_data["slots"],
+                        company=p_data.get("company"),
+                        company_advisor=p_data.get("company_advisor"),
+                        isec_advisor=p_data.get("isec_advisor"),
+                        calendar=p_data["calendar"],
+                        proposal_submission_date=today - timedelta(days=15),
+                    )
+                    
+                    # Add branches if any
+                    if p_data.get("branches"):
+                        proposal.branches.set(p_data["branches"])
+                    
+                    self.stdout.write(f'  Created: {p_data["title"][:50]}...')
+
         self.stdout.write(self.style.SUCCESS('Database seeding completed successfully!'))
         self.stdout.write(self.style.SUCCESS(f'  Scientific Areas: {ScientificArea.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Courses: {Course.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'  Calendars: {Calendar.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Teachers: {Teacher.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Students: {Student.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Companies: {Company.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'  Representatives: {Representative.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'  Proposals: {Proposal.objects.count()}'))
 

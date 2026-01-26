@@ -11,7 +11,7 @@ import {
 	ListTeachers, ViewTeacher, EditTeacher,
 	ListProposals, ViewProposal, EditProposal,
 	ListCompanies, ViewCompany, EditCompany,
-	ViewRepresentative, EditRepresentative,
+	ViewRepresentative, EditRepresentative, MyCandidates,
 	ListCandidatures, ViewCandidature, EditCandidature,
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
@@ -213,6 +213,7 @@ function App() {
 						<Route path="/representative">
 							<Route path="view" element={<ViewRepresentative />} />
 							<Route path="edit" element={<EditRepresentative />} />
+							<Route path="candidates" element={<MyCandidates />} />
 						</Route>
 
 						{/* Manage Proposals */}
