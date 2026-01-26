@@ -34,6 +34,8 @@ from api.models import (
     Settings,
 )
 from api.services.notifications import NotificationService
+from api.services.protocol_generator import ProtocolGenerator
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -49,18 +51,21 @@ class PlacementNotificationProcessor:
     def __init__(self, calendar: Calendar):
         self.calendar = calendar
         self.notification_service = NotificationService()
+        self.protocol_generator = ProtocolGenerator()
         
         # Load notification settings
         self.settings = Settings.objects.first()
         self.notify_students = getattr(self.settings, 'notify_placement_students', True) if self.settings else True
         self.notify_companies = getattr(self.settings, 'notify_placement_companies', True) if self.settings else True
         self.notify_advisors = getattr(self.settings, 'notify_placement_advisors', True) if self.settings else True
+        self.auto_generate_protocols = getattr(self.settings, 'auto_generate_protocols', True) if self.settings else True
         
         # Tracking data structures
         self.placed_students: Dict[int, Dict[str, Any]] = {}  # student_id -> placement info
         self.rejected_students: List[Student] = []
         self.company_placements: Dict[int, List[Dict[str, Any]]] = defaultdict(list)  # company_id -> placements
         self.advisor_orientations: Dict[int, List[Dict[str, Any]]] = defaultdict(list)  # teacher_id -> orientations
+        self.placed_candidatures: List[Candidature] = []  # Track candidatures for protocol generation
 
     def process(self) -> Dict[str, Any]:
         """
@@ -94,7 +99,14 @@ class PlacementNotificationProcessor:
             else:
                 logger.info("Advisor notifications disabled in settings")
             
-            # Step 5: Get summary
+            # Step 5: Generate protocols automatically (REQ-7)
+            protocol_results = None
+            if self.auto_generate_protocols:
+                protocol_results = self._generate_protocols()
+            else:
+                logger.info("Automatic protocol generation disabled in settings")
+            
+            # Step 6: Get summary
             summary = self.notification_service.get_summary()
             summary['calendar'] = str(self.calendar)
             summary['placed_students'] = len(self.placed_students)
@@ -105,7 +117,11 @@ class PlacementNotificationProcessor:
                 'notify_students': self.notify_students,
                 'notify_companies': self.notify_companies,
                 'notify_advisors': self.notify_advisors,
+                'auto_generate_protocols': self.auto_generate_protocols,
             }
+            
+            if protocol_results:
+                summary['protocols'] = protocol_results
             
             logger.info(f"Placement notification processing completed: {summary}")
             return summary
@@ -164,6 +180,9 @@ class PlacementNotificationProcessor:
                     'proposal': accepted_proposal,
                     'candidature': candidature,
                 }
+                
+                # Track candidature for protocol generation
+                self.placed_candidatures.append(candidature)
                 
                 # Track for company notification
                 if accepted_proposal.company:
@@ -280,6 +299,37 @@ class PlacementNotificationProcessor:
                 logger.error(f"Teacher {teacher_id} not found")
             except Exception as e:
                 logger.error(f"Failed to notify teacher {teacher_id}: {str(e)}")
+
+    def _generate_protocols(self) -> Dict[str, Any]:
+        """
+        Generate protocols for all placed candidatures.
+        
+        REQ-7: Automatic Protocol Generation
+        """
+        logger.info(f"Starting automatic protocol generation for {len(self.placed_candidatures)} candidatures")
+        
+        if not self.placed_candidatures:
+            logger.info("No placed candidatures to generate protocols for")
+            return {
+                "total": 0,
+                "successful": 0,
+                "failed": 0,
+                "skipped": 0
+            }
+        
+        # Generate protocols in batch
+        results = self.protocol_generator.generate_protocols_batch(self.placed_candidatures)
+        
+        # Update protocol_generated_date for successful generations
+        if results["successful"] > 0:
+            now = timezone.now()
+            for candidature in self.placed_candidatures:
+                if candidature.has_protocol() and not candidature.protocol_generated_date:
+                    candidature.protocol_generated_date = now
+                    candidature.save(update_fields=['protocol_generated_date'])
+        
+        logger.info(f"Protocol generation completed: {results['successful']}/{results['total']} successful")
+        return results
 
 
 def handle_placements(calendar_id: int) -> Optional[Dict[str, Any]]:

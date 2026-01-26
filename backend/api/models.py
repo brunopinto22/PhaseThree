@@ -39,6 +39,9 @@ class Settings(models.Model):
     notify_placement_companies = models.BooleanField(default=True, help_text="Send placement notifications to companies")
     notify_placement_advisors = models.BooleanField(default=True, help_text="Send placement notifications to advisors")
     
+    # REQ-7: Protocol Generation Settings
+    auto_generate_protocols = models.BooleanField(default=True, help_text="Automatically generate protocols when candidatures are placed")
+    
     class Meta:
         verbose_name = "System Settings"
         verbose_name_plural = "System Settings"
@@ -476,9 +479,26 @@ class Candidature(models.Model):
     state = models.CharField(max_length=20, choices=STATE_CHOICES, default='pending')
 
     candidature_submission_date = models.DateField()
+    
+    # REQ-7: Automatic Protocol Generation
+    protocol_file = models.FileField(
+        upload_to='protocols/',
+        null=True,
+        blank=True,
+        help_text="Generated protocol document (PDF)"
+    )
+    protocol_generated_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Date when protocol was automatically generated"
+    )
 
     def __str__(self):
         return f"Candidature {self.id_candidature}"
+    
+    def has_protocol(self) -> bool:
+        """Check if protocol has been generated."""
+        return bool(self.protocol_file)
 
 
 class CandidatureProposal(models.Model):

@@ -105,6 +105,46 @@ def send_single_notification_async(
         raise
 
 
+@shared_task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+)
+def generate_protocol_async(self, candidature_id: int) -> Optional[str]:
+    """
+    Async Celery task to generate a protocol for a candidature.
+    
+    Args:
+        candidature_id: Primary key of the Candidature instance
+        
+    Returns:
+        Path to the generated protocol file, or None on failure
+    """
+    from api.models import Candidature
+    from api.services.protocol_generator import ProtocolGenerator
+    
+    logger.info(f"Celery task: Generating protocol for candidature {candidature_id}")
+    
+    try:
+        candidature = Candidature.objects.get(id_candidature=candidature_id)
+        generator = ProtocolGenerator()
+        protocol_path = generator.generate_protocol(candidature)
+        
+        if protocol_path:
+            logger.info(f"Celery task: Protocol generated successfully: {protocol_path}")
+        else:
+            logger.warning(f"Celery task: Protocol generation returned None for candidature {candidature_id}")
+            
+        return protocol_path
+        
+    except Candidature.DoesNotExist:
+        logger.error(f"Celery task: Candidature {candidature_id} not found")
+        return None
+    except Exception as e:
+        logger.exception(f"Celery task failed: {str(e)}")
+        raise
+
+
 @shared_task
 def send_bulk_notifications_async(notifications: list) -> Dict[str, int]:
     """
