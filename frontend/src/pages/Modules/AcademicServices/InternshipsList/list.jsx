@@ -1,7 +1,7 @@
 import './list.css';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert } from '../../../../components';
+import { Alert, SecundaryButton } from '../../../../components';
 import { getStudentsWithInternships } from '../../../../services/students';
 import { listCalendars } from '../../../../services/calendars';
 import { UserContext } from '../../../../contexts';
@@ -18,6 +18,34 @@ const InternshipsList = () => {
 	const [selectedCalendar, setSelectedCalendar] = useState("");
 	const [sortColumn, setSortColumn] = useState(null);
 	const [sortDirection, setSortDirection] = useState('asc');
+
+	// Mapa de ícones para estados de internships
+	const stateIconMap = {
+		'placed': 'bi-check2',
+		'protocol_generated': 'bi-file-binary',
+		'presidency_signature': 'bi-journal-bookmark-fill',
+		'company_signature': 'bi-building-check',
+		'student_signature': 'bi-journal-check',
+		'finished': 'bi-rocket-fill',
+	};
+
+	const stateColorMap = {
+		'placed': 'accepted',
+		'protocol_generated': 'protocol-generated',
+		'presidency_signature': 'protocol-isec',
+		'company_signature': 'protocol-company',
+		'student_signature': 'protocol-student',
+		'finished': 'start',
+	};
+
+	const stateTextMap = {
+		'placed': 'Colocado',
+		'protocol_generated': 'Protocolo Gerado',
+		'presidency_signature': 'Protocolo ISEC',
+		'company_signature': 'Protocolo Empresa',
+		'student_signature': 'Protocolo Aluno',
+		'finished': 'Em estágio',
+	};
 
 	// Carregar calendários ao montar o componente
 	useEffect(() => {
@@ -136,9 +164,27 @@ const InternshipsList = () => {
 	});
 
 	return (
-		<div className="internships-list-container">
-			<h2>Estudantes com Internships</h2>
-			
+		<div className="internships-list d-flex flex-column">
+
+			<div className="top d-flex flex-row justify-content-between">
+				<div className="title"><h4>Estudantes com Internships</h4></div>
+
+				<div className="filters"></div>
+
+				<div className="options d-flex gap-3">
+					{/* Opções podem ser adicionadas aqui */}
+				</div>
+			</div>
+
+			<div className="captions d-flex flex-row align-items-center gap-3">
+				{Object.entries(stateTextMap).map(([state, text], index) => (
+					<div key={state} className={`cap noselect d-flex flex-row align-items-center gap-2 ${stateColorMap[state]}`}>
+						<i className={`bi ${stateIconMap[state]}`}></i>
+						<p>{text}</p>
+					</div>
+				))}
+			</div>
+
 			<div className="filters-section mb-3">
 				<div className="row">
 					<div className="col-md-4 mb-2">
@@ -176,78 +222,85 @@ const InternshipsList = () => {
 				</div>
 			</div>
 			
-			<div className="internships-table">
-				<table className="table table-striped">
-					<thead>
-						<tr>
-							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('number')}>
-								Número {sortColumn === 'number' && (sortDirection === 'asc' ? '↑' : '↓')}
+			
+			{!list || list.length === 0 && <Alert text="Nenhum estudante com internship encontrado" />}
+
+			{list && list.length > 0 && (
+				<table>
+					<tr className='header'>
+						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('number')} className='fit-column'>
+							<p>Nº aluno {sortColumn === 'number' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+						</th>
+						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('name')}>
+							<p>Aluno {sortColumn === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+						</th>
+						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
+							<p>Email {sortColumn === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+						</th>
+						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('contact')}>
+							<p>Contacto {sortColumn === 'contact' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+						</th>
+						<th><p>Empresas</p></th>
+						<th><p>Orientadores</p></th>
+						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('status')} className='fit-column'>
+							<p>Estado {sortColumn === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+						</th>
+					</tr>
+
+					{sortedList.map((student, index) => (
+						<tr key={index} className='table-row'>
+							<th className='fit-column text-center'><p>{student.student_number}</p></th>
+							<th><p>{student.name}</p></th>
+							<th><p>{student.email}</p></th>
+							<th><p>{student.contact || '—'}</p></th>
+							<th>
+								<div className="companies-list">
+									{student.companies && student.companies.length > 0 ? (
+										student.companies.map((company, idx) => (
+											<div key={idx} className="company-item">
+												<strong>{company.company_name}</strong>
+												<br />
+												<span>Contacto: {company.company_contact || '-'}</span>
+												<br />
+												<span>Email: {company.company_email || '-'}</span>
+											</div>
+										))
+									) : '—'}
+								</div>
 							</th>
-							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('name')}>
-								Nome {sortColumn === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+							<th>
+								<div className="advisors-list">
+									{student.advisors && student.advisors.length > 0 ? (
+										student.advisors.map((advisor, idx) => (
+											<div key={idx} className="advisor-item">
+												<strong>{advisor.name}</strong>
+												<br />
+												<span>Contacto: {advisor.contact || '-'}</span>
+												<br />
+												<small>Email: {advisor.email}</small>
+											</div>
+										))
+									) : '—'}
+								</div>
 							</th>
-							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
-								Email {sortColumn === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
-							</th>
-							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('contact')}>
-								Contacto {sortColumn === 'contact' && (sortDirection === 'asc' ? '↑' : '↓')}
-							</th>
-							<th>Empresas</th>
-							<th>Orientadores</th>
-							<th style={{ cursor: 'pointer' }} onClick={() => handleSort('status')}>
-								Estado {sortColumn === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+							<th className='fit-column'>
+								<div className="status-list d-flex gap-2 flex-row">
+									{student.internship_status && student.internship_status.map((status, idx) => {
+										const icon = stateIconMap[status] || 'bi-question-circle';
+										const colorClass = stateColorMap[status] || '';
+										return (
+											<div key={idx} className={`cap noselect d-flex flex-row align-items-center gap-1 ${colorClass}`} style={{ fontSize: '0.8em' }}>
+												<i className={`bi ${icon}`}></i>
+											</div>
+										);
+									})}
+								</div>
 							</th>
 						</tr>
-					</thead>
-					<tbody>
-						{sortedList.map((student, index) => (
-							<tr key={index}>
-								<td>{student.student_number}</td>
-								<td>{student.name}</td>
-								<td>{student.email}</td>
-								<td>{student.contact || '-'}</td>
-								<td>
-									<div className="companies-list">
-										{student.companies && student.companies.length > 0 ? (
-											student.companies.map((company, idx) => (
-												<div key={idx} className="company-item">
-													<strong>{company.company_name}</strong>
-													<br />
-													<span>Contacto: {company.company_contact || '-'}</span>
-													<br />
-													<span>Email: {company.company_email || '-'}</span>
-												</div>
-											))
-										) : '-'}
-									</div>
-								</td>
-								<td>
-									<div className="advisors-list">
-										{student.advisors && student.advisors.length > 0 ? (
-											student.advisors.map((advisor, idx) => (
-												<div key={idx} className="advisor-item">
-													<strong>{advisor.name}</strong>
-													<br />
-													<span>Contacto: {advisor.contact || '-'}</span>
-													<br />
-													<span>Email: {advisor.email}</span>
-													</div>
-											))
-										) : '-'}
-									</div>
-								</td>
-								<td>
-									<div className="status-list">
-										{student.internship_status && student.internship_status.map((status, idx) => (
-											<span key={idx} className="badge bg-info">{status}</span>
-										))}
-									</div>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
+					))}
+			</table>
+		)}
+
 		</div>
 	);
 };
