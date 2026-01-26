@@ -29,3 +29,58 @@ section {
 .table-row td {
 	vertical-align: middle;
 }
+
+.text-muted {
+	color: #6c757d;
+	margin-bottom: 12px;
+}
+
+/* Priority Badge */
+.priority-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 36px;
+	height: 36px;
+	
+	color: black;
+	font-weight: bold;
+	font-size: 16px;
+	border-radius: 50%;
+}
+
+/* Priority Actions */
+.priority-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+}
+
+.btn-icon {
+	background: #f8f9fa;
+	border: 1px solid #dee2e6;
+	color: #495057;
+	width: 32px;
+	height: 32px;
+	border-radius: 4px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+.btn-icon:hover:not(:disabled) {
+	background: #007bff;
+	color: white;
+	border-color: #007bff;
+}
+
+.btn-icon:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+
+.btn-icon i {
+	font-size: 16px;
+}

@@ -1,14 +1,14 @@
 const apiUrl = process.env.REACT_APP_API_URL || '/api';
 
 /**
- * Submete uma nova candidatura com lista de propostas
+ * Submete uma nova candidatura com lista de propostas priorizadas
  * @param {string} token - Token de autenticação
- * @param {Array<number>} proposalIds - Lista de IDs das propostas selecionadas
+ * @param {Array<{id: number, priority: number}>} proposals - Lista de propostas com prioridades
  * @param {Function} setStatus - Callback para status HTTP
  * @param {Function} setErrorMessage - Callback para mensagens de erro
  * @returns {Object|null} - Dados da candidatura criada ou null em caso de erro
  */
-export async function submitCandidature(token, proposalIds, setStatus, setErrorMessage) {
+export async function submitCandidature(token, proposals, setStatus, setErrorMessage) {
   try {
     const res = await fetch(`${apiUrl}/candidature/submit/`, {
       method: "POST",
@@ -16,7 +16,7 @@ export async function submitCandidature(token, proposalIds, setStatus, setErrorM
         "Content-Type": "application/json",
         "Authorization": token,
       },
-      body: JSON.stringify({ proposal_ids: proposalIds }),
+      body: JSON.stringify({ proposals }),
     });
 
     const data = await res.json();
@@ -37,15 +37,15 @@ export async function submitCandidature(token, proposalIds, setStatus, setErrorM
 }
 
 /**
- * Atualiza uma candidatura existente com nova lista de propostas
+ * Atualiza uma candidatura existente com nova lista de propostas priorizadas
  * @param {string} token - Token de autenticação
  * @param {number} candidatureId - ID da candidatura a atualizar
- * @param {Array<number>} proposalIds - Nova lista de IDs das propostas
+ * @param {Array<{id: number, priority: number}>} proposals - Nova lista de propostas com prioridades
  * @param {Function} setStatus - Callback para status HTTP
  * @param {Function} setErrorMessage - Callback para mensagens de erro
  * @returns {Object|null} - Resposta de sucesso ou null em caso de erro
  */
-export async function updateCandidature(token, candidatureId, proposalIds, setStatus, setErrorMessage) {
+export async function updateCandidature(token, candidatureId, proposals, setStatus, setErrorMessage) {
   try {
     const res = await fetch(`${apiUrl}/candidature/update/${candidatureId}/`, {
       method: "PUT",
@@ -53,7 +53,7 @@ export async function updateCandidature(token, candidatureId, proposalIds, setSt
         "Content-Type": "application/json",
         "Authorization": token,
       },
-      body: JSON.stringify({ proposal_ids: proposalIds }),
+      body: JSON.stringify({ proposals }),
     });
 
     const data = await res.json();

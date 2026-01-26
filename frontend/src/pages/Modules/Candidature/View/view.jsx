@@ -21,8 +21,8 @@ function View() {
 	const getStateLabel = (state) => {
 		const labels = {
 			'submitted': 'Submetida',
-			'revision': 'Em Revisão',
 			'placed': 'Colocado',
+			'revision': 'Em Revisão',
 			'protocol_generated': 'Protocolo Gerado',
 			'presidency_signature': 'Aguardando Assinatura ISEC',
 			'company_signature': 'Aguardando Assinatura Empresa',
@@ -34,9 +34,9 @@ function View() {
 
 	const getStateDescription = (state) => {
 		const descriptions = {
-			'submitted': 'Sua candidatura foi submetida com sucesso e está aguardando análise.',
-			'revision': 'Sua candidatura está sendo analisada pelos serviços académicos.',
+			'submitted': 'Sua candidatura foi submetida com sucesso e está aguardando colocação.',
 			'placed': 'Parabéns! Você foi colocado numa proposta de estágio.',
+			'revision': 'Sua candidatura está sendo analisada pelos serviços académicos.',
 			'protocol_generated': 'O protocolo de estágio foi gerado e está pronto para assinatura.',
 			'presidency_signature': 'O protocolo aguarda assinatura da presidência do ISEC.',
 			'company_signature': 'O protocolo aguarda assinatura da empresa.',
@@ -48,8 +48,8 @@ function View() {
 
 	const getNextSteps = (state) => {
 		const nextSteps = {
-			'submitted': 'Aguarde a análise dos serviços académicos.',
-			'revision': 'Aguarde o processo de colocação.',
+			'submitted': 'Aguarde a colocação.',
+			'revision': 'Aguarde a revisão pelos serviços acadêmicos.',
 			'placed': 'Aguarde a geração do protocolo de estágio.',
 			'protocol_generated': 'Aguarde a assinatura da presidência.',
 			'presidency_signature': 'Aguarde a empresa assinar o protocolo.',
@@ -98,7 +98,7 @@ function View() {
 		navigate('/candidature/edit');
 	};
 
-	const ProposalRow = ({ proposal }) => {
+	const ProposalRow = ({ proposal, priority }) => {
 		const stateMap = {
 			'pending': { text: 'Pendente', class: 'warning' },
 			'accepted': { text: 'Aceite', class: 'success' },
@@ -109,7 +109,9 @@ function View() {
 
 		return (
 			<tr className='table-row'>
-				<td><p>{proposal.id}</p></td>
+				<td>
+					<div className="priority-badge-small">{priority}ª</div>
+				</td>
 				<td><p>{proposal.title}</p></td>
 				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
 				<td>
@@ -180,7 +182,7 @@ function View() {
 					</section>
 
 					<section className='p-0'>
-						<h4 className="mb-4">Propostas Selecionadas ({candidature.proposals.length} / {calendar.max})</h4>
+						<h4 className="mb-4">Propostas Selecionadas (por ordem de prioridade)</h4>
 						
 						{candidature.proposals.length === 0 ? (
 							<Alert text='Nenhuma proposta selecionada' type='warning' />
@@ -188,16 +190,18 @@ function View() {
 							<table>
 								<thead>
 									<tr className='header'>
-										<th><p>#</p></th>
+										<th><p>Prioridade</p></th>
 										<th><p>Título</p></th>
 										<th><p>Empresa</p></th>
 										<th><p>Estado</p></th>
 									</tr>
 								</thead>
 								<tbody>
-									{candidature.proposals.map(proposal => (
-										<ProposalRow key={proposal.id} proposal={proposal} />
-									))}
+									{candidature.proposals
+										.sort((a, b) => a.priority - b.priority)
+										.map(proposal => (
+											<ProposalRow key={proposal.id} proposal={proposal} priority={proposal.priority} />
+										))}
 								</tbody>
 							</table>
 						)}

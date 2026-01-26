@@ -124,3 +124,20 @@
 	font-size: 0.75rem;
 	margin-top: 4px;
 }
+
+/* Priority Badge */
+.priority-badge-small {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 36px;
+	height: 36px;
+	color: black;
+	font-weight: bold;
+	font-size: 15px;
+	border-radius: 50%;
+}
+
+.table-row td {
+	vertical-align: middle;
+}

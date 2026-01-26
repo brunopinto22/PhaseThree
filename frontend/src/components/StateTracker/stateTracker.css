@@ -94,6 +94,12 @@
 	color: var(--text-color-700);
 }
 
+/* Make the connector (edge) after the current state red so it indicates
+   the current step is done and we're waiting for the next one */
+.state.current .icon::before {
+	background-color: var(--primary-color-600);
+}
+
 .state.to-do .icon {
 	background-color: var(--background-color-700);
 	color: var(--background-color-100);

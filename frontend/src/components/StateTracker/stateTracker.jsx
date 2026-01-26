@@ -5,8 +5,8 @@ const StateTracker = ({ currentState }) => {
 
 	const states = [
 		{ key: 'submitted', label: 'Submetida', description: 'Candidatura submetida' },
-		{ key: 'revision', label: 'Em Revisão', description: 'Análise pelos serviços' },
 		{ key: 'placed', label: 'Colocado', description: 'Aluno colocado' },
+		{ key: 'revision', label: 'Em Revisão', description: 'Análise pelos serviços acadêmicos' },
 		{ key: 'protocol_generated', label: 'Protocolo', description: 'Protocolo gerado' },
 		{ key: 'presidency_signature', label: 'ISEC', description: 'Assinatura ISEC' },
 		{ key: 'company_signature', label: 'Empresa', description: 'Assinatura empresa' },

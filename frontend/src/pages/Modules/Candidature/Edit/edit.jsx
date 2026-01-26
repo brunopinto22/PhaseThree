@@ -17,7 +17,7 @@ const Edit = () => {
 
 	const [candidature, setCandidature] = useState(null);
 	const [proposals, setProposals] = useState([]);
-	const [selectedProposals, setSelectedProposals] = useState([]);
+	const [selectedProposals, setSelectedProposals] = useState([]); // Array ordenado de IDs
 	const [minProposals, setMinProposals] = useState(1);
 	const [maxProposals, setMaxProposals] = useState(6);
 	const [loading, setLoading] = useState(true);
@@ -39,9 +39,11 @@ const Edit = () => {
 				if (data.has_candidature) {
 					// Já tem candidatura - modo edição
 					setCandidature(data);
-					// Extrair IDs das propostas já selecionadas
-					const selectedIds = data.proposals.map(p => p.id);
-					setSelectedProposals(selectedIds);
+					// Extrair IDs ordenados por prioridade
+					const orderedIds = data.proposals
+						.sort((a, b) => a.priority - b.priority)
+						.map(p => p.id);
+					setSelectedProposals(orderedIds);
 				}
 			}
 
@@ -67,8 +69,22 @@ const Edit = () => {
 	};
 
 	const isValid = () => {
-		return selectedProposals.length >= 1 && 
+		return selectedProposals.length >= minProposals && 
 		       selectedProposals.length <= maxProposals;
+	};
+
+	const moveUp = (index) => {
+		if (index === 0) return;
+		const newSelected = [...selectedProposals];
+		[newSelected[index - 1], newSelected[index]] = [newSelected[index], newSelected[index - 1]];
+		setSelectedProposals(newSelected);
+	};
+
+	const moveDown = (index) => {
+		if (index === selectedProposals.length - 1) return;
+		const newSelected = [...selectedProposals];
+		[newSelected[index], newSelected[index + 1]] = [newSelected[index + 1], newSelected[index]];
+		setSelectedProposals(newSelected);
 	};
 
 	const submit = async () => {
@@ -76,16 +92,22 @@ const Edit = () => {
 		setSuccess('');
 
 		if (!isValid()) {
-			setError(`Deve selecionar entre 1 e ${maxProposals} propostas`);
+			setError(`Deve selecionar entre ${minProposals} e ${maxProposals} propostas`);
 			return;
 		}
+
+		// Converter para formato com prioridades
+		const proposalsWithPriority = selectedProposals.map((id, index) => ({
+			id: id,
+			priority: index + 1
+		}));
 
 		if (candidature) {
 			// Atualizar candidatura existente
 			const result = await updateCandidature(
 				userInfo.token, 
 				candidature.id_candidature, 
-				selectedProposals,
+				proposalsWithPriority,
 				setStatus,
 				setError
 			);
@@ -98,7 +120,7 @@ const Edit = () => {
 			// Criar nova candidatura
 			const result = await submitCandidature(
 				userInfo.token, 
-				selectedProposals,
+				proposalsWithPriority,
 				setStatus,
 				setError
 			);
@@ -130,7 +152,7 @@ const Edit = () => {
 						disabled={isDisabled}
 					/>
 				</td>
-				<td><p>{proposal.proposal_number || proposal.id}</p></td>
+				
 				<td><p>{proposal.title}</p></td>
 				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
 				<td><p>{proposal.location}</p></td>
@@ -148,7 +170,43 @@ const Edit = () => {
 	}
 
 	const selectedCount = selectedProposals.length;
-	const counterClass = selectedCount < 1 || selectedCount > maxProposals ? 'error' : 'success';
+	const counterClass = selectedCount < minProposals || selectedCount > maxProposals ? 'error' : 'success';
+
+	const SelectedProposalRow = ({ proposalId, index }) => {
+		const proposal = proposals.find(p => p.id === proposalId);
+		if (!proposal) return null;
+
+		return (
+			<tr className='table-row'>
+				<td>
+					<div className="priority-badge">{index + 1}ª</div>
+				</td>
+				
+				<td><p>{proposal.title}</p></td>
+				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
+				<td>
+					<div className="priority-actions">
+						<button 
+							className="btn-icon" 
+							onClick={() => moveUp(index)}
+							disabled={index === 0}
+							title="Mover para cima"
+						>
+							<i className="bi bi-arrow-up"></i>
+						</button>
+						<button 
+							className="btn-icon" 
+							onClick={() => moveDown(index)}
+							disabled={index === selectedProposals.length - 1}
+							title="Mover para baixo"
+						>
+							<i className="bi bi-arrow-down"></i>
+						</button>
+					</div>
+				</td>
+			</tr>
+		);
+	};
 
 	return (
 		<div id='candidature' className='d-flex flex-column'>
@@ -171,8 +229,8 @@ const Edit = () => {
 			</section>
 
 			<section className='p-0'>
-				<h4>Propostas Disponíveis</h4>
-				<p className='text-muted'>Selecione entre 1 e {maxProposals} propostas</p>
+				<h4>1. Selecione as Propostas</h4>
+				<p className='text-muted'>Escolha entre {minProposals} e {maxProposals} propostas</p>
 
 				{proposals.length === 0 && (
 					<Alert text='Não existem propostas disponíveis no momento' type='danger' />
@@ -183,7 +241,7 @@ const Edit = () => {
 						<thead>
 							<tr className='header'>
 								<th></th>
-								<th><p>#</p></th>
+								
 								<th><p>Título</p></th>
 								<th><p>Empresa</p></th>
 								<th><p>Localização</p></th>
@@ -198,6 +256,33 @@ const Edit = () => {
 					</table>
 				)}
 			</section>
+
+			{selectedProposals.length > 0 && (
+				<section className='p-0'>
+					<h4>2. Defina a Ordem de Prioridade</h4>
+					<p className='text-muted'>Use as setas para ordenar as propostas por preferência (1ª escolha no topo)</p>
+
+					<table>
+						<thead>
+							<tr className='header'>
+								<th><p>Prioridade</p></th>
+								<th><p>Título</p></th>
+								<th><p>Empresa</p></th>
+								<th><p>Ações</p></th>
+							</tr>
+						</thead>
+						<tbody>
+							{selectedProposals.map((proposalId, index) => (
+								<SelectedProposalRow 
+									key={proposalId} 
+									proposalId={proposalId} 
+									index={index} 
+								/>
+							))}
+						</tbody>
+					</table>
+				</section>
+			)}
 
 			<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-5 p-0">
 				<PrimaryButton 
