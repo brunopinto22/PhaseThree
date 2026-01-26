@@ -211,7 +211,7 @@ def createStudent(request):
     ):
         return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"message": "Sem permissão para criar um Aluno"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
@@ -222,70 +222,71 @@ def createStudent(request):
             return Response({"message": "Sem permissão para criar um Aluno"}, status=HTTP_401_UNAUTHORIZED)
 
     try:
-        data = request.data.copy()
+        with transaction.atomic():
+            data = request.data.copy()
 
-        course = None
-        try:
-            course = Course.objects.get(id_course=data.get("student_course"))
-        except Course.DoesNotExist:
-            return Response({"message": "Curso não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
-
-        branch = None
-        branch_id = data.get("student_branch")
-        if branch_id:
+            course = None
             try:
-                branch = Branch.objects.get(id_branch=branch_id)
-            except Branch.DoesNotExist:
-                return Response({"message": "Ramo não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+                course = Course.objects.get(id_course=data.get("student_course"))
+            except Course.DoesNotExist:
+                return Response({"message": "Curso não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Accounts.objects.filter(email=data.get("email")).exists():
-            return Response({"message": "Email já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            branch = None
+            branch_id = data.get("student_branch")
+            if branch_id:
+                try:
+                    branch = Branch.objects.get(id_branch=branch_id)
+                except Branch.DoesNotExist:
+                    return Response({"message": "Ramo não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Student.objects.filter(student_number=data.get("student_number")).exists():
-            return Response({"message": "Número de aluno já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            if Accounts.objects.filter(email=data.get("email")).exists():
+                return Response({"message": "Email já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Student.objects.filter(nif=data.get("nif")).exists():
-            return Response({"message": "NIF já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            if Student.objects.filter(student_number=data.get("student_number")).exists():
+                return Response({"message": "Número de aluno já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Student.objects.filter(ident_doc=data.get("ident_doc")).exists():
-            return Response({"message": "Documento de identificação já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            if Student.objects.filter(nif=data.get("nif")).exists():
+                return Response({"message": "NIF já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        settings = Settings.objects.first()
-        password = settings.student_password
-        if data.get("password"):
-            password = data.get("password")
+            if Student.objects.filter(ident_doc=data.get("ident_doc")).exists():
+                return Response({"message": "Documento de identificação já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = Accounts.objects.create_user(
-            username=data["email"],
-            email=data["email"],
-            user_type="student",
-        )
-        user.set_password(password)
-        user.save()
+            settings = Settings.objects.first()
+            password = settings.student_password
+            if data.get("password"):
+                password = data.get("password")
 
-        student = Student.objects.create(
-            user=user,
-            student_number=data.get("student_number"),
-            student_name=data.get("student_name"),
-            nationality=data.get("nationality"),
-            ident_type=data.get("ident_type"),
-            ident_doc=data.get("ident_doc"),
-            nif=data.get("nif"),
-            gender=data.get("gender"),
-            address=data.get("address"),
-            contact=data.get("contact"),
-            current_year=data.get("year"),
-            average=data.get("average"),
-            subjects_done=data.get("subjects_done"),
-            student_course=course,
-            student_branch=branch,
-            student_ects=data.get("student_ects"),
-        )
+            user = Accounts.objects.create_user(
+                username=data["email"],
+                email=data["email"],
+                user_type="student",
+            )
+            user.set_password(password)
+            user.save()
 
-        for subj in data.pop('subjects', []):
-            student.add_subject(subj['subject_name'], subj.get('state', Subject.PENDING))
+            student = Student.objects.create(
+                user=user,
+                student_number=data.get("student_number"),
+                student_name=data.get("student_name"),
+                nationality=data.get("nationality", ""),
+                ident_type=data.get("ident_type"),
+                ident_doc=data.get("ident_doc"),
+                nif=data.get("nif"),
+                gender=data.get("gender"),
+                address=data.get("address"),
+                contact=data.get("contact"),
+                current_year=data.get("year"),
+                average=data.get("average"),
+                subjects_done=data.get("subjects_done"),
+                student_course=course,
+                student_branch=branch,
+                student_ects=data.get("student_ects"),
+            )
 
-        return Response({"message": "Aluno criado com sucesso"}, status=status.HTTP_201_CREATED)
+            for subj in data.pop('subjects', []):
+                student.add_subject(subj['subject_name'], subj.get('state', Subject.PENDING))
+
+            return Response({"message": "Aluno criado com sucesso"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({"message": "Internal server error",}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -310,7 +311,7 @@ def editStudent(request, pk):
         if student != self:
             return Response({"error":"Sem permissão para para editar o Aluno"}, status=status.HTTP_403_FORBIDDEN)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"detail": "login"}, status=HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
@@ -394,7 +395,7 @@ def deleteStudent(request, pk):
     ):
         return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"message": "Sem permissão para para eliminar o Aluno"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":

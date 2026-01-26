@@ -139,7 +139,7 @@ const Dashboard = () => {
 								action={() => navigate("/course/list")}
 							/>
 						)}
-						{(permissions['Alunos'] && (permissions['Alunos'].view || permissions['Alunos'].edit || permissions['Alunos'].delete) || role === 'admin') && (
+						{(permissions['Alunos'] && (permissions['Alunos'].view || permissions['Alunos'].edit || permissions['Alunos'].delete) || role === 'admin' || role === 'academic_services') && (
 							<DashButton
 								icon={<i className="bi bi-person-fill"></i>}
 								text="Gerir Alunos"
