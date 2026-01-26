@@ -149,7 +149,7 @@ def registerStudent(request):
             return Response({"message": "Curso não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
 
         calendars = Calendar.objects.filter(course=course)
-        active_regs = [c for c in calendars if c.registrations and c.registrations >= date.today()]
+        active_regs = [c for c in calendars if c.registrations is None or c.registrations >= date.today()]
 
         if not active_regs:
             return Response({"message": "Não existe um calendário com inscrições ativas para este curso."}, status=status.HTTP_400_BAD_REQUEST)

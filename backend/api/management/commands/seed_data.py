@@ -388,6 +388,8 @@ class Command(BaseCommand):
                 submission_end=today + timedelta(days=30),
                 divulgation=today + timedelta(days=40),
                 candidatures=today + timedelta(days=50),
+                candidatures=today + timedelta(days=50),
+                registrations=today + timedelta(days=60),
                 placements=today + timedelta(days=60),
                 course=course
             )
@@ -399,6 +401,7 @@ class Command(BaseCommand):
             calendar.submission_end = today + timedelta(days=30)
             calendar.divulgation = today + timedelta(days=40)
             calendar.candidatures = today + timedelta(days=50)
+            calendar.registrations = today + timedelta(days=60)
             calendar.placements = today + timedelta(days=60)
             calendar.save()
             self.stdout.write(f'  Activated: {calendar}')

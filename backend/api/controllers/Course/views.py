@@ -150,9 +150,9 @@ def listCourses(request):
                     "branch_acronym",
                     "color"
                 )),
-                "active_calendars": any(cl.submission_start <= date.today() <= cl.placements for cl in Calendar.objects.filter(course=c).all()),
-                "active_calendars_submission": any( cl.submission_start <= date.today() <= cl.submission_end for cl in Calendar.objects.filter(course=c).all()) and ( user_type != "teacher" or u.scientific_area == c.scientific_area ),
-                "active_calendars_registrations": any(date.today() <= cl.registrations for cl in Calendar.objects.filter(course=c).all()),
+                "active_calendars": any(cl.submission_start and cl.placements and cl.submission_start <= date.today() <= cl.placements for cl in Calendar.objects.filter(course=c).all()),
+                "active_calendars_submission": any(cl.submission_start and cl.submission_end and cl.submission_start <= date.today() <= cl.submission_end for cl in Calendar.objects.filter(course=c).all()) and ( user_type != "teacher" or u.scientific_area == c.scientific_area ),
+                "active_calendars_registrations": any((cl.registrations is None or date.today() <= cl.registrations) for cl in Calendar.objects.filter(course=c).all()),
             })
 
         return JsonResponse(data, status=status.HTTP_200_OK, safe=False)
