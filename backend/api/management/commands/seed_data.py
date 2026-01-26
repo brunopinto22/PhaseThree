@@ -388,9 +388,10 @@ class Command(BaseCommand):
                 submission_end=today + timedelta(days=30),
                 divulgation=today + timedelta(days=40),
                 candidatures=today + timedelta(days=50),
-                candidatures=today + timedelta(days=50),
                 registrations=today + timedelta(days=60),
                 placements=today + timedelta(days=60),
+                min_proposals=1,
+                max_proposals=6,
                 course=course
             )
             self.stdout.write(f'  Created: {calendar.calendar_year}/{calendar.calendar_year+1} - {calendar.calendar_semester}º Sem')
@@ -403,6 +404,8 @@ class Command(BaseCommand):
             calendar.candidatures = today + timedelta(days=50)
             calendar.registrations = today + timedelta(days=60)
             calendar.placements = today + timedelta(days=60)
+            calendar.min_proposals = 1
+            calendar.max_proposals = 6
             calendar.save()
             self.stdout.write(f'  Activated: {calendar}')
         
@@ -487,13 +490,13 @@ class Command(BaseCommand):
                 "email": "teste.aluno1@isec.pt",
                 "number": 2020111111,
                 "name": "Maria Teste Candidata",
-                "state": "pending"
+                "state": "submitted"
             },
             {
                 "email": "teste.aluno2@isec.pt",
                 "number": 2021222222,
                 "name": "João Teste Candidato",
-                "state": "pending"
+                "state": "revision"
             },
         ]
         
@@ -519,7 +522,8 @@ class Command(BaseCommand):
                     contact="912000000",
                     current_year=3,
                     student_course=course,
-                    student_ects=150
+                    student_ects=150,
+                    calendar=calendar
                 )
             
             # Create candidature
@@ -536,7 +540,7 @@ class Command(BaseCommand):
                 CandidatureProposal.objects.create(
                     candidature=candidature,
                     proposal=proposal,
-                    state=s_data["state"]
+                    state='pending'
                 )
             
             self.stdout.write(f'  Created: {student.student_name} ({s_data["state"]})')

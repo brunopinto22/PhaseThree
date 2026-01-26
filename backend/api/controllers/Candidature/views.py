@@ -688,10 +688,24 @@ def updateCandidatureState(request, pk):
         # 7. Obter user que está fazendo a mudança (usar ID para garantir unicidade)
         user = Accounts.objects.get(pk=user_id)
 
-        # 8. Alterar estado usando o método do modelo
+        # 8. Atualizar validation_status do estudante se necessário
+        if current_state == 'revision':
+            student = candidature.student
+            if new_state == 'protocol_generated':
+                # Conta validada
+                student.validation_status = 'validated'
+                student.save()
+                print(f"debug: student validation_status updated to 'validated'")
+            elif new_state == 'finished':
+                # Conta rejeitada
+                student.validation_status = 'rejected'
+                student.save()
+                print(f"debug: student validation_status updated to 'rejected'")
+
+        # 9. Alterar estado usando o método do modelo
         candidature.change_state(new_state, changed_by=user, notes=notes)
 
-        # 9. Retornar candidatura atualizada
+        # 10. Retornar candidatura atualizada
         return Response({
             "message": "Estado da candidatura atualizado com sucesso",
             "candidature": {

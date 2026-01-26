@@ -66,7 +66,7 @@ class Student(models.Model):
     calendar = models.ForeignKey('Calendar', on_delete=models.SET_NULL, related_name='students_in_calendar', null=True, blank=True)
 
     VALIDATION_STATUS_CHOICES = [
-        ('pending', 'Pending'),
+        ('pending', 'Por Validar'),
         ('validated', 'Validated'),
         ('rejected', 'Rejected'),
     ]

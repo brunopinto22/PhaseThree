@@ -19,6 +19,15 @@ const STATE_LABELS = {
 	'finished': 'Finalizada'
 };
 
+// Mapeamento do fluxo de estados
+const STATE_FLOW = {
+	'protocol_generated': 'presidency_signature',
+	'presidency_signature': 'company_signature',
+	'company_signature': 'student_signature',
+	'student_signature': 'finished'
+};
+
+
 const Edit = () => {
 
 	const navigate = useNavigate();
@@ -195,6 +204,106 @@ const Edit = () => {
 		}
 	};
 
+	// Função para ações rápidas (validar/rejeitar) no estado revision
+	const handleQuickStateChange = async (newState, actionName) => {
+		setError('');
+		setSuccess('');
+
+		// Preparar notas com prefixo baseado na ação
+		const actionPrefix = newState === 'protocol_generated' ? 'Conta Validada' : 'Conta Rejeitada';
+		const finalNotes = stateNotes.trim()
+			? `${actionPrefix} - ${stateNotes}`
+			: actionPrefix;
+
+		const result = await updateCandidatureState(
+			userInfo.token,
+			candidatureIdParam,
+			newState,
+			finalNotes,
+			() => { },
+			setError
+		);
+
+		if (result) {
+			setSuccess(`Candidatura ${actionName} com sucesso!`);
+			// Recarregar dados
+			const data = await getCandidatureById(userInfo.token, candidatureIdParam, () => { }, setError);
+			if (data) {
+				setCandidatureData(data);
+				setSelectedState(data.state);
+			}
+
+			const historyData = await getCandidatureHistory(userInfo.token, candidatureIdParam, () => { }, setError);
+			if (historyData) {
+				setHistory(historyData.history);
+			}
+
+			setStateNotes('');
+		}
+	};
+
+	// Função para avançar estado automaticamente
+	const handleAdvanceState = async () => {
+		setError('');
+		setSuccess('');
+
+		const currentState = candidatureData.state;
+		const nextState = STATE_FLOW[currentState];
+
+		if (!nextState) {
+			setError('Não há próximo estado definido');
+			return;
+		}
+
+		// Primeira mudança de estado
+		const result = await updateCandidatureState(
+			userInfo.token,
+			candidatureIdParam,
+			nextState,
+			stateNotes,
+			() => { },
+			setError
+		);
+
+		if (result) {
+			// Se estamos em company_signature, avançar mais um estado automaticamente
+			if (currentState === 'company_signature') {
+				// Aguardar um pouco para garantir que a primeira mudança foi registrada
+				await new Promise(resolve => setTimeout(resolve, 500));
+
+				// Segunda mudança: de student_signature para finished
+				const secondResult = await updateCandidatureState(
+					userInfo.token,
+					candidatureIdParam,
+					'finished',
+					'', // Sem notas adicionais na segunda mudança
+					() => { },
+					setError
+				);
+
+				if (secondResult) {
+					setSuccess('Estado avançado com sucesso!');
+				}
+			} else {
+				setSuccess('Estado avançado com sucesso!');
+			}
+
+			// Recarregar dados
+			const data = await getCandidatureById(userInfo.token, candidatureIdParam, () => { }, setError);
+			if (data) {
+				setCandidatureData(data);
+				setSelectedState(data.state);
+			}
+
+			const historyData = await getCandidatureHistory(userInfo.token, candidatureIdParam, () => { }, setError);
+			if (historyData) {
+				setHistory(historyData.history);
+			}
+
+			setStateNotes('');
+		}
+	};
+
 	const handleProposalStateUpdate = async (proposalId, newState) => {
 		setError('');
 		setSuccess('');
@@ -284,120 +393,109 @@ const Edit = () => {
 						<div><strong>Nome:</strong> {candidatureData.student.student_name}</div>
 						<div><strong>Email:</strong> {candidatureData.student.email}</div>
 						<div><strong>Curso:</strong> {candidatureData.student.course || 'N/A'}</div>
+						<div><strong>Estado Atual:</strong> <span className={`status-badge ${candidatureData.state}`}>{STATE_LABELS[candidatureData.state] || candidatureData.state}</span></div>
 					</div>
 				</section>
 
-				{/* Propostas Selecionadas */}
-				<section className='p-0'>
-					<h5>Propostas ({candidatureData.proposals.length})</h5>
-					{candidatureData.proposals.length > 0 && (
-						<table>
-							<thead>
-								<tr className='header'>
-									<th><p>#</p></th>
-									<th><p>Título</p></th>
-									<th><p>Empresa</p></th>
-									<th><p>Localização</p></th>
-									<th><p>Estado</p></th>
-									<th><p>Ações</p></th>
-								</tr>
-							</thead>
-							<tbody>
-								{candidatureData.proposals.map((proposal, idx) => (
-									<tr key={proposal.id}>
-										<td><p>{idx + 1}</p></td>
-										<td><p>{proposal.title}</p></td>
-										<td><p>{proposal.company.name}</p></td>
-										<td><p>{proposal.location}</p></td>
-										<td>
-											<span className={`status-badge ${proposal.state}`}>
-												{proposal.state === 'accepted' ? 'Aceite' :
-													proposal.state === 'rejected' ? 'Rejeitada' : 'Pendente'}
-											</span>
-										</td>
-										<td>
-											<div className='d-flex gap-2 justify-content-center'>
-												<button
-													className='icon-btn'
-													title='Anular Decisão'
-													onClick={() => handleProposalStateUpdate(proposal.id, 'pending')}
-													disabled={proposal.state === 'pending'}
-												>
-													<i className="bi bi-arrow-counterclockwise"></i>
-												</button>
-												<button
-													className='icon-btn success'
-													title='Aceitar Proposta'
-													onClick={() => handleProposalStateUpdate(proposal.id, 'accepted')}
-													disabled={proposal.state === 'accepted'}
-												>
-													<i className="bi bi-check-lg"></i>
-												</button>
-												<button
-													className='icon-btn danger'
-													title='Rejeitar Proposta'
-													onClick={() => handleProposalStateUpdate(proposal.id, 'rejected')}
-													disabled={proposal.state === 'rejected'}
-												>
-													<i className="bi bi-x-lg"></i>
-												</button>
-											</div>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					)}
-				</section>
 
-				{/* Gestão de Estado */}
+				{/* Gestão de Estado - Sempre Visível */}
 				<section className='p-0'>
 					<h5>Gestão de Estado</h5>
 					<div className='state-management'>
 						<div className='form-group'>
 							<label><strong>Estado Atual:</strong></label>
-							<p>{STATE_LABELS[candidatureData.state] || candidatureData.state}</p>
+							<p><span className={`status-badge ${candidatureData.state}`}>{STATE_LABELS[candidatureData.state] || candidatureData.state}</span></p>
 						</div>
 
-						<div className='form-group'>
-							<label htmlFor='state-select'><strong>Novo Estado:</strong></label>
-							<select
-								id='state-select'
-								value={selectedState}
-								onChange={(e) => setSelectedState(e.target.value)}
-							>
-								{candidatureData.available_next_states.map(state => (
-									<option key={state} value={state}>
-										{STATE_LABELS[state] || state}
-									</option>
-								))}
-							</select>
-						</div>
+						{/* Acções para estado 'revision' */}
+						{candidatureData.state === 'revision' && (
+							<>
+								<div className='form-group'>
+									<label htmlFor='notes'><strong>Notas (opcional):</strong></label>
+									<textarea
+										id='notes'
+										value={stateNotes}
+										onChange={(e) => setStateNotes(e.target.value)}
+										placeholder='Adicione observações sobre esta decisão...'
+										rows={3}
+									/>
+								</div>
 
-						<div className='form-group'>
-							<label htmlFor='notes'><strong>Notas (opcional):</strong></label>
-							<textarea
-								id='notes'
-								value={stateNotes}
-								onChange={(e) => setStateNotes(e.target.value)}
-								placeholder='Adicione observações sobre esta mudança...'
-								rows={3}
-							/>
-						</div>
+								<div className='d-flex gap-3 mt-2'>
+									<SecundaryButton
+										small
+										action={cancel}
+										content={<h6>Voltar</h6>}
+									/>
+									<button
+										className='btn btn-danger btn-sm'
+										onClick={() => handleQuickStateChange('finished', 'rejeitada')}
+									>
+										<i className="bi bi-x-circle me-2"></i>
+										<h6 style={{ display: 'inline' }}>Rejeitar Conta do Aluno</h6>
+									</button>
+									<button
+										className='btn btn-success btn-sm'
+										onClick={() => handleQuickStateChange('protocol_generated', 'validada')}
+									>
+										<i className="bi bi-check-circle me-2"></i>
+										<h6 style={{ display: 'inline' }}>Validar Conta do Aluno</h6>
+									</button>
+								</div>
+							</>
+						)}
 
-						<div className='d-flex gap-3 mt-2'>
-							<SecundaryButton
-								small
-								action={cancel}
-								content={<h6>Voltar</h6>}
-							/>
-							<PrimaryButton
-								small
-								action={handleStateUpdate}
-								content={<h6>Atualizar Estado</h6>}
-								disabled={selectedState === candidatureData.state}
-							/>
-						</div>
+						{/* Acções para estados de fluxo automático */}
+						{(candidatureData.state === 'protocol_generated' ||
+							candidatureData.state === 'presidency_signature' ||
+							candidatureData.state === 'company_signature' ||
+							candidatureData.state === 'student_signature') && (
+								<>
+									<div className='form-group'>
+										<label><strong>Próximo Estado:</strong></label>
+										<p>{STATE_LABELS[STATE_FLOW[candidatureData.state]] || STATE_FLOW[candidatureData.state]}</p>
+									</div>
+
+									<div className='form-group'>
+										<label htmlFor='notes'><strong>Notas (opcional):</strong></label>
+										<textarea
+											id='notes'
+											value={stateNotes}
+											onChange={(e) => setStateNotes(e.target.value)}
+											placeholder='Adicione observações sobre esta mudança...'
+											rows={3}
+										/>
+									</div>
+
+									<div className='d-flex gap-3 mt-2'>
+										<SecundaryButton
+											small
+											action={cancel}
+											content={<h6>Voltar</h6>}
+										/>
+										<PrimaryButton
+											small
+											action={handleAdvanceState}
+											content={<h6>Avançar Estado</h6>}
+										/>
+									</div>
+								</>
+							)}
+
+						{/* Se for apenas visualização (ex: finished, placed, submitted) */}
+						{!(candidatureData.state === 'revision' ||
+							candidatureData.state === 'protocol_generated' ||
+							candidatureData.state === 'presidency_signature' ||
+							candidatureData.state === 'company_signature' ||
+							candidatureData.state === 'student_signature') && (
+								<div className='d-flex gap-3 mt-2'>
+									<SecundaryButton
+										small
+										action={cancel}
+										content={<h6>Voltar</h6>}
+									/>
+								</div>
+							)}
 					</div>
 				</section>
 

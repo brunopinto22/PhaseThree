@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox, PfpModal } from '../../../../components';
 
 import { getStudent, createStudent, editStudent, getCourse, listCourses } from '../../../../services';
+import { getAllCandidatures, updateCandidatureState } from '../../../../services/candidatures';
 import { UserContext } from '../../../../contexts';
 
 
@@ -114,6 +115,139 @@ const Edit = () => {
 	}, [course]);
 
 
+	const handleValidateStudent = async () => {
+		const newStatus = 'validated';
+		setValidationStatus(newStatus);
+
+		try {
+			// 1. Atualizar o estado do estudante no backend IMEDIATAMENTE
+			const currentData = {
+				active: active,
+				email: email,
+				student_number: number,
+				student_name: fullName,
+				nationality: nacionality,
+				ident_type: idType,
+				ident_doc: idNumber,
+				nif: nif,
+				gender: gender,
+				address: address,
+				contact: contact,
+				year: year,
+				average: average,
+				subjects_done: subjectsDone,
+				student_course: course,
+				student_branch: branch,
+				student_calendar: calendar,
+				student_ects: ects,
+				subjects: todo.map(t => ({
+					subject_name: t.name,
+					state: Number(t.state)
+				})),
+				validation_status: newStatus
+			};
+
+			await editStudent(token, id, currentData, setStatus, setError);
+
+			// 2. Buscar candidatura do estudante em estado 'revision'
+			const candidaturesList = await getAllCandidatures(token, () => { }, setError);
+			if (candidaturesList && Array.isArray(candidaturesList)) {
+				// Procurar por número de aluno (comparação solta por segurança)
+				const studentCandidature = candidaturesList.find(c =>
+					(String(c.studentNumber) === String(id) || String(c.studentNumber) === String(number)) &&
+					c.state === 'revision'
+				);
+
+				if (studentCandidature) {
+					// Avançar candidatura para 'protocol_generated'
+					await updateCandidatureState(
+						token,
+						studentCandidature.id,
+						'protocol_generated',
+						'Conta Validada',
+						() => { },
+						setError
+					);
+				}
+			}
+
+			// Recarregar dados para confirmar
+			const data = await getStudent(userInfo.token, id, setStatus, setError);
+			if (data) {
+				setValidationStatus(data.validation_status);
+			}
+		} catch (err) {
+			console.error('Erro ao validar estudante:', err);
+			setError('Erro ao processar validação');
+		}
+	};
+
+	const handleRejectStudent = async () => {
+		const newStatus = 'rejected';
+		setValidationStatus(newStatus);
+
+		try {
+			// 1. Atualizar o estado do estudante no backend IMEDIATAMENTE
+			const currentData = {
+				active: active,
+				email: email,
+				student_number: number,
+				student_name: fullName,
+				nationality: nacionality,
+				ident_type: idType,
+				ident_doc: idNumber,
+				nif: nif,
+				gender: gender,
+				address: address,
+				contact: contact,
+				year: year,
+				average: average,
+				subjects_done: subjectsDone,
+				student_course: course,
+				student_branch: branch,
+				student_calendar: calendar,
+				student_ects: ects,
+				subjects: todo.map(t => ({
+					subject_name: t.name,
+					state: Number(t.state)
+				})),
+				validation_status: newStatus
+			};
+
+			await editStudent(token, id, currentData, setStatus, setError);
+
+			// 2. Buscar candidatura do estudante em estado 'revision'
+			const candidaturesList = await getAllCandidatures(token, () => { }, setError);
+			if (candidaturesList && Array.isArray(candidaturesList)) {
+				const studentCandidature = candidaturesList.find(c =>
+					(String(c.studentNumber) === String(id) || String(c.studentNumber) === String(number)) &&
+					c.state === 'revision'
+				);
+
+				if (studentCandidature) {
+					// Mudar candidatura para 'finished'
+					await updateCandidatureState(
+						token,
+						studentCandidature.id,
+						'finished',
+						'Conta Rejeitada',
+						() => { },
+						setError
+					);
+				}
+			}
+
+			// Recarregar dados para confirmar
+			const data = await getStudent(userInfo.token, id, setStatus, setError);
+			if (data) {
+				setValidationStatus(data.validation_status);
+			}
+		} catch (err) {
+			console.error('Erro ao rejeitar estudante:', err);
+			setError('Erro ao processar rejeição');
+		}
+	};
+
 	const submit = async () => {
 
 		const data = {
@@ -210,12 +344,32 @@ const Edit = () => {
 						<div className="profile-picture h-100" style={{ backgroundImage: `url(${pfp ? pfp : default_pfp})` }}></div>
 						<div className="options d-flex flex-column justify-content-center w-100">
 							{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Alunos"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
-							{(userInfo?.role === "admin" || userInfo?.role === "academic_services") && (
-								<Dropdown text="Estado de Validação" value={validationStatus} setValue={setValidationStatus}>
-									<option value="pending">Pendente</option>
-									<option value="validated">Validado</option>
-									<option value="rejected">Rejeitado</option>
-								</Dropdown>
+							{(userInfo?.role === "admin" || userInfo?.role === "academic_services") && validationStatus === 'pending' && (
+								<>
+									<p><strong>Estado de Validação:</strong> Por Validar</p>
+									<div className='d-flex gap-2'>
+										<button
+											className='btn btn-danger btn-sm'
+											onClick={handleRejectStudent}
+										>
+											<i className="bi bi-x-circle me-2"></i>
+											Rejeitar
+										</button>
+										<button
+											className='btn btn-success btn-sm'
+											onClick={handleValidateStudent}
+										>
+											<i className="bi bi-check-circle me-2"></i>
+											Validar
+										</button>
+									</div>
+								</>
+							)}
+							{(userInfo?.role === "admin" || userInfo?.role === "academic_services") && validationStatus === 'validated' && (
+								<p><strong>Estado de Validação:</strong> Validado</p>
+							)}
+							{(userInfo?.role === "admin" || userInfo?.role === "academic_services") && validationStatus === 'rejected' && (
+								<p><strong>Estado de Validação:</strong> Rejeitado</p>
 							)}
 							<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
 							<PrimaryButton small content={<p>Alterar Currículo</p>} />
