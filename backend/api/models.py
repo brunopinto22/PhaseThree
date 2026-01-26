@@ -33,6 +33,12 @@ class Settings(models.Model):
     student_password = models.CharField(max_length=255, null=False, blank=False)
     teacher_password = models.CharField(max_length=255, null=False, blank=False)
     representative_password = models.CharField(max_length=255, null=False, blank=False)
+    
+    # REQ-16: Application Notification Settings
+    notify_companies_applications = models.BooleanField(
+        default=True,
+        help_text="Notify companies when students submit candidatures to their proposals"
+    )
 
 
 def validate_pdf(value):
