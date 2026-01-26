@@ -55,18 +55,26 @@ def submitCandidature(request):
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # 7. Receber lista de proposal_ids
-        proposal_ids = request.data.get("proposal_ids", [])
+        # 7. Receber lista de proposals com prioridades
+        proposals_data = request.data.get("proposals", [])
 
-        if not isinstance(proposal_ids, list):
+        if not isinstance(proposals_data, list):
             return Response(
-                {"message": "proposal_ids deve ser uma lista"},
+                {"message": "proposals deve ser uma lista"},
                 status=HTTP_400_BAD_REQUEST
             )
 
+        # Validar estrutura de cada item (deve ter 'id' e 'priority')
+        for prop_data in proposals_data:
+            if not isinstance(prop_data, dict) or 'id' not in prop_data or 'priority' not in prop_data:
+                return Response(
+                    {"message": "Cada proposta deve ter 'id' e 'priority'"},
+                    status=HTTP_400_BAD_REQUEST
+                )
+
         # 8. Validar quantidade de propostas (min/max)
-        num_proposals = len(proposal_ids)
-        min_required = 1  # Mínimo sempre 1
+        num_proposals = len(proposals_data)
+        min_required = calendar.min_proposals
         max_allowed = calendar.max_proposals
         
         if num_proposals < min_required or num_proposals > max_allowed:
@@ -75,34 +83,56 @@ def submitCandidature(request):
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # 9. Validar que não há duplicados
+        # 9. Validar prioridades e duplicados
+        proposal_ids = [p['id'] for p in proposals_data]
+        priorities = [p['priority'] for p in proposals_data]
+        
+        # Validar que não há IDs duplicados
         if len(proposal_ids) != len(set(proposal_ids)):
             return Response(
                 {"message": "Não pode selecionar a mesma proposta mais de uma vez"},
                 status=HTTP_400_BAD_REQUEST
             )
+        
+        # Validar que prioridades são sequenciais (1, 2, 3, ..., N)
+        expected_priorities = list(range(1, num_proposals + 1))
+        if sorted(priorities) != expected_priorities:
+            return Response(
+                {"message": "Prioridades devem ser sequenciais começando em 1 (ex: 1, 2, 3, ...)"},
+                status=HTTP_400_BAD_REQUEST
+            )
+        
+        # Validar que não há prioridades duplicadas
+        if len(priorities) != len(set(priorities)):
+            return Response(
+                {"message": "Não pode ter prioridades duplicadas"},
+                status=HTTP_400_BAD_REQUEST
+            )
 
         # 10. Validar que todas propostas existem e pertencem ao calendário do aluno
         proposals = []
-        for prop_id in proposal_ids:
+        for prop_data in proposals_data:
             try:
-                proposal = Proposal.objects.get(id_proposal=prop_id)
+                proposal = Proposal.objects.get(id_proposal=prop_data['id'])
                 
                 # Verificar se proposta pertence ao calendário do aluno
                 if proposal.calendar.id_calendar != calendar.id_calendar:
                     return Response(
-                        {"message": f"Proposta {prop_id} não pertence ao calendário do aluno"},
+                        {"message": f"Proposta {prop_data['id']} não pertence ao calendário do aluno"},
                         status=HTTP_400_BAD_REQUEST
                     )
                 
-                proposals.append(proposal)
+                proposals.append({
+                    'proposal': proposal,
+                    'priority': prop_data['priority']
+                })
             except Proposal.DoesNotExist:
                 return Response(
-                    {"message": f"Proposta {prop_id} não encontrada"},
+                    {"message": f"Proposta {prop_data['id']} não encontrada"},
                     status=HTTP_404_NOT_FOUND
                 )
 
-        # 11. Criar Candidature e CandidatureProposals
+        # 11. Criar Candidature e CandidatureProposals com prioridades
         with transaction.atomic():
             candidature = Candidature.objects.create(
                 student=student,
@@ -119,10 +149,11 @@ def submitCandidature(request):
                 notes='Candidatura inicial submetida'
             )
 
-            for proposal in proposals:
+            for prop_info in proposals:
                 CandidatureProposal.objects.create(
                     candidature=candidature,
-                    proposal=proposal,
+                    proposal=prop_info['proposal'],
+                    priority=prop_info['priority'],
                     state='pending'
                 )
 
@@ -190,18 +221,26 @@ def updateCandidature(request, pk):
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # 8. Receber nova lista de proposal_ids
-        proposal_ids = request.data.get("proposal_ids", [])
+        # 8. Receber nova lista de proposals com prioridades
+        proposals_data = request.data.get("proposals", [])
 
-        if not isinstance(proposal_ids, list):
+        if not isinstance(proposals_data, list):
             return Response(
-                {"message": "proposal_ids deve ser uma lista"},
+                {"message": "proposals deve ser uma lista"},
                 status=HTTP_400_BAD_REQUEST
             )
 
+        # Validar estrutura de cada item (deve ter 'id' e 'priority')
+        for prop_data in proposals_data:
+            if not isinstance(prop_data, dict) or 'id' not in prop_data or 'priority' not in prop_data:
+                return Response(
+                    {"message": "Cada proposta deve ter 'id' e 'priority'"},
+                    status=HTTP_400_BAD_REQUEST
+                )
+
         # 9. Validar quantidade de propostas (min/max)
-        num_proposals = len(proposal_ids)
-        min_required = 1  # Mínimo sempre 1
+        num_proposals = len(proposals_data)
+        min_required = calendar.min_proposals
         max_allowed = calendar.max_proposals
         
         if num_proposals < min_required or num_proposals > max_allowed:
@@ -210,30 +249,52 @@ def updateCandidature(request, pk):
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # 10. Validar que não há duplicados
+        # 10. Validar prioridades e duplicados
+        proposal_ids = [p['id'] for p in proposals_data]
+        priorities = [p['priority'] for p in proposals_data]
+        
+        # Validar que não há IDs duplicados
         if len(proposal_ids) != len(set(proposal_ids)):
             return Response(
                 {"message": "Não pode selecionar a mesma proposta mais de uma vez"},
                 status=HTTP_400_BAD_REQUEST
             )
+        
+        # Validar que prioridades são sequenciais (1, 2, 3, ..., N)
+        expected_priorities = list(range(1, num_proposals + 1))
+        if sorted(priorities) != expected_priorities:
+            return Response(
+                {"message": "Prioridades devem ser sequenciais começando em 1 (ex: 1, 2, 3, ...)"},
+                status=HTTP_400_BAD_REQUEST
+            )
+        
+        # Validar que não há prioridades duplicadas
+        if len(priorities) != len(set(priorities)):
+            return Response(
+                {"message": "Não pode ter prioridades duplicadas"},
+                status=HTTP_400_BAD_REQUEST
+            )
 
         # 11. Validar que todas propostas existem e pertencem ao calendário do aluno
         proposals = []
-        for prop_id in proposal_ids:
+        for prop_data in proposals_data:
             try:
-                proposal = Proposal.objects.get(id_proposal=prop_id)
+                proposal = Proposal.objects.get(id_proposal=prop_data['id'])
                 
                 # Verificar se proposta pertence ao calendário do aluno
                 if proposal.calendar.id_calendar != calendar.id_calendar:
                     return Response(
-                        {"message": f"Proposta {prop_id} não pertence ao calendário do aluno"},
+                        {"message": f"Proposta {prop_data['id']} não pertence ao calendário do aluno"},
                         status=HTTP_400_BAD_REQUEST
                     )
                 
-                proposals.append(proposal)
+                proposals.append({
+                    'proposal': proposal,
+                    'priority': prop_data['priority']
+                })
             except Proposal.DoesNotExist:
                 return Response(
-                    {"message": f"Proposta {prop_id} não encontrada"},
+                    {"message": f"Proposta {prop_data['id']} não encontrada"},
                     status=HTTP_404_NOT_FOUND
                 )
 
@@ -242,13 +303,15 @@ def updateCandidature(request, pk):
             # Deletar CandidatureProposals antigos
             CandidatureProposal.objects.filter(candidature=candidature).delete()
 
-            # Criar novos CandidatureProposals
-            for proposal in proposals:
+            # Criar novos CandidatureProposals com prioridades
+            for prop_info in proposals:
                 CandidatureProposal.objects.create(
                     candidature=candidature,
-                    proposal=proposal,
+                    proposal=prop_info['proposal'],
+                    priority=prop_info['priority'],
                     state='pending'
                 )
+
 
         return Response(
             {"message": "Candidatura atualizada com sucesso"},
@@ -299,15 +362,16 @@ def getMyCandidature(request):
         try:
             candidature = Candidature.objects.get(student=student)
 
-            # Obter propostas da candidatura
+            # Obter propostas da candidatura ordenadas por prioridade
             candidature_proposals = CandidatureProposal.objects.filter(
                 candidature=candidature
-            ).select_related('proposal', 'proposal__company')
+            ).select_related('proposal', 'proposal__company').order_by('priority')
 
             proposals_list = []
             for cp in candidature_proposals:
                 proposals_list.append({
                     "id": cp.proposal.id_proposal,
+                    "priority": cp.priority,  # NOVO: incluir prioridade
                     "title": cp.proposal.proposal_title,
                     "company": {
                         "id": cp.proposal.company.id_company if cp.proposal.company else None,

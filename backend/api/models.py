@@ -527,11 +527,19 @@ class CandidatureProposal(models.Model):
 
     candidature = models.ForeignKey('Candidature', on_delete=models.CASCADE, related_name='candidature_proposals')
     proposal = models.ForeignKey('Proposal', on_delete=models.CASCADE, related_name='proposal_candidatures')
+    priority = models.PositiveIntegerField(default=1, help_text="1 = primeira escolha, 2 = segunda escolha, etc.")
     state = models.CharField(max_length=20, choices=STATE_CHOICES, default='pending')
     state_changed_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        ordering = ['priority']  # Ordenar automaticamente por prioridade
+        unique_together = [
+            ['candidature', 'proposal'],  # Não pode ter proposta duplicada na mesma candidatura
+            ['candidature', 'priority']    # Não pode ter prioridade duplicada na mesma candidatura
+        ]
+
     def __str__(self):
-        return f"{self.candidature.student} - {self.proposal.proposal_title} - {self.state}"
+        return f"{self.candidature.student} - {self.proposal.proposal_title} (Prioridade {self.priority}) - {self.state}"
 
 
 class CandidatureStatusHistory(models.Model):
