@@ -15,6 +15,7 @@ import {
 	ListCandidatures, ViewCandidature, EditCandidature,
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
+	ListInternships,
 } from './pages';
 import { Layout } from "./components";
 import { testToken } from "./services";
@@ -233,6 +234,11 @@ function App() {
 						{/* System Settings */}
 						<Route path="/settings">
 							<Route index element={<Settings />} />
+						</Route>
+
+						{/* Academic Services */}
+						<Route path="/academic-services">
+							<Route path="internships" element={<ListInternships />} />
 						</Route>
           </Route>
 

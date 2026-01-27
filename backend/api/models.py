@@ -10,7 +10,8 @@ class Accounts(AbstractUser):
         ('admin', 'Admin'),
         ('student', 'Student'),
         ('representative', 'Company Representative'),
-        ('teacher', 'Teacher')
+        ('teacher', 'Teacher'),
+        ('academic_services', 'Academic Services')
     )
     groups = models.ManyToManyField(
         'auth.Group',
@@ -33,6 +34,7 @@ class Settings(models.Model):
     student_password = models.CharField(max_length=255, null=False, blank=False)
     teacher_password = models.CharField(max_length=255, null=False, blank=False)
     representative_password = models.CharField(max_length=255, null=False, blank=False)
+    academic_services_password = models.CharField(max_length=255, null=False, blank=False)
 
 
 def validate_pdf(value):

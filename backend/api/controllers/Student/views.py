@@ -94,7 +94,7 @@ def listStudents(request):
     ):
         return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"message": "Sem permissão para para ver os Alunos"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
@@ -665,3 +665,109 @@ def deleteCurriculum(request, pk):
     except Exception as e:
         traceback.print_exc()
         return Response({"message": "Erro", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def listStudentsWithInternships(request):
+    """
+    Endpoint para Academic Services ver estudantes com internships ativos.
+    Retorna estudantes que têm candidaturas com estado 'placed' ou 'protocol_generated'.
+    Query Params:
+        - calendar_id (opcional): filtra estudantes por calendário específico
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    # Apenas admin e academic_services podem ver
+    elif user_type not in ["admin", "academic_services"]:
+        return Response({"message": "Sem permissão para ver estudantes com internships"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        # Obter calendar_id opcional dos query params
+        calendar_id = request.GET.get('calendar_id', None)
+        
+        # Filtrar estudantes que têm candidaturas com estado de internship ativo
+        internship_states = ['placed', 'protocol_generated', 'presidency_signature', 'company_signature', 'student_signature', 'finished']
+        
+        students_query = Student.objects.filter(
+            students_candidatures__state__in=internship_states
+        )
+        
+        # Se calendar_id foi fornecido, filtrar por calendário através das proposals
+        if calendar_id:
+            students_query = students_query.filter(
+                students_candidatures__candidature_proposals__proposal__calendar__id_calendar=calendar_id
+            )
+        
+        students_with_internships = students_query.distinct()
+
+        if not students_with_internships.exists():
+            return Response({"message": "Nenhum estudante com internship encontrado"}, status=status.HTTP_204_NO_CONTENT)
+
+        data = []
+
+        for s in students_with_internships:
+            # Obter informações de contacto de empresas e orientadores
+            candidatures = Candidature.objects.filter(student=s, state__in=internship_states)
+            
+            companies_contacts = []
+            advisors = []
+            
+            for candidature in candidatures:
+                proposals = CandidatureProposal.objects.filter(candidature=candidature)
+                for prop in proposals:
+                    # Empresa e contactos associados
+                    if (
+                        prop.proposal.company 
+                        and prop.proposal.company.id_company not in [c['company_id'] for c in companies_contacts]
+                    ):
+                        companies_contacts.append({
+                            'company_id': prop.proposal.company.id_company,
+                            'company_name': prop.proposal.company.company_name,
+                            'company_contact': prop.proposal.company.company_contact,
+                            'company_email': prop.proposal.company.company_email,
+                        })
+
+                    # Orientadores ISEC
+                    if prop.proposal.isec_advisor:
+                        advisor_info_isec = {
+                            'name': prop.proposal.isec_advisor.teacher_name,
+                            'email': prop.proposal.isec_advisor.user.email,
+                            'contact': prop.proposal.isec_advisor.user.email,
+                        }
+                        if advisor_info_isec not in advisors:
+                            advisors.append(advisor_info_isec)
+
+                    # Orientadores da Empresa (Representantes)
+                    if prop.proposal.company_advisor:
+                        advisor_info_company = {
+                            'name': prop.proposal.company_advisor.representative_name,
+                            'email': prop.proposal.company_advisor.user.email,
+                            'contact': prop.proposal.company_advisor.representative_contact,
+                        }
+                        if advisor_info_company not in advisors:
+                            advisors.append(advisor_info_company)
+
+            data.append({
+                "student_number": s.student_number,
+                "name": s.student_name,
+                "email": s.user.email,
+                "contact": s.contact,
+                "course": s.student_course.course_name,
+                "companies": companies_contacts,
+                "advisors": advisors,
+                "internship_status": [c.state for c in candidatures]
+            })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

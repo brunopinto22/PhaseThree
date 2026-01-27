@@ -17,6 +17,43 @@ from api.token_manager import *
 from django.db import transaction
 
 
+@api_view(['GET'])
+def listCalendars(request):
+    """
+    Lista todos os calendários disponíveis.
+    Retorna lista simplificada com id, ano, semestre e curso.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        calendars = Calendar.objects.all().select_related('course').order_by('-calendar_year', '-calendar_semester')
+        
+        data = [
+            {
+                "id": c.id_calendar,
+                "title": str(c),
+                "year": c.calendar_year,
+                "semester": c.calendar_semester,
+                "course_id": c.course.id_course,
+                "course_name": c.course.course_name,
+            }
+            for c in calendars
+        ]
+
+        return Response(data, status=HTTP_200_OK)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
 def getCalendar(request, pk):
