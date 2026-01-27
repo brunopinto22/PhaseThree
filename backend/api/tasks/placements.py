@@ -300,19 +300,22 @@ def handle_placements(calendar_id: int) -> Optional[Dict[str, Any]]:
         Dictionary with processing results, or None if calendar not found
     """
     logger.info(f"handle_placements triggered for calendar_id: {calendar_id}")
-    
+
+    # Primeiro, executa a colocação automática (matching)
+    handle_automatic_placements(calendar_id)
+
     try:
         calendar = Calendar.objects.select_related('course').get(id_calendar=calendar_id)
     except Calendar.DoesNotExist:
         logger.error(f"Calendar with id {calendar_id} not found.")
         return None
-    
+
     logger.info(f"Processing placements for: {calendar}")
-    
-    # Create processor and run
+
+    # Depois, processa as notificações normalmente
     processor = PlacementNotificationProcessor(calendar)
     result = processor.process()
-    
+
     return result
 
 
