@@ -1,7 +1,7 @@
 import './list.css';
 import { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
+import { OptionButton, SecundaryButton, Alert, State, CheckBox } from '../../../../components';
 import { getAllCandidatures, deleteCandidature } from '../../../../services/candidatures';
 import { UserContext } from '../../../../contexts';
 
@@ -12,6 +12,7 @@ const List = () => {
 
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [unfinishedOnly, setUnfinishedOnly] = useState(false);
 
 	const iconMap = [
 		"bi-hourglass-split",
@@ -132,14 +133,19 @@ const List = () => {
 		);
 	}
 
+	const filteredList = unfinishedOnly ? list.filter(c => c.state !== 10) : list;
+
 	return (
 		<div className='candidatures-list d-flex flex-column'>
 
 			<div className="top d-flex flex-wrap flex-row justify-content-between align-items-center gap-3">
 				<div className="title"><h4>Candidaturas</h4></div>
 
-				<div className="options d-flex gap-3">
-					<SecundaryButton small action={exportList} content={<div className='d-flex flex-row gap-2'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} />
+				<div className="d-flex flex-row gap-4 align-items-center">
+					<CheckBox label="Apenas não finalizadas" value={unfinishedOnly} setValue={setUnfinishedOnly} />
+					<div className="options d-flex gap-3">
+						<SecundaryButton small action={exportList} content={<div className='d-flex flex-row gap-2'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} />
+					</div>
 				</div>
 			</div>
 
@@ -154,9 +160,9 @@ const List = () => {
 
 			{loading && <Alert text='A carregar candidaturas...' />}
 			{error && <Alert text={error} />}
-			{!loading && !error && list.length === 0 && <Alert text='Não existem candidaturas de momento' />}
+			{!loading && !error && filteredList.length === 0 && <Alert text='Não existem candidaturas de momento' />}
 
-			{!loading && !error && list.length > 0 && (
+			{!loading && !error && filteredList.length > 0 && (
 				<div className="table-container shadow-sm">
 					<table>
 						<thead>
@@ -170,7 +176,7 @@ const List = () => {
 							</tr>
 						</thead>
 						<tbody>
-							{list.map(candidature => (
+							{filteredList.map(candidature => (
 								<Row key={candidature.id} {...candidature} />
 							))}
 						</tbody>
