@@ -513,28 +513,30 @@ const Edit = () => {
 				{history.length > 0 && (
 					<section className='p-0'>
 						<h5>Histórico de Mudanças</h5>
-						<table>
-							<thead>
-								<tr className='header'>
-									<th><p>Data</p></th>
-									<th><p>De</p></th>
-									<th><p>Para</p></th>
-									<th><p>Por</p></th>
-									<th><p>Notas</p></th>
-								</tr>
-							</thead>
-							<tbody>
-								{history.map(entry => (
-									<tr key={entry.id}>
-										<td><p>{entry.changed_at}</p></td>
-										<td><p>{STATE_LABELS[entry.old_state] || entry.old_state || '-'}</p></td>
-										<td><p>{STATE_LABELS[entry.new_state] || entry.new_state}</p></td>
-										<td><p>{entry.changed_by.email}</p></td>
-										<td><p>{entry.notes || '-'}</p></td>
+						<div className="table-container shadow-sm">
+							<table>
+								<thead>
+									<tr className='header'>
+										<th><p>Data</p></th>
+										<th><p>De</p></th>
+										<th><p>Para</p></th>
+										<th><p>Por</p></th>
+										<th className="notes-column"><p>Notas</p></th>
 									</tr>
-								))}
-							</tbody>
-						</table>
+								</thead>
+								<tbody>
+									{history.map(entry => (
+										<tr key={entry.id}>
+											<td><p>{entry.changed_at}</p></td>
+											<td><p>{STATE_LABELS[entry.old_state] || entry.old_state || '-'}</p></td>
+											<td><p>{STATE_LABELS[entry.new_state] || entry.new_state}</p></td>
+											<td><p>{entry.changed_by.email}</p></td>
+											<td className="notes-column"><p>{entry.notes || '-'}</p></td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
 					</section>
 				)}
 
@@ -612,23 +614,24 @@ const Edit = () => {
 				)}
 
 				{proposals.length > 0 && (
-					<table>
-						<thead>
-							<tr className='header'>
-								<th></th>
-
-								<th><p>Título</p></th>
-								<th><p>Empresa</p></th>
-								<th><p>Localização</p></th>
-								<th><p>Tipo</p></th>
-							</tr>
-						</thead>
-						<tbody>
-							{proposals.map(proposal => (
-								<ProposalRow key={proposal.id} proposal={proposal} />
-							))}
-						</tbody>
-					</table>
+					<div className="table-container shadow-sm mt-3">
+						<table>
+							<thead>
+								<tr className='header'>
+									<th></th>
+									<th><p>Título</p></th>
+									<th><p>Empresa</p></th>
+									<th><p>Localização</p></th>
+									<th><p>Tipo</p></th>
+								</tr>
+							</thead>
+							<tbody>
+								{proposals.map(proposal => (
+									<ProposalRow key={proposal.id} proposal={proposal} />
+								))}
+							</tbody>
+						</table>
+					</div>
 				)}
 			</section>
 
@@ -637,26 +640,28 @@ const Edit = () => {
 					<h4>2. Defina a Ordem de Prioridade</h4>
 					<p className='text-muted'>Use as setas para ordenar as propostas por preferência (1ª escolha no topo)</p>
 
-					<table>
-						<thead>
-							<tr className='header'>
-								<th><p>Prioridade</p></th>
-								<th><p>Título</p></th>
-								<th><p>Empresa</p></th>
-								<th><p>Ações</p></th>
-							</tr>
-						</thead>
-						<tbody>
-							{selectedProposals.map((proposalId, index) => (
-								<SelectedProposalRow
-									key={proposalId}
-									proposalId={proposalId}
-									index={index}
-								/>
-							))}
-						</tbody>
-					</table>
-				</section>
+					<div className="table-container shadow-sm mt-3">
+						<table>
+							<thead>
+								<tr className='header'>
+									<th style={{ width: '80px' }}><p>Ordem</p></th>
+									<th><p>Título</p></th>
+									<th><p>Empresa</p></th>
+									<th style={{ width: '120px' }}><p>Ações</p></th>
+								</tr>
+							</thead>
+							<tbody>
+								{selectedProposals.map((proposalId, index) => (
+									<SelectedProposalRow
+										key={proposalId}
+										proposalId={proposalId}
+										index={index}
+									/>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</section >
 			)}
 
 			<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-5 p-0">
@@ -667,7 +672,7 @@ const Edit = () => {
 				/>
 				<SecundaryButton action={cancel} content={<h6>Cancelar</h6>} />
 			</section>
-		</div>
+		</div >
 	);
 
 }
