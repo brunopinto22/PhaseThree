@@ -12,5 +12,8 @@ urlpatterns = [
     path('candidature/<int:pk>/history/', views.getCandidatureHistory, name='get_candidature_history'),
     path('candidature/active/', views.getActiveInternships, name='get_active_internships'),
     path('candidature/delete/', views.deleteCandidature, name='delete_candidature'),
+    path('candidature/<int:pk>/generate-protocol', views.generateProtocol),
+    path('candidature/<int:pk>/download-protocol', views.downloadProtocol),
+    path('candidature/generate-protocols-batch', views.generateProtocolsBatch),
 ]
 

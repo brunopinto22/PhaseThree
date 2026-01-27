@@ -130,9 +130,6 @@ function CandidateCard({ candidate, onAccept, onReject, slotsAvailable, loading 
           </div>
         )}
 
-        {!candidate.can_change && (
-          <p className="period-closed">Período de seleção encerrado</p>
-        )}
 
         {!slotsAvailable && canAccept && candidate.state !== 'accepted' && (
           <p className="slots-warning">Vagas esgotadas - rejeite um candidato aceite para liberar vaga</p>
