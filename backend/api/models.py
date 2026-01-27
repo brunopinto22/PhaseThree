@@ -475,10 +475,9 @@ class Candidature(models.Model):
     STATE_CHOICES = [
         ('submitted', 'Submitted'),
         ('placed', 'Placed'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
         ('revision', 'Revision'),
-        ('placed', 'Placed'),
-        ('accepted', 'Accepted'),  # Empresa aceitou o aluno
-        ('rejected', 'Rejected'),  # Sem colocação (rejeitado ou sem vagas)
         ('protocol_generated', 'Protocol Generated'),
         ('presidency_signature', 'ISEC Signature'),
         ('company_signature', 'Company Signature'),
