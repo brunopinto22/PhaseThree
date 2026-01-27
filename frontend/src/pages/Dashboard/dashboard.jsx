@@ -189,10 +189,6 @@ const Dashboard = () => {
 									text="Gerir Candidaturas"
 									action={() => navigate("/candidature/list")}
 								/>
-								<DashButton
-									icon={<i className="bi bi-briefcase-fill"></i>}
-									text="Ver Internships e Placements"
-								/>
 							</>
 						)}
 

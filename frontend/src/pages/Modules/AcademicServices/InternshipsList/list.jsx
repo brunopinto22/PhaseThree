@@ -1,18 +1,17 @@
 import './list.css';
 import { useContext, useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Alert } from '../../../../components';
+import { Alert, CheckBox } from '../../../../components';
 import { getStudentsWithInternships } from '../../../../services/students';
 import { listCalendars } from '../../../../services/calendars';
 import { UserContext } from '../../../../contexts';
 
 const InternshipsList = () => {
-	const navigate = useNavigate();
 	const { userInfo } = useContext(UserContext);
 	const [error, setError] = useState('');
 	const [students, setStudents] = useState(null); // Renamed 'list' to 'students'
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [onlyInInternship, setOnlyInInternship] = useState(false);
 	const [calendars, setCalendars] = useState([]);
 	const [selectedCalendar, setSelectedCalendar] = useState("");
 	const [sortColumn, setSortColumn] = useState(null);
@@ -102,10 +101,6 @@ const InternshipsList = () => {
 		return <Alert text={error} />;
 	}
 
-	if (!students || students.length === 0) { // Changed list to students
-		return <Alert text="Nenhum estudante com internship encontrado" />;
-	}
-
 	// Handler para ordenação
 	const handleSort = (column) => {
 		if (sortColumn === column) {
@@ -118,16 +113,22 @@ const InternshipsList = () => {
 		}
 	};
 
-	// Filtrar lista com base no termo de pesquisa
-	const filteredList = students.filter(student => { // Changed list to students
+	// Filtrar lista com base no termo de pesquisa e toggle
+	const filteredList = (students || []).filter(student => {
 		const search = searchTerm.toLowerCase();
-		return (
+		const matchesSearch = (
 			student.student_number.toString().includes(search) ||
 			student.name.toLowerCase().includes(search) ||
 			student.email.toLowerCase().includes(search) ||
 			student.course.toLowerCase().includes(search) ||
 			student.companies.some(c => c.company_name.toLowerCase().includes(search))
 		);
+
+		if (onlyInInternship) {
+			return matchesSearch && student.internship_status && student.internship_status.includes('in_internship');
+		}
+
+		return matchesSearch;
 	});
 
 	// Ordenar lista filtrada
@@ -177,8 +178,6 @@ const InternshipsList = () => {
 			<div className="top d-flex flex-row justify-content-between">
 				<div className="title"><h4>Estudantes com Internships</h4></div>
 
-				<div className="filters"></div>
-
 				<div className="options d-flex gap-3">
 					{/* Opções podem ser adicionadas aqui */}
 				</div>
@@ -194,8 +193,8 @@ const InternshipsList = () => {
 			</div>
 
 			<div className="filters-section mb-3">
-				<div className="row">
-					<div className="col-md-4 mb-2">
+				<div className="row align-items-end">
+					<div className="col-md-4">
 						<label htmlFor="calendar-filter" className="form-label">Filtrar por Calendário:</label>
 						<select
 							id="calendar-filter"
@@ -211,7 +210,10 @@ const InternshipsList = () => {
 							))}
 						</select>
 					</div>
-					<div className="col-md-8">
+					<div className="col-md-auto pb-2">
+						<CheckBox label="Apenas em estágio" value={onlyInInternship} setValue={setOnlyInInternship} />
+					</div>
+					<div className="col">
 						<label htmlFor="search-input" className="form-label">Pesquisar:</label>
 						<input
 							id="search-input"
@@ -223,7 +225,7 @@ const InternshipsList = () => {
 						/>
 						{searchTerm && (
 							<small className="text-muted">
-								{sortedList.length} resultado(s) de {students.length} total {/* Changed list to students */}
+								{sortedList.length} resultado(s) de {(students || []).length} total
 							</small>
 						)}
 					</div>
