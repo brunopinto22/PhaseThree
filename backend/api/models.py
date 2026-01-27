@@ -56,6 +56,12 @@ class Settings(models.Model):
         default=True,
         help_text="Notify companies when new calendars are created"
     )
+    
+    # REQ-16: Application Notification Settings
+    notify_companies_applications = models.BooleanField(
+        default=True,
+        help_text="Notify companies when students submit candidatures to their proposals"
+    )
 
 
 def validate_pdf(value):
