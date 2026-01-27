@@ -780,11 +780,11 @@ def updateCandidatureState(request, pk):
                 student.validation_status = 'validated'
                 student.save()
                 print(f"debug: student validation_status updated to 'validated'")
-            elif new_state == 'rejected':
+            elif new_state == 'rejected' or new_state == 'finished':
                 # Conta rejeitada
                 student.validation_status = 'rejected'
                 student.save()
-                print(f"debug: student validation_status updated to 'rejected'")
+                print(f"debug: student validation_status updated to 'rejected' (state: {new_state})")
 
         # 9. Alterar estado usando o método do modelo
         candidature.change_state(new_state, changed_by=user, notes=notes)

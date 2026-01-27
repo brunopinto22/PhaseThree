@@ -1,19 +1,17 @@
 import './list.css';
-import { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Alert, SecundaryButton } from '../../../../components';
+import { useContext, useEffect, useState, useCallback } from 'react';
+import { Alert, CheckBox } from '../../../../components';
 import { getStudentsWithInternships } from '../../../../services/students';
 import { listCalendars } from '../../../../services/calendars';
 import { UserContext } from '../../../../contexts';
 
 const InternshipsList = () => {
-	const navigate = useNavigate();
 	const { userInfo } = useContext(UserContext);
-	const [status, setStatus] = useState(0);
-	const [error, setError] = useState("");
-	const [list, setList] = useState(null);
+	const [error, setError] = useState('');
+	const [students, setStudents] = useState(null); // Renamed 'list' to 'students'
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [onlyInInternship, setOnlyInInternship] = useState(false);
 	const [calendars, setCalendars] = useState([]);
 	const [selectedCalendar, setSelectedCalendar] = useState("");
 	const [sortColumn, setSortColumn] = useState(null);
@@ -56,10 +54,13 @@ const InternshipsList = () => {
 		'finished': 'Finalizado',
 	};
 
+
+
 	// Carregar calendários ao montar o componente
 	useEffect(() => {
 		const fetchCalendars = async () => {
-			const cals = await listCalendars(userInfo.token, setStatus, setError);
+			// Removed setStatus, using setError directly for error handling
+			const cals = await listCalendars(userInfo.token, () => { }, setError);
 			if (cals) {
 				setCalendars(cals);
 			}
@@ -68,32 +69,29 @@ const InternshipsList = () => {
 		if (userInfo?.token) {
 			fetchCalendars();
 		}
-	}, [userInfo]);
+	}, [userInfo.token, setError]); // Added setError to dependencies
 
 	// Carregar estudantes (filtrados ou não)
-	useEffect(() => {
-		const fetchStudents = async () => {
-			setLoading(true);
-			const students = await getStudentsWithInternships(
-				userInfo.token,
-				setStatus,
-				setError,
-				selectedCalendar || null
-			);
-			setList(students);
-			setLoading(false);
-		};
+	const fetchStudents = useCallback(async () => {
+		setLoading(true);
+		const fetchedStudents = await getStudentsWithInternships(
+			userInfo.token,
+			() => { },
+			setError,
+			selectedCalendar || null
+		);
+		setStudents(fetchedStudents);
+		setLoading(false);
+	}, [userInfo.token, selectedCalendar, setError]);
 
+	useEffect(() => {
 		if (userInfo?.token) {
 			fetchStudents();
 		}
-	}, [userInfo, selectedCalendar]);
+	}, [userInfo.token, fetchStudents]); // Added setError to dependencies
 
-	useEffect(() => {
-		if (status === 401) {
-			navigate("/unauthorized");
-		}
-	}, [status, navigate]);
+	// Removed useEffect for status === 401 as status state is removed.
+	// Error handling for 401 should be managed within the service calls or a global interceptor.
 
 	if (loading) {
 		return <div className="text-center mt-5"><p>Carregando...</p></div>;
@@ -101,10 +99,6 @@ const InternshipsList = () => {
 
 	if (error) {
 		return <Alert text={error} />;
-	}
-
-	if (!list || list.length === 0) {
-		return <Alert text="Nenhum estudante com internship encontrado" />;
 	}
 
 	// Handler para ordenação
@@ -119,16 +113,22 @@ const InternshipsList = () => {
 		}
 	};
 
-	// Filtrar lista com base no termo de pesquisa
-	const filteredList = list.filter(student => {
+	// Filtrar lista com base no termo de pesquisa e toggle
+	const filteredList = (students || []).filter(student => {
 		const search = searchTerm.toLowerCase();
-		return (
+		const matchesSearch = (
 			student.student_number.toString().includes(search) ||
 			student.name.toLowerCase().includes(search) ||
 			student.email.toLowerCase().includes(search) ||
 			student.course.toLowerCase().includes(search) ||
 			student.companies.some(c => c.company_name.toLowerCase().includes(search))
 		);
+
+		if (onlyInInternship) {
+			return matchesSearch && student.internship_status && student.internship_status.includes('in_internship');
+		}
+
+		return matchesSearch;
 	});
 
 	// Ordenar lista filtrada
@@ -178,8 +178,6 @@ const InternshipsList = () => {
 			<div className="top d-flex flex-row justify-content-between">
 				<div className="title"><h4>Estudantes com Internships</h4></div>
 
-				<div className="filters"></div>
-
 				<div className="options d-flex gap-3">
 					{/* Opções podem ser adicionadas aqui */}
 				</div>
@@ -195,8 +193,8 @@ const InternshipsList = () => {
 			</div>
 
 			<div className="filters-section mb-3">
-				<div className="row">
-					<div className="col-md-4 mb-2">
+				<div className="row align-items-end">
+					<div className="col-md-4">
 						<label htmlFor="calendar-filter" className="form-label">Filtrar por Calendário:</label>
 						<select
 							id="calendar-filter"
@@ -212,7 +210,10 @@ const InternshipsList = () => {
 							))}
 						</select>
 					</div>
-					<div className="col-md-8">
+					<div className="col-md-auto pb-2">
+						<CheckBox label="Apenas em estágio" value={onlyInInternship} setValue={setOnlyInInternship} />
+					</div>
+					<div className="col">
 						<label htmlFor="search-input" className="form-label">Pesquisar:</label>
 						<input
 							id="search-input"
@@ -224,7 +225,7 @@ const InternshipsList = () => {
 						/>
 						{searchTerm && (
 							<small className="text-muted">
-								{sortedList.length} resultado(s) de {list.length} total
+								{sortedList.length} resultado(s) de {(students || []).length} total
 							</small>
 						)}
 					</div>
@@ -232,9 +233,9 @@ const InternshipsList = () => {
 			</div>
 
 
-			{!list || list.length === 0 && <Alert text="Nenhum estudante com internship encontrado" />}
+			{(!students || students.length === 0) && <Alert text="Nenhum estudante com internship encontrado" />}
 
-			{list && list.length > 0 && (
+			{(students && students.length > 0) && (
 				<div className="table-container shadow-sm">
 					<table>
 						<thead>

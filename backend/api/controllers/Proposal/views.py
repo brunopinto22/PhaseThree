@@ -741,7 +741,7 @@ def acceptCandidate(request, proposal_id, student_number):
             )
         elif student.validation_status == 'rejected':
             candidature.change_state(
-                new_state='rejected',
+                new_state='finished',
                 changed_by=None,
                 notes='Mudança automática: Conta do aluno foi rejeitada'
             )

@@ -438,7 +438,7 @@ const Edit = () => {
 									/>
 									<button
 										className='btn btn-danger btn-sm'
-										onClick={() => handleQuickStateChange('rejected', 'rejeitada')}
+										onClick={() => handleQuickStateChange('finished', 'rejeitada')}
 									>
 										<i className="bi bi-x-circle me-2"></i>
 										<h6 style={{ display: 'inline' }}>Rejeitar Conta do Aluno</h6>

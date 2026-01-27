@@ -10,7 +10,6 @@ function View() {
 
 	const navigate = useNavigate();
 	const { userInfo } = useContext(UserContext);
-	const [status, setStatus] = useState(null);
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
 
@@ -71,7 +70,7 @@ function View() {
 
 	useEffect(() => {
 		const fetchData = async () => {
-			const data = await getMyCandidature(userInfo.token, setStatus, setError);
+			const data = await getMyCandidature(userInfo.token, () => { }, setError);
 
 			if (data) {
 				setCalendar(data.calendar);
@@ -83,7 +82,7 @@ function View() {
 					const historyData = await getCandidatureHistory(
 						userInfo.token,
 						data.id_candidature,
-						setStatus,
+						() => { },
 						setError
 					);
 
@@ -97,7 +96,7 @@ function View() {
 		};
 
 		fetchData();
-	}, [userInfo.token]);
+	}, [userInfo.token, navigate]);
 
 	const handleSubmit = () => {
 		navigate('/candidature/edit');
