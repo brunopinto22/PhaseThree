@@ -25,15 +25,19 @@ const ActiveInternships = () => {
 
     const stateMap = {
         'placed': 2,
-        'protocol_generated': 3,
-        'presidency_signature': 4,
-        'company_signature': 5,
-        'student_signature': 6,
-        'finished': 7,
+        'accepted': 3,
+        'rejected': 4,
+        'protocol_generated': 5,
+        'presidency_signature': 6,
+        'company_signature': 7,
+        'student_signature': 8,
+        'finished': 9,
     };
 
     const stateLabels = {
         'placed': 'Colocado',
+        'accepted': 'Aceite',
+        'rejected': 'Rejeitado',
         'protocol_generated': 'Protocolo Gerado',
         'presidency_signature': 'Assinatura ISEC',
         'company_signature': 'Assinatura Empresa',

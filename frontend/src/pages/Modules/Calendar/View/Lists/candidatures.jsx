@@ -3,20 +3,24 @@ import { useDebounce } from "../../../../../utils";
 import { Alert, OptionButton, Pill, SecundaryButton, State } from "../../../../../components";
 import { useNavigate } from "react-router-dom";
 
-const Candidatures = ({list, placements, token, role}) => {
+const Candidatures = ({ list, placements, token, role }) => {
 	const iconMap = [
 		"bi-arrow-clockwise",
 		"bi-check2",
+		"bi-clipboard-check",
+		"bi-clipboard-x",
 		"bi-file-binary",
 		"bi-journal-bookmark-fill",
 		"bi-building-check",
 		"bi-journal-check",
 		"bi-rocket-fill",
 	];
-		
+
 	const text = [
 		"Pendente",
 		"Colocado",
+		"Aceite",
+		"Rejeitado",
 		"Protocolo Gerado",
 		"Protocolo ISEC",
 		"Protocolo Empresa",
@@ -26,7 +30,9 @@ const Candidatures = ({list, placements, token, role}) => {
 
 	const btnClass = [
 		"pending",
-		"accpeted",
+		"placed",
+		"accepted",
+		"rejected",
 		"protocol-generated",
 		"protocol-isec",
 		"protocol-company",
@@ -49,7 +55,7 @@ const Candidatures = ({list, placements, token, role}) => {
 	const debouncedStudent = useDebounce(student, 300);
 	const debouncedCompany = useDebounce(company, 300);
 	const debouncedTitle = useDebounce(title, 300);
-	
+
 	useEffect(() => {
 		updateFilter('number', debouncedId);
 		updateFilter('student', debouncedStudent);
@@ -83,27 +89,27 @@ const Candidatures = ({list, placements, token, role}) => {
 	};
 
 	useEffect(() => {
-    if (spanRef.current) {
-      const width = spanRef.current.offsetWidth;
-      setInputWidth(width);
-    }
-  }, [id]);
+		if (spanRef.current) {
+			const width = spanRef.current.offsetWidth;
+			setInputWidth(width);
+		}
+	}, [id]);
 
 
 
-	const Row = ({id, state, student, proposal}) => {
-	
+	const Row = ({ id, state, student, proposal }) => {
+
 		const view = () => {
-			navigate("/candidature/view?id="+id);
+			navigate("/candidature/view?id=" + id);
 		}
 		const edit = () => {
-			navigate("/candidature/edit?id="+id);
+			navigate("/candidature/edit?id=" + id);
 		}
 		const handleDelete = () => {
 			// TODO : eliminar Proposta
 		}
 
-		return(
+		return (
 			<tr className='table-row'>
 				<th><State state={state} hideState={true} hideText={true} tooltip={true} /></th>
 				<th className='fit-column text-center'><p>{student.number}</p></th>
@@ -124,65 +130,73 @@ const Candidatures = ({list, placements, token, role}) => {
 
 	return (
 		<div className="list-container list-container d-flex flex-column">
-		
+
 			{list.length === 0 && <Alert text='Não existe nenhuma proposta de momento' />}
 
 			{list.length > 0 &&
-			<>
-			<div className="d-flex flex-row align-items-center justify-content-between">
+				<>
+					<div className="d-flex flex-row align-items-center justify-content-between">
 
-				<div className="captions d-flex flex-row align-items-center gap-3">
-					{iconMap.map((icon,index) => (
-						<><div className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length-1 && (<p>|</p>)}</>
-					))}
-				</div>
+						<div className="captions noselect">
+							{iconMap.map((icon, index) => (
+								<div key={index} className={`cap d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}>
+									<i className={`bi ${icon}`}></i>
+									<p>{text[index]}</p>
+								</div>
+							))}
+						</div>
 
-				<div className="d-flex flex-row align-items-center gap-3">
-					<SecundaryButton small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} disabled={!placements || new Date() < new Date(placements)} />
-				</div>
-			</div>
-			
-			<table>
-				<tr className='header'>
-					<th className="fit-column" style={{minWidth: 120}}>
-						<p className='dropdown'>
-							<select name="Estado" id="type" onChange={e => updateFilter("state", e.target.value === "all" ? "all" : Number(e.target.value))}>
-								<option value={"all"}>Estado</option>
-								{text.map((t, index) => (
-									<option key={index + "_" + text} value={index+1}>{t}</option>
-								))}
-							</select>
-						</p>
-					</th>
-					<th>
-						<input type="number" value={id || ''} placeholder={'Nº aluno'} onChange={e => setId(e.target.value === '' ? null : Number(e.target.value))} style={{
-							width: inputWidth,
-							minWidth: 80,
-						}} ref={inputRef} />
-						<span ref={spanRef} style={{
-							position: 'absolute',
-							visibility: 'hidden',
-							height: 0,
-							overflow: 'scroll',
-							whiteSpace: 'pre',
-							fontSize: 'inherit',
-							fontFamily: 'inherit',
-							fontWeight: 'inherit',
-							letterSpacing: 'inherit'
-						}}>
-							{id !== null && id !== undefined ? id : '#'}
-						</span>
-					</th>
-					<th><p><input placeholder='Aluno' onChange={e => setStudent(e.target.value)} /></p></th>
-					<th><p><input placeholder='Empresa' onChange={e => setCompany(e.target.value)} /></p></th>
-					<th><p><input placeholder='Proposta' onChange={e => setTitle(e.target.value)} /></p></th>
-					<th className="fit-column"></th>
-				</tr>
+						<div className="d-flex flex-row align-items-center gap-3">
+							<SecundaryButton small content={<div className='d-flex flex-row justify-content-center gap-2 w-100'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} disabled={!placements || new Date() < new Date(placements)} />
+						</div>
+					</div>
 
-				{getFilteredList().map(proposal => <Row key={proposal.id + "-" + proposal.type} {...proposal} />)}
+					<div className="table-container shadow-sm mt-3">
+						<table>
+							<thead>
+								<tr className='header'>
+									<th className="fit-column" style={{ minWidth: 120 }}>
+										<p className='dropdown'>
+											<select name="Estado" id="type" onChange={e => updateFilter("state", e.target.value === "all" ? "all" : Number(e.target.value))}>
+												<option value={"all"}>Estado</option>
+												{text.map((t, index) => (
+													<option key={index + "_" + text} value={index + 1}>{t}</option>
+												))}
+											</select>
+										</p>
+									</th>
+									<th>
+										<input type="number" value={id || ''} placeholder={'Nº aluno'} onChange={e => setId(e.target.value === '' ? null : Number(e.target.value))} style={{
+											width: inputWidth,
+											minWidth: 80,
+										}} ref={inputRef} />
+										<span ref={spanRef} style={{
+											position: 'absolute',
+											visibility: 'hidden',
+											height: 0,
+											overflow: 'scroll',
+											whiteSpace: 'pre',
+											fontSize: 'inherit',
+											fontFamily: 'inherit',
+											fontWeight: 'inherit',
+											letterSpacing: 'inherit'
+										}}>
+											{id !== null && id !== undefined ? id : '#'}
+										</span>
+									</th>
+									<th><p><input placeholder='Aluno' onChange={e => setStudent(e.target.value)} /></p></th>
+									<th><p><input placeholder='Empresa' onChange={e => setCompany(e.target.value)} /></p></th>
+									<th><p><input placeholder='Proposta' onChange={e => setTitle(e.target.value)} /></p></th>
+									<th className="fit-column"></th>
+								</tr>
+							</thead>
 
-			</table>
-			</>
+							<tbody>
+								{getFilteredList().map(proposal => <Row key={proposal.id + "-" + proposal.type} {...proposal} />)}
+							</tbody>
+						</table>
+					</div>
+				</>
 			}
 
 			{(getFilteredList().length === 0 && list.length > 0) && <Alert text='Não foi encontrada nenhuma proposta' />}

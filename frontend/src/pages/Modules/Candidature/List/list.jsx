@@ -16,6 +16,8 @@ const List = () => {
 	const iconMap = [
 		"bi-arrow-clockwise",
 		"bi-check2",
+		"bi-clipboard-check",
+		"bi-clipboard-x",
 		"bi-file-binary",
 		"bi-journal-bookmark-fill",
 		"bi-building-check",
@@ -26,6 +28,8 @@ const List = () => {
 	const text = [
 		"Pendente",
 		"Colocado",
+		"Aceite",
+		"Rejeitado",
 		"Protocolo Gerado",
 		"Protocolo ISEC",
 		"Protocolo Empresa",
@@ -35,7 +39,9 @@ const List = () => {
 
 	const btnClass = [
 		"pending",
-		"accpeted",
+		"placed",
+		"accepted",
+		"rejected",
 		"protocol-generated",
 		"protocol-isec",
 		"protocol-company",
@@ -52,11 +58,13 @@ const List = () => {
 			'submitted': 1,
 			'revision': 1,
 			'placed': 2,
-			'protocol_generated': 3,
-			'presidency_signature': 4,
-			'company_signature': 5,
-			'student_signature': 6,
-			'finished': 7,
+			'accepted': 3,
+			'rejected': 4,
+			'protocol_generated': 5,
+			'presidency_signature': 6,
+			'company_signature': 7,
+			'student_signature': 8,
+			'finished': 9,
 		};
 
 		const data = await getAllCandidatures(userInfo.token, () => { }, setError);
@@ -123,19 +131,20 @@ const List = () => {
 	return (
 		<div className='candidatures-list d-flex flex-column'>
 
-			<div className="top d-flex flex-row justify-content-between">
+			<div className="top d-flex flex-wrap flex-row justify-content-between align-items-center gap-3">
 				<div className="title"><h4>Candidaturas</h4></div>
-
-				<div className="filters"></div>
 
 				<div className="options d-flex gap-3">
 					<SecundaryButton small action={exportList} content={<div className='d-flex flex-row gap-2'><i className="bi bi-download"></i><p>Exportar colocações</p></div>} />
 				</div>
 			</div>
 
-			<div className="captions d-flex flex-row align-items-center gap-3">
+			<div className="captions noselect d-flex flex-wrap gap-2">
 				{iconMap.map((icon, index) => (
-					<><div className={`cap noselect d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}><i className={`bi ${icon}`}></i><p>{text[index]}</p></div>{index < iconMap.length - 1 && (<p>|</p>)}</>
+					<div key={index} className={`cap d-flex flex-row align-items-center gap-2 ${btnClass[index]}`}>
+						<i className={`bi ${icon}`}></i>
+						<p>{text[index]}</p>
+					</div>
 				))}
 			</div>
 
@@ -144,21 +153,25 @@ const List = () => {
 			{!loading && !error && list.length === 0 && <Alert text='Não existem candidaturas de momento' />}
 
 			{!loading && !error && list.length > 0 && (
-				<table>
-					<tr className='header'>
-						<th className='fit-column'><p>Estado</p></th>
-						<th className='fit-column'><p>Nº aluno</p></th>
-						<th><p>Aluno</p></th>
-						<th><p>Empresa/Docente</p></th>
-						<th><p>Proposta</p></th>
-						<th className='fit-column'></th>
-					</tr>
-
-					{list.map(candidature => (
-						<Row key={candidature.id} {...candidature} />
-					))}
-
-				</table>
+				<div className="table-container shadow-sm">
+					<table>
+						<thead>
+							<tr className='header'>
+								<th className='fit-column'><p>Estado</p></th>
+								<th className='fit-column'><p>Nº aluno</p></th>
+								<th><p>Aluno</p></th>
+								<th><p>Empresa/Docente</p></th>
+								<th><p>Proposta</p></th>
+								<th className='fit-column'></th>
+							</tr>
+						</thead>
+						<tbody>
+							{list.map(candidature => (
+								<Row key={candidature.id} {...candidature} />
+							))}
+						</tbody>
+					</table>
+				</div>
 			)}
 
 		</div>

@@ -22,6 +22,8 @@ const InternshipsList = () => {
 	// Mapa de ícones para estados de internships
 	const stateIconMap = {
 		'placed': 'bi-check2',
+		'accepted': 'bi-clipboard-check',
+		'rejected': 'bi-clipboard-x',
 		'protocol_generated': 'bi-file-binary',
 		'presidency_signature': 'bi-journal-bookmark-fill',
 		'company_signature': 'bi-building-check',
@@ -30,7 +32,9 @@ const InternshipsList = () => {
 	};
 
 	const stateColorMap = {
-		'placed': 'accepted',
+		'placed': 'placed',
+		'accepted': 'accepted',
+		'rejected': 'rejected',
 		'protocol_generated': 'protocol-generated',
 		'presidency_signature': 'protocol-isec',
 		'company_signature': 'protocol-company',
@@ -40,6 +44,8 @@ const InternshipsList = () => {
 
 	const stateTextMap = {
 		'placed': 'Colocado',
+		'accepted': 'Aceite',
+		'rejected': 'Rejeitado',
 		'protocol_generated': 'Protocolo Gerado',
 		'presidency_signature': 'Protocolo ISEC',
 		'company_signature': 'Protocolo Empresa',
@@ -66,9 +72,9 @@ const InternshipsList = () => {
 		const fetchStudents = async () => {
 			setLoading(true);
 			const students = await getStudentsWithInternships(
-				userInfo.token, 
-				setStatus, 
-				setError, 
+				userInfo.token,
+				setStatus,
+				setError,
 				selectedCalendar || null
 			);
 			setList(students);
@@ -176,9 +182,9 @@ const InternshipsList = () => {
 				</div>
 			</div>
 
-			<div className="captions d-flex flex-row align-items-center gap-3">
+			<div className="captions noselect d-flex flex-wrap gap-2">
 				{Object.entries(stateTextMap).map(([state, text], index) => (
-					<div key={state} className={`cap noselect d-flex flex-row align-items-center gap-2 ${stateColorMap[state]}`}>
+					<div key={state} className={`cap d-flex flex-row align-items-center gap-2 ${stateColorMap[state]}`}>
 						<i className={`bi ${stateIconMap[state]}`}></i>
 						<p>{text}</p>
 					</div>
@@ -221,85 +227,91 @@ const InternshipsList = () => {
 					</div>
 				</div>
 			</div>
-			
-			
+
+
 			{!list || list.length === 0 && <Alert text="Nenhum estudante com internship encontrado" />}
 
 			{list && list.length > 0 && (
-				<table>
-					<tr className='header'>
-						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('number')} className='fit-column'>
-							<p>Nº aluno {sortColumn === 'number' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
-						</th>
-						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('name')}>
-							<p>Aluno {sortColumn === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
-						</th>
-						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
-							<p>Email {sortColumn === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
-						</th>
-						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('contact')}>
-							<p>Contacto {sortColumn === 'contact' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
-						</th>
-						<th><p>Empresas</p></th>
-						<th><p>Orientadores</p></th>
-						<th style={{ cursor: 'pointer' }} onClick={() => handleSort('status')} className='fit-column'>
-							<p>Estado {sortColumn === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
-						</th>
-					</tr>
+				<div className="table-container shadow-sm">
+					<table>
+						<thead>
+							<tr className='header'>
+								<th style={{ cursor: 'pointer' }} onClick={() => handleSort('number')} className='fit-column'>
+									<p>Nº aluno {sortColumn === 'number' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+								</th>
+								<th style={{ cursor: 'pointer' }} onClick={() => handleSort('name')}>
+									<p>Aluno {sortColumn === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+								</th>
+								<th style={{ cursor: 'pointer' }} onClick={() => handleSort('email')}>
+									<p>Email {sortColumn === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+								</th>
+								<th style={{ cursor: 'pointer' }} onClick={() => handleSort('contact')}>
+									<p>Contacto {sortColumn === 'contact' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+								</th>
+								<th><p>Empresas</p></th>
+								<th><p>Orientadores</p></th>
+								<th style={{ cursor: 'pointer' }} onClick={() => handleSort('status')} className='fit-column'>
+									<p>Estado {sortColumn === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}</p>
+								</th>
+							</tr>
+						</thead>
 
-					{sortedList.map((student, index) => (
-						<tr key={index} className='table-row'>
-							<th className='fit-column text-center'><p>{student.student_number}</p></th>
-							<th><p>{student.name}</p></th>
-							<th><p>{student.email}</p></th>
-							<th><p>{student.contact || '—'}</p></th>
-							<th>
-								<div className="companies-list">
-									{student.companies && student.companies.length > 0 ? (
-										student.companies.map((company, idx) => (
-											<div key={idx} className="company-item">
-												<strong>{company.company_name}</strong>
-												<br />
-												<span>Contacto: {company.company_contact || '-'}</span>
-												<br />
-												<span>Email: {company.company_email || '-'}</span>
-											</div>
-										))
-									) : '—'}
-								</div>
-							</th>
-							<th>
-								<div className="advisors-list">
-									{student.advisors && student.advisors.length > 0 ? (
-										student.advisors.map((advisor, idx) => (
-											<div key={idx} className="advisor-item">
-												<strong>{advisor.name}</strong>
-												<br />
-												<span>Contacto: {advisor.contact || '-'}</span>
-												<br />
-												<small>Email: {advisor.email}</small>
-											</div>
-										))
-									) : '—'}
-								</div>
-							</th>
-							<th className='fit-column'>
-								<div className="status-list d-flex gap-2 flex-row">
-									{student.internship_status && student.internship_status.map((status, idx) => {
-										const icon = stateIconMap[status] || 'bi-question-circle';
-										const colorClass = stateColorMap[status] || '';
-										return (
-											<div key={idx} className={`cap noselect d-flex flex-row align-items-center gap-1 ${colorClass}`} style={{ fontSize: '0.8em' }}>
-												<i className={`bi ${icon}`}></i>
-											</div>
-										);
-									})}
-								</div>
-							</th>
-						</tr>
-					))}
-			</table>
-		)}
+						<tbody>
+							{sortedList.map((student, index) => (
+								<tr key={index} className='table-row'>
+									<th className='fit-column text-center'><p>{student.student_number}</p></th>
+									<th><p>{student.name}</p></th>
+									<th><p>{student.email}</p></th>
+									<th><p>{student.contact || '—'}</p></th>
+									<th>
+										<div className="companies-list">
+											{student.companies && student.companies.length > 0 ? (
+												student.companies.map((company, idx) => (
+													<div key={idx} className="company-item">
+														<strong>{company.company_name}</strong>
+														<br />
+														<span>Contacto: {company.company_contact || '-'}</span>
+														<br />
+														<span>Email: {company.company_email || '-'}</span>
+													</div>
+												))
+											) : '—'}
+										</div>
+									</th>
+									<th>
+										<div className="advisors-list">
+											{student.advisors && student.advisors.length > 0 ? (
+												student.advisors.map((advisor, idx) => (
+													<div key={idx} className="advisor-item">
+														<strong>{advisor.name}</strong>
+														<br />
+														<span>Contacto: {advisor.contact || '-'}</span>
+														<br />
+														<small>Email: {advisor.email}</small>
+													</div>
+												))
+											) : '—'}
+										</div>
+									</th>
+									<th className='fit-column'>
+										<div className="status-list d-flex gap-2 flex-row">
+											{student.internship_status && student.internship_status.map((status, idx) => {
+												const icon = stateIconMap[status] || 'bi-question-circle';
+												const colorClass = stateColorMap[status] || '';
+												return (
+													<div key={idx} className={`cap noselect d-flex flex-row align-items-center gap-1 ${colorClass}`} style={{ fontSize: '0.8em' }}>
+														<i className={`bi ${icon}`}></i>
+													</div>
+												);
+											})}
+										</div>
+									</th>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			)}
 
 		</div>
 	);

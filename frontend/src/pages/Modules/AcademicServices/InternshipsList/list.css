@@ -15,8 +15,12 @@
 }
 
 .captions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-md);
 	color: var(--text-color-100);
 	font-size: 0.9rem;
+	padding: var(--spacing-sm) 0;
 }
 
 .cap {
@@ -34,24 +38,39 @@
 .cap.unset {
 	color: var(--text-color-300);
 }
+
 .cap.pending {
 	color: var(--yellow);
 }
-.cap.accepted {
+
+.cap.placed {
 	color: var(--green);
 }
+
+.cap.accepted {
+	color: var(--teal);
+}
+
+.cap.rejected {
+	color: var(--red);
+}
+
 .cap.protocol-generated {
 	color: var(--blue);
 }
+
 .cap.protocol-isec {
 	color: var(--primary-color-400);
 }
+
 .cap.protocol-company {
 	color: var(--teal);
 }
+
 .cap.protocol-student {
 	color: var(--orange);
 }
+
 .cap.start {
 	color: var(--green);
 }
@@ -131,5 +150,5 @@ th.fit-column {
 }
 
 .status-list .badge {
-  font-size: 0.75rem;
+	font-size: 0.75rem;
 }

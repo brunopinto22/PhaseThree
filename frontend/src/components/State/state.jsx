@@ -1,22 +1,26 @@
 import './state.css';
 
-const OptionButton = ({state = 0, hideState = false, hideText = false, className = "", tooltip = false, tooltipPosition = "right"}) => {
+const OptionButton = ({ state = 0, hideState = false, hideText = false, className = "", tooltip = false, tooltipPosition = "right" }) => {
 
 	const iconMap = [
 		"bi-x",
 		"bi-arrow-clockwise",
 		"bi-check2",
+		"bi-clipboard-check",
+		"bi-clipboard-x",
 		"bi-file-binary",
 		"bi-journal-bookmark-fill",
 		"bi-building-check",
 		"bi-journal-check",
 		"bi-rocket-fill",
 	];
-	
+
 	const text = [
 		"unset",
 		"Pendente",
 		"Colocado",
+		"Aceite",
+		"Rejeitado",
 		"Protocolo Gerado",
 		"Protocolo ISEC",
 		"Protocolo Empresa",
@@ -27,7 +31,9 @@ const OptionButton = ({state = 0, hideState = false, hideText = false, className
 	const btnClass = [
 		"unset",
 		"pending",
-		"accpeted",
+		"placed",
+		"accepted",
+		"rejected",
 		"protocol-generated",
 		"protocol-isec",
 		"protocol-company",
@@ -36,7 +42,7 @@ const OptionButton = ({state = 0, hideState = false, hideText = false, className
 	];
 
 
-	return(
+	return (
 		<div className={`state-text ${btnClass[state]} ${tooltip ? `tooltip tooltip-${tooltipPosition}` : ""} ${className}`}>
 			<i className={`bi ${iconMap[state]}`}></i>
 			{!hideState && <b>Estado:</b>}
