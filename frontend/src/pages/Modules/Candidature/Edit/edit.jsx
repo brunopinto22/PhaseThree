@@ -9,17 +9,17 @@ import { listProposals } from '../../../../services/proposals';
 
 // Mapeamento de estados para labels em português
 const STATE_LABELS = {
-	'submitted': 'Submetida',
+	'submitted': 'Pendente',
 	'revision': 'Em Revisão',
-	'placed': 'Colocada',
+	'placed': 'Colocado',
 	'accepted': 'Aceite',
-	'rejected': 'Rejeitada',
+	'rejected': 'Rejeitado',
 	'protocol_generated': 'Protocolo Gerado',
-	'presidency_signature': 'Assinatura ISEC',
-	'company_signature': 'Assinatura da Empresa',
-	'student_signature': 'Assinatura do Aluno',
+	'presidency_signature': 'Protocolo ISEC',
+	'company_signature': 'Protocolo Empresa',
+	'student_signature': 'Protocolo Aluno',
 	'in_internship': 'Em estágio',
-	'finished': 'Finalizada'
+	'finished': 'Finalizado'
 };
 
 // Mapeamento do fluxo de estados
