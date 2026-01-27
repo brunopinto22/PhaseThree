@@ -713,17 +713,39 @@ def acceptCandidate(request, proposal_id, student_number):
                 status=HTTP_400_BAD_REQUEST
             )
 
-        # ACEITAR CANDIDATO
+        # ACEITAR CANDIDATO (na proposta)
         candidature_proposal.state = 'accepted'
         candidature_proposal.state_changed_at = timezone.now()
         candidature_proposal.save()
 
-        # Atualizar estado da candidatura E registrar no histórico
+        # 1. Mudar estado da candidatura para 'accepted' (registrado como ação do representante)
         candidature.change_state(
             new_state='accepted',
             changed_by=representative.user,
             notes=f'Aceito pela empresa {proposal.company.company_name}'
         )
+
+        # 2. Mudar automaticamente para 'revision' (registrado como ação do sistema)
+        candidature.change_state(
+            new_state='revision',
+            changed_by=None,
+            notes='Mudança automática do sistema após aceitação da empresa'
+        )
+
+        # 3. Verificações de conta do aluno
+        if student.validation_status == 'validated':
+            candidature.change_state(
+                new_state='protocol_generated',
+                changed_by=None,
+                notes='Mudança automática: Conta do aluno já se encontra validada'
+            )
+        elif student.validation_status == 'rejected':
+            candidature.change_state(
+                new_state='rejected',
+                changed_by=None,
+                notes='Mudança automática: Conta do aluno foi rejeitada'
+            )
+        # Se for 'pending', permanece em 'revision', conforme solicitado
 
         # Marcar todas as outras propostas como 'skipped'
         CandidatureProposal.objects.filter(

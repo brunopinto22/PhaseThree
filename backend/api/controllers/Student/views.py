@@ -805,7 +805,7 @@ def listStudentsWithInternships(request):
         calendar_id = request.GET.get('calendar_id', None)
         
         # Filtrar estudantes que têm candidaturas com estado de internship ativo
-        internship_states = ['placed', 'protocol_generated', 'presidency_signature', 'company_signature', 'student_signature', 'finished']
+        internship_states = ['placed', 'protocol_generated', 'presidency_signature', 'company_signature', 'student_signature', 'in_internship', 'finished']
         
         students_query = Student.objects.filter(
             students_candidatures__state__in=internship_states

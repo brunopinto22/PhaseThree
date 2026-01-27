@@ -11,8 +11,9 @@ const StateTracker = ({ currentState }) => {
 		{ key: 'protocol_generated', label: 'Protocolo', description: 'Protocolo gerado' },
 		{ key: 'presidency_signature', label: 'ISEC', description: 'Assinatura ISEC' },
 		{ key: 'company_signature', label: 'Empresa', description: 'Assinatura empresa' },
-		{ key: 'student_signature', label: 'Aluno', description: 'Assinatura aluno' },
-		{ key: 'finished', label: 'Concluído', description: 'Processo completo' }
+		{ key: 'student_signature', label: 'Assinado', description: 'Assinatura aluno' },
+		{ key: 'in_internship', label: 'Estágio', description: 'Em estágio' },
+		{ key: 'finished', label: 'Finalizado', description: 'Estágio concluído' }
 	];
 
 	// Se o estado atual é 'rejected', mostrar no lugar de 'accepted'
@@ -36,13 +37,13 @@ const StateTracker = ({ currentState }) => {
 	};
 
 
-	return(
+	return (
 		<div className="state-tracker d-flex flex-row justify-content-between">
 			{states.map((state, index) => (
-				<State 
-					key={state.key} 
-					index={index + 1} 
-					state={state} 
+				<State
+					key={state.key}
+					index={index + 1}
+					state={state}
 					isCurrent={index === currentIndex}
 					isDone={index < currentIndex}
 				/>
