@@ -1,5 +1,5 @@
 import './active.css';
-import { useState, useEffect, useContext } from 'react';
+import { useContext, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, Alert, State, Pill } from '../../../../components';
 import { getActiveInternships } from '../../../../services/candidatures';
@@ -47,20 +47,20 @@ const ActiveInternships = () => {
         'finished': 'Finalizado',
     };
 
-    const fetchInternships = async () => {
+    const fetchInternships = useCallback(async () => {
         setLoading(true);
         const data = await getActiveInternships(userInfo.token, () => { }, setError);
         if (data) {
             setList(data);
         }
         setLoading(false);
-    }
+    }, [userInfo.token, setError]);
 
     useEffect(() => {
         if (userInfo?.token) {
             fetchInternships();
         }
-    }, [userInfo]);
+    }, [userInfo.token, fetchInternships]);
 
     const updateFilter = (key, value) => {
         setFilters(prev => ({

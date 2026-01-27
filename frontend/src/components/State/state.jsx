@@ -44,19 +44,6 @@ const OptionButton = ({ state = 0, hideState = false, hideText = false, classNam
 		"finished",
 	]
 
-	const stateMap = {
-		'submitted': 1,
-		'placed': 2,
-		'accepted': 3,
-		'rejected': 4,
-		'protocol_generated': 5,
-		'presidency_signature': 6,
-		'company_signature': 7,
-		'student_signature': 8,
-		'in_internship': 9,
-		'finished': 10,
-	};
-
 	return (
 		<div className={`state-text ${btnClass[state]} ${tooltip ? `tooltip tooltip-${tooltipPosition}` : ""} ${className}`}>
 			<i className={`bi ${iconMap[state]}`}></i>

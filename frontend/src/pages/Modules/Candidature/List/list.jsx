@@ -1,5 +1,5 @@
 import './list.css';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, SecundaryButton, Alert, State } from '../../../../components';
 import { getAllCandidatures, deleteCandidature } from '../../../../services/candidatures';
@@ -54,7 +54,7 @@ const List = () => {
 
 	const [list, setList] = useState([]);
 
-	const fetchCandidatures = async () => {
+	const fetchCandidatures = useCallback(async () => {
 		setLoading(true);
 		// Mapear estados do backend para números do frontend
 		const stateMap = {
@@ -86,13 +86,13 @@ const List = () => {
 			setList(mappedData);
 		}
 		setLoading(false);
-	}
+	}, [userInfo.token, setError]);
 
 	useEffect(() => {
 		if (userInfo?.token) {
 			fetchCandidatures();
 		}
-	}, [userInfo]);
+	}, [userInfo.token, fetchCandidatures]);
 
 
 	const exportList = () => {
