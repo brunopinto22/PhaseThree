@@ -247,6 +247,42 @@ def createCalendar(request):
         )
         calendar.save()
 
+        # REQ-15: Notify companies about new calendar
+        try:
+            settings = Settings.objects.first()
+            if settings and getattr(settings, 'notify_companies_new_calendars', True):
+                # Check if async notification is requested
+                use_async = request.data.get("notify_async", False)
+                
+                if use_async:
+                    # Use Celery task for async notification
+                    from api.tasks.calendar_notifications import notify_companies_new_calendar_async
+                    task = notify_companies_new_calendar_async.delay(calendar.id_calendar)
+                    return Response({
+                        "message": "Calendário criado com sucesso. Notificações em processamento.",
+                        "task_id": task.id
+                    }, status=status.HTTP_201_CREATED)
+                else:
+                    # Synchronous notification
+                    from api.services.calendar_notifications import CalendarNotificationService
+                    notification_service = CalendarNotificationService()
+                    notification_results = notification_service.notify_companies_new_calendar(calendar)
+                    
+                    return Response({
+                        "message": "Calendário criado com sucesso.",
+                        "notifications": {
+                            "total": notification_results["total"],
+                            "successful": notification_results["successful"],
+                            "failed": notification_results["failed"]
+                        }
+                    }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            # Log error but don't fail calendar creation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error sending calendar notifications: {str(e)}")
+            # Continue with success response even if notifications fail
+
         return Response({"message":"Calendário criado com sucesso."}, status=status.HTTP_201_CREATED)
     except Course.DoesNotExist:
         return Response({"message": "Curso não encontrado."}, status=HTTP_404_NOT_FOUND)

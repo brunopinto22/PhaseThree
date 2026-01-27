@@ -50,6 +50,12 @@ class Settings(models.Model):
     
     def __str__(self):
         return "System Settings"
+    
+    # REQ-15: Calendar Notification Settings
+    notify_companies_new_calendars = models.BooleanField(
+        default=True,
+        help_text="Notify companies when new calendars are created"
+    )
 
 
 def validate_pdf(value):

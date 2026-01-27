@@ -22,6 +22,10 @@ from .notification_tasks import (
     send_bulk_notifications_async,
     generate_protocol_async,
 )
+from .calendar_notifications import (
+    notify_companies_new_calendar_async,
+    notify_companies_new_calendar_manual,
+)
 
 __all__ = [
     'verify_day_events',
@@ -31,4 +35,6 @@ __all__ = [
     'send_single_notification_async',
     'send_bulk_notifications_async',
     'generate_protocol_async',
+    'notify_companies_new_calendar_async',
+    'notify_companies_new_calendar_manual',
 ]
