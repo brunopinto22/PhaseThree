@@ -96,11 +96,13 @@ const Edit = () => {
 	const [courses, setCourses] = useState([]);
 	const [branches, setBranches] = useState([]);
 	const [calendars, setCalendars] = useState([]);
-	
+
 	useEffect(() => {
 		const fetchCourses = async () => {
 			const c = await listCourses(userInfo.token, setStatus, setError);
-			setCourses(c.filter(c => c.active_calendars_registrations));
+			if (c) {
+				setCourses(c);
+			}
 		};
 		fetchCourses();
 	}, []);
@@ -401,21 +403,21 @@ const Edit = () => {
 							<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
 							<PrimaryButton small content={<p>Alterar Currículo</p>} action={() => setShowCurriculumUpload(!showCurriculumUpload)} />
 							{curriculum && <SecundaryButton small content={<p>Eliminar Currículo</p>} action={handleDeleteCurriculum} />}
-						<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
+							<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 						</div>
 					</div>
 					{showCurriculumUpload && (
-					<div className='col-sm-12 col-md-8'>
-						<CurriculumUpload 
-							studentId={id} 
-							token={userInfo.token}
-							onSuccess={() => {
-								setShowCurriculumUpload(false);
-							}}
-						/>
-					</div>
-				)}
-			</section>
+						<div className='col-sm-12 col-md-8'>
+							<CurriculumUpload
+								studentId={id}
+								token={userInfo.token}
+								onSuccess={() => {
+									setShowCurriculumUpload(false);
+								}}
+							/>
+						</div>
+					)}
+				</section>
 
 				<section className='row p-0'>
 					<h4>Dados Pessoais</h4>
