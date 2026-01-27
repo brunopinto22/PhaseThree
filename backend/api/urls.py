@@ -10,5 +10,7 @@ urlpatterns = [
     path('scientificArea/add', addArea),
     path('scientificArea/<int:pk>/edit', editArea),
     path('scientificArea/<int:pk>/delete', deleteArea),
-
+    
+    # GDPR - Data Export
+    path('user/data-export/', export_user_data),
 ]

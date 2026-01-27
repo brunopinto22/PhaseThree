@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PrimaryButton, Alert } from '../../../../components';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../../../contexts';
-import { getStudent } from '../../../../services';
+import { getStudent, exportUserData } from '../../../../services';
 import { getCurriculum } from '../../../../services/curriculum';
 
 function View() {
@@ -16,6 +16,8 @@ function View() {
 	const [error, setError] = useState(null);
 	const [curriculum, setCurriculum] = useState(null);
 	const [curriculumLoading, setCurriculumLoading] = useState(false);
+	const [isExporting, setIsExporting] = useState(false);
+	const [exportMessage, setExportMessage] = useState(null);
   const id = searchParams.get('id');
 
 	const [studentData, setStudentData] = useState({
@@ -105,6 +107,31 @@ function View() {
 
 	const canEdit = userInfo?.role === "admin" || (userInfo?.role === "student" && userInfo.id === id) || userInfo?.perms["Alunos"].edit;
 	
+	// GDPR Data Export
+	const handleDataExport = async () => {
+		setIsExporting(true);
+		setExportMessage(null);
+		const token = userInfo.token;
+		
+		const userData = await exportUserData(token, setStatus, setError);
+		
+		if (userData) {
+			// Create JSON file and trigger download
+			const dataStr = JSON.stringify(userData, null, 2);
+			const dataBlob = new Blob([dataStr], { type: 'application/json' });
+			const url = URL.createObjectURL(dataBlob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = `my_data_export_${new Date().toISOString().split('T')[0]}.json`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+			setExportMessage("Dados exportados com sucesso!");
+		}
+		setIsExporting(false);
+	}
+	
 	const handleCurriculumButton = () => {
 		if (curriculum && curriculum.curriculum_url) {
 			window.open(curriculum.curriculum_url, '_blank');
@@ -138,6 +165,25 @@ function View() {
 						content={<h6>Editar Perfil</h6>}
 					/>
 				)}
+					<PrimaryButton 
+						disabled={isExporting}
+						content={
+							<div className='d-flex flex-row align-items-center justify-content-center gap-2'>
+								{isExporting ? (
+									<>
+										<span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+										<h6>Exportando...</h6>
+									</>
+								) : (
+									<>
+										<i className="bi bi-download"></i>
+										<h6>Exportar Dados (GDPR)</h6>
+									</>
+								)}
+							</div>
+						}
+						action={handleDataExport}
+					/>
 				</div>
 
 			</div>
@@ -158,6 +204,8 @@ function View() {
 						<div className="content-row"><p><b>Contacto: </b>{contact}</p></div>
 					</div>
 				</div>
+
+				{exportMessage && <Alert text={exportMessage} />}
 
 				<div className="section">
 					<h4>Dados Curriculares</h4>

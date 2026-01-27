@@ -98,7 +98,11 @@ const Dashboard = () => {
 									/>
 
 
-									<DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
+              <DashButton 
+								icon={<i className="bi bi-compass-fill"></i>} 
+								text='Orientação' 
+								action={() => navigate(`/representative/${userInfo.id}/orientation`)}
+							/>
 
 									<DashButton
 										icon={<i className="bi bi-person-plus-fill"></i>}
@@ -109,15 +113,19 @@ const Dashboard = () => {
 							)
 						}
 
-						{role === 'teacher' &&
-							(
-								<>
-									<DashButton icon={<i className="bi bi-file-earmark-plus-fill"></i>} text='Submeter Proposta' action={() => navigate("/proposal/edit?new=true&type=project")} disabled={summary?.calendars.length <= 0} />
-									<DashButton action={() => navigate("/proposal/list?self=true")} icon={<i className="bi bi-file-earmark-text-fill"></i>} text='As Minhas Propostas' />
-									<DashButton icon={<i className="bi bi-compass-fill"></i>} text='Orientação' />
-								</>
-							)
-						}
+					{role === 'teacher' &&
+						(
+							<>
+								<DashButton icon={<i className="bi bi-file-earmark-plus-fill"></i>} text='Submeter Proposta' action={() => navigate("/proposal/edit?new=true&type=project")} disabled={summary?.calendars.length <= 0} />
+								<DashButton action={() => navigate("/proposal/list?self=true")} icon={<i className="bi bi-file-earmark-text-fill"></i>} text='As Minhas Propostas' />
+								<DashButton 
+									icon={<i className="bi bi-compass-fill"></i>} 
+									text='Orientação' 
+									action={() => navigate(`/teacher/${userInfo.id}/orientation`)}
+								/>
+							</>
+						)
+					}
 
 
 						{(permissions['Docentes'] && (permissions['Docentes'].view || permissions['Docentes'].edit || permissions['Docentes'].delete) || role === 'admin') && (

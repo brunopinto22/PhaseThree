@@ -28,6 +28,7 @@ const Register = () => {
 	const [branch, setBranch] = useState();
 	const [password, setPassword] = useState();
 	const [repeat, setRepeat] = useState();
+	const [gdprConsent, setGdprConsent] = useState(false);
 
 	const [errorMessage, setErrorMessage] = useState("");
 
@@ -48,6 +49,11 @@ const Register = () => {
 
 
 		const submit = () => {
+
+		if (!gdprConsent) {
+			setErrorMessage("Deve consentir com o processamento dos dados de acordo com o RGPD");
+			return;
+		}
 
 		const data = {
 			student_name: name,
@@ -100,7 +106,20 @@ const Register = () => {
 						<PasswordInput text='Palavra-Passe' value={password} setValue={setPassword} />
 						<PasswordInput text='Confirmar Palavra-Passe' value={repeat} setValue={setRepeat} />
 
-            <PrimaryButton content={<h6>Registar</h6>} action={submit} />
+					<div className='gdpr-consent d-flex flex-row align-items-start gap-2' style={{marginTop: '10px', marginBottom: '10px'}}>
+						<input 
+							type='checkbox' 
+							id='gdpr-consent-student' 
+							checked={gdprConsent}
+							onChange={(e) => setGdprConsent(e.target.checked)}
+							style={{marginTop: '5px', cursor: 'pointer', minWidth: '20px'}}
+						/>
+						<label htmlFor='gdpr-consent-student' style={{cursor: 'pointer', fontSize: '0.9em', margin: 0}}>
+							Concordo que os meus dados pessoais (Nome, Email, Número de Aluno) sejam processados de acordo com o Regulamento Geral de Proteção de Dados (RGPD) para fins de registo e gestão da candidatura.
+						</label>
+					</div>
+
+                    <PrimaryButton content={<h6>Registar</h6>} action={submit} />
 						{errorMessage && (<p className='error-message'>{errorMessage}</p>)}
 					</div>
 
