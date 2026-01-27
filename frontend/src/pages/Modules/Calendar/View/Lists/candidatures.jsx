@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const Candidatures = ({ list, placements, token, role }) => {
 	const iconMap = [
-		"bi-arrow-clockwise",
+		"bi-hourglass-split",
 		"bi-check2",
 		"bi-clipboard-check",
 		"bi-clipboard-x",
@@ -14,7 +14,8 @@ const Candidatures = ({ list, placements, token, role }) => {
 		"bi-building-check",
 		"bi-journal-check",
 		"bi-rocket-fill",
-	];
+		"bi-flag-fill",
+	]
 
 	const text = [
 		"Pendente",
@@ -26,6 +27,7 @@ const Candidatures = ({ list, placements, token, role }) => {
 		"Protocolo Empresa",
 		"Protocolo Aluno",
 		"Em estágio",
+		"Finalizado",
 	]
 
 	const btnClass = [
@@ -37,8 +39,22 @@ const Candidatures = ({ list, placements, token, role }) => {
 		"protocol-isec",
 		"protocol-company",
 		"protocol-student",
-		"start",
-	];
+		"in-internship",
+		"finished",
+	]
+
+	const stateMap = {
+		'submitted': 1,
+		'placed': 2,
+		'accepted': 3,
+		'rejected': 4,
+		'protocol_generated': 5,
+		'presidency_signature': 6,
+		'company_signature': 7,
+		'student_signature': 8,
+		'in_internship': 9,
+		'finished': 10,
+	};
 
 	const navigate = useNavigate();
 	const spanRef = useRef(null);

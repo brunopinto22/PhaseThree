@@ -482,6 +482,7 @@ class Candidature(models.Model):
         ('presidency_signature', 'ISEC Signature'),
         ('company_signature', 'Company Signature'),
         ('student_signature', 'Student Signature'),
+        ('in_internship', 'In Internship'),
         ('finished', 'Finished'),
     ]
 

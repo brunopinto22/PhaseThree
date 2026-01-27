@@ -29,7 +29,8 @@ function View() {
 			'presidency_signature': 'Aguardando Assinatura ISEC',
 			'company_signature': 'Aguardando Assinatura Empresa',
 			'student_signature': 'Aguardando Sua Assinatura',
-			'finished': 'Concluído'
+			'in_internship': 'Em Estágio',
+			'finished': 'Relatório Final/Finalizado'
 		};
 		return labels[state] || state;
 	};
@@ -45,7 +46,8 @@ function View() {
 			'presidency_signature': 'O protocolo aguarda assinatura da presidência do ISEC.',
 			'company_signature': 'O protocolo aguarda assinatura da empresa.',
 			'student_signature': 'O protocolo aguarda sua assinatura. Por favor, assine o documento.',
-			'finished': 'Processo concluído! Seu estágio está oficialmente iniciado.'
+			'in_internship': 'Seu estágio está oficialmente decorrendo.',
+			'finished': 'Processo concluído! O estágio foi finalizado com sucesso.'
 		};
 		return descriptions[state] || 'Estado desconhecido';
 	};
@@ -60,8 +62,9 @@ function View() {
 			'protocol_generated': 'Aguarde a assinatura da presidência.',
 			'presidency_signature': 'Aguarde a empresa assinar o protocolo.',
 			'company_signature': 'Assine o protocolo assim que possível.',
-			'student_signature': 'Aguarde finalização do processo.',
-			'finished': 'Processo completo. Bom estágio!'
+			'student_signature': 'Aguarde o início oficial do estágio.',
+			'in_internship': 'Complete o seu estágio e submeta o relatório final.',
+			'finished': 'Processo completo.'
 		};
 		return nextSteps[state] || '';
 	};
@@ -69,13 +72,13 @@ function View() {
 	useEffect(() => {
 		const fetchData = async () => {
 			const data = await getMyCandidature(userInfo.token, setStatus, setError);
-			
+
 			if (data) {
 				setCalendar(data.calendar);
-				
+
 				if (data.has_candidature) {
 					setCandidature(data);
-					
+
 					// Buscar histórico da candidatura
 					const historyData = await getCandidatureHistory(
 						userInfo.token,
@@ -83,13 +86,13 @@ function View() {
 						setStatus,
 						setError
 					);
-					
+
 					if (historyData && historyData.history) {
 						setHistory(historyData.history);
 					}
 				}
 			}
-			
+
 			setLoading(false);
 		};
 
@@ -112,7 +115,7 @@ function View() {
 			'placed': { text: 'Colocado', class: 'info' },
 			'skipped': { text: 'Ignorada', class: 'secondary' }
 		};
-		
+
 		const stateInfo = stateMap[proposal.state] || stateMap['pending'];
 		const rowClass = isPlaced ? 'table-row placed-row' : 'table-row';
 
@@ -146,12 +149,12 @@ function View() {
 	const hasCandidature = candidature !== null;
 	const canEdit = hasCandidature && candidature.state === 'submitted';
 
-	return(
+	return (
 		<div id='candidature' className='d-flex flex-column'>
 
 			<section className='row p-0'>
 				<h3>Minha Candidatura</h3>
-				
+
 				{error && <Alert text={error} type='danger' />}
 
 				{calendar && (
@@ -168,7 +171,7 @@ function View() {
 					<section className='state-progress p-0'>
 						<h4>Progresso da Candidatura</h4>
 						<StateTracker currentState={candidature.state} />
-						
+
 						<div className='current-state-info'>
 							<h5>Estado Atual: {getStateLabel(candidature.state)}</h5>
 							<p className='state-description'>{getStateDescription(candidature.state)}</p>
@@ -178,7 +181,7 @@ function View() {
 
 					<section className='p-0'>
 						<h4 className="mb-4">Propostas Selecionadas (por ordem de prioridade)</h4>
-						
+
 						{candidature.proposals.length === 0 ? (
 							<Alert text='Nenhuma proposta selecionada' type='warning' />
 						) : (
@@ -195,9 +198,9 @@ function View() {
 									{candidature.proposals
 										.sort((a, b) => a.priority - b.priority)
 										.map(proposal => (
-											<ProposalRow 
-												key={proposal.id} 
-												proposal={proposal} 
+											<ProposalRow
+												key={proposal.id}
+												proposal={proposal}
 												priority={proposal.priority}
 												isPlaced={candidature.placed_proposal?.id === proposal.id}
 											/>
@@ -210,7 +213,7 @@ function View() {
 					<HistoryTimeline history={history} />
 
 					<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-6 p-0">
-						<SecundaryButton 
+						<SecundaryButton
 							action={handleSubmit}
 							content={
 								<div className='d-flex flex-column align-items-center'>
@@ -220,7 +223,7 @@ function View() {
 							}
 							disabled={true}
 						/>
-						<PrimaryButton 
+						<PrimaryButton
 							action={handleEdit}
 							content={<h6>Editar Candidatura</h6>}
 							disabled={!canEdit}
@@ -235,11 +238,11 @@ function View() {
 					</section>
 
 					<section className="buttons d-flex flex-row gap-3 col-sm-12 col-md-6 p-0">
-						<PrimaryButton 
+						<PrimaryButton
 							action={handleSubmit}
 							content={<h6>Submeter Candidatura</h6>}
 						/>
-						<SecundaryButton 
+						<SecundaryButton
 							action={handleEdit}
 							content={<h6>Editar Candidatura</h6>}
 							disabled={true}

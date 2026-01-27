@@ -12,10 +12,13 @@ const STATE_LABELS = {
 	'submitted': 'Submetida',
 	'revision': 'Em Revisão',
 	'placed': 'Colocada',
+	'accepted': 'Aceite',
+	'rejected': 'Rejeitada',
 	'protocol_generated': 'Protocolo Gerado',
 	'presidency_signature': 'Assinatura ISEC',
 	'company_signature': 'Assinatura da Empresa',
 	'student_signature': 'Assinatura do Aluno',
+	'in_internship': 'Em estágio',
 	'finished': 'Finalizada'
 };
 
@@ -24,7 +27,8 @@ const STATE_FLOW = {
 	'protocol_generated': 'presidency_signature',
 	'presidency_signature': 'company_signature',
 	'company_signature': 'student_signature',
-	'student_signature': 'finished'
+	'student_signature': 'in_internship',
+	'in_internship': 'finished'
 };
 
 
@@ -75,14 +79,14 @@ const Edit = () => {
 					setMaxProposals(data.calendar.max);
 
 					if (data.has_candidature) {
-					// Já tem candidatura - modo edição
-					setCandidature(data);
-					// Extrair IDs ordenados por prioridade
-					const orderedIds = data.proposals
-						.sort((a, b) => a.priority - b.priority)
-						.map(p => p.id);
-					setSelectedProposals(orderedIds);
-				}
+						// Já tem candidatura - modo edição
+						setCandidature(data);
+						// Extrair IDs ordenados por prioridade
+						const orderedIds = data.proposals
+							.sort((a, b) => a.priority - b.priority)
+							.map(p => p.id);
+						setSelectedProposals(orderedIds);
+					}
 
 				}
 				setLoading(false);
@@ -166,8 +170,8 @@ const Edit = () => {
 
 		if (candidature) {
 			const result = await updateCandidature(
-				userInfo.token, 
-				candidature.id_candidature, 
+				userInfo.token,
+				candidature.id_candidature,
 				proposalsWithPriority,
 				setStatus,
 				setError
@@ -179,7 +183,7 @@ const Edit = () => {
 			}
 		} else {
 			const result = await submitCandidature(
-				userInfo.token, 
+				userInfo.token,
 				proposalsWithPriority,
 				setStatus,
 				setError
@@ -291,28 +295,7 @@ const Edit = () => {
 		);
 
 		if (result) {
-			// Se estamos em company_signature, avançar mais um estado automaticamente
-			if (currentState === 'company_signature') {
-				// Aguardar um pouco para garantir que a primeira mudança foi registrada
-				await new Promise(resolve => setTimeout(resolve, 500));
-
-				// Segunda mudança: de student_signature para finished
-				const secondResult = await updateCandidatureState(
-					userInfo.token,
-					candidatureIdParam,
-					'finished',
-					'', // Sem notas adicionais na segunda mudança
-					() => { },
-					setError
-				);
-
-				if (secondResult) {
-					setSuccess('Estado avançado com sucesso!');
-				}
-			} else {
-				setSuccess('Estado avançado com sucesso!');
-			}
-
+			setSuccess('Estado avançado com sucesso!');
 			// Recarregar dados
 			const data = await getCandidatureById(userInfo.token, candidatureIdParam, () => { }, setError);
 			if (data) {
@@ -373,7 +356,7 @@ const Edit = () => {
 						disabled={isDisabled}
 					/>
 				</td>
-				
+
 				<td><p>{proposal.title}</p></td>
 				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
 				<td><p>{proposal.location}</p></td>
@@ -454,7 +437,7 @@ const Edit = () => {
 									/>
 									<button
 										className='btn btn-danger btn-sm'
-										onClick={() => handleQuickStateChange('finished', 'rejeitada')}
+										onClick={() => handleQuickStateChange('rejected', 'rejeitada')}
 									>
 										<i className="bi bi-x-circle me-2"></i>
 										<h6 style={{ display: 'inline' }}>Rejeitar Conta do Aluno</h6>
@@ -474,7 +457,8 @@ const Edit = () => {
 						{(candidatureData.state === 'protocol_generated' ||
 							candidatureData.state === 'presidency_signature' ||
 							candidatureData.state === 'company_signature' ||
-							candidatureData.state === 'student_signature') && (
+							candidatureData.state === 'student_signature' ||
+							candidatureData.state === 'in_internship') && (
 								<>
 									<div className='form-group'>
 										<label><strong>Próximo Estado:</strong></label>
@@ -512,7 +496,8 @@ const Edit = () => {
 							candidatureData.state === 'protocol_generated' ||
 							candidatureData.state === 'presidency_signature' ||
 							candidatureData.state === 'company_signature' ||
-							candidatureData.state === 'student_signature') && (
+							candidatureData.state === 'student_signature' ||
+							candidatureData.state === 'in_internship') && (
 								<div className='d-flex gap-3 mt-2'>
 									<SecundaryButton
 										small
@@ -571,21 +556,21 @@ const Edit = () => {
 				<td>
 					<div className="priority-badge">{index + 1}ª</div>
 				</td>
-				
+
 				<td><p>{proposal.title}</p></td>
 				<td><p>{proposal.company?.name || 'ISEC'}</p></td>
 				<td>
 					<div className="priority-actions">
-						<button 
-							className="btn-icon" 
+						<button
+							className="btn-icon"
 							onClick={() => moveUp(index)}
 							disabled={index === 0}
 							title="Mover para cima"
 						>
 							<i className="bi bi-arrow-up"></i>
 						</button>
-						<button 
-							className="btn-icon" 
+						<button
+							className="btn-icon"
 							onClick={() => moveDown(index)}
 							disabled={index === selectedProposals.length - 1}
 							title="Mover para baixo"
@@ -608,7 +593,7 @@ const Edit = () => {
 					<h5 className={counterClass}>
 						{selectedCount} / {maxProposals} propostas selecionadas
 					</h5>
-					
+
 					{selectedCount > maxProposals && (
 						<Alert text={`Máximo: ${maxProposals} propostas`} type='danger' />
 					)}
@@ -631,7 +616,7 @@ const Edit = () => {
 						<thead>
 							<tr className='header'>
 								<th></th>
-								
+
 								<th><p>Título</p></th>
 								<th><p>Empresa</p></th>
 								<th><p>Localização</p></th>
@@ -663,10 +648,10 @@ const Edit = () => {
 						</thead>
 						<tbody>
 							{selectedProposals.map((proposalId, index) => (
-								<SelectedProposalRow 
-									key={proposalId} 
-									proposalId={proposalId} 
-									index={index} 
+								<SelectedProposalRow
+									key={proposalId}
+									proposalId={proposalId}
+									index={index}
 								/>
 							))}
 						</tbody>

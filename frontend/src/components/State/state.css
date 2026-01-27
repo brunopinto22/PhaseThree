@@ -46,6 +46,10 @@
 	color: var(--orange);
 }
 
-.state-text.start {
+.state-text.in-internship {
 	color: var(--green);
+}
+
+.state-text.finished {
+	color: var(--primary-color-600);
 }

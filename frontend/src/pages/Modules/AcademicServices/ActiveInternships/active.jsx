@@ -31,7 +31,8 @@ const ActiveInternships = () => {
         'presidency_signature': 6,
         'company_signature': 7,
         'student_signature': 8,
-        'finished': 9,
+        'in_internship': 9,
+        'finished': 10,
     };
 
     const stateLabels = {
@@ -42,7 +43,8 @@ const ActiveInternships = () => {
         'presidency_signature': 'Assinatura ISEC',
         'company_signature': 'Assinatura Empresa',
         'student_signature': 'Assinatura Aluno',
-        'finished': 'Estágio Ativo / Concluído',
+        'in_internship': 'Em estágio',
+        'finished': 'Finalizado',
     };
 
     const fetchInternships = async () => {

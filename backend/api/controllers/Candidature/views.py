@@ -780,7 +780,7 @@ def updateCandidatureState(request, pk):
                 student.validation_status = 'validated'
                 student.save()
                 print(f"debug: student validation_status updated to 'validated'")
-            elif new_state == 'finished':
+            elif new_state == 'rejected':
                 # Conta rejeitada
                 student.validation_status = 'rejected'
                 student.save()

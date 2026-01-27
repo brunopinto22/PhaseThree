@@ -14,7 +14,7 @@ const List = () => {
 	const [error, setError] = useState(null);
 
 	const iconMap = [
-		"bi-arrow-clockwise",
+		"bi-hourglass-split",
 		"bi-check2",
 		"bi-clipboard-check",
 		"bi-clipboard-x",
@@ -23,7 +23,8 @@ const List = () => {
 		"bi-building-check",
 		"bi-journal-check",
 		"bi-rocket-fill",
-	];
+		"bi-flag-fill",
+	]
 
 	const text = [
 		"Pendente",
@@ -35,6 +36,7 @@ const List = () => {
 		"Protocolo Empresa",
 		"Protocolo Aluno",
 		"Em estágio",
+		"Finalizado",
 	]
 
 	const btnClass = [
@@ -46,8 +48,9 @@ const List = () => {
 		"protocol-isec",
 		"protocol-company",
 		"protocol-student",
-		"start",
-	];
+		"in-internship",
+		"finished",
+	]
 
 	const [list, setList] = useState([]);
 
@@ -64,7 +67,8 @@ const List = () => {
 			'presidency_signature': 6,
 			'company_signature': 7,
 			'student_signature': 8,
-			'finished': 9,
+			'in_internship': 9,
+			'finished': 10,
 		};
 
 		const data = await getAllCandidatures(userInfo.token, () => { }, setError);

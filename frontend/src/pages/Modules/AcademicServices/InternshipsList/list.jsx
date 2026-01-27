@@ -28,7 +28,8 @@ const InternshipsList = () => {
 		'presidency_signature': 'bi-journal-bookmark-fill',
 		'company_signature': 'bi-building-check',
 		'student_signature': 'bi-journal-check',
-		'finished': 'bi-rocket-fill',
+		'in_internship': 'bi-rocket-fill',
+		'finished': 'bi-flag-fill',
 	};
 
 	const stateColorMap = {
@@ -39,7 +40,8 @@ const InternshipsList = () => {
 		'presidency_signature': 'protocol-isec',
 		'company_signature': 'protocol-company',
 		'student_signature': 'protocol-student',
-		'finished': 'start',
+		'in_internship': 'in-internship',
+		'finished': 'finished',
 	};
 
 	const stateTextMap = {
@@ -50,7 +52,8 @@ const InternshipsList = () => {
 		'presidency_signature': 'Protocolo ISEC',
 		'company_signature': 'Protocolo Empresa',
 		'student_signature': 'Protocolo Aluno',
-		'finished': 'Em estágio',
+		'in_internship': 'Em estágio',
+		'finished': 'Finalizado',
 	};
 
 	// Carregar calendários ao montar o componente
