@@ -2,9 +2,9 @@ const apiUrl = process.env.REACT_APP_API_URL || '/api';
 
 export async function getTeacher(token, id, setStatus, setErrorMessage) {
 
-	try {
+  try {
 
-		const res = await fetch(`${apiUrl}/teacher/${id}`, {
+    const res = await fetch(`${apiUrl}/teacher/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -15,14 +15,14 @@ export async function getTeacher(token, id, setStatus, setErrorMessage) {
     const data = await res.json();
     setStatus(res.status);
 
-    if(res.status !== 200) {
+    if (res.status !== 200) {
       setErrorMessage(
-				data.message ||
-				data.error ||
-				data.detail || 
-				data.details ||
-				"Erro desconhecido"
-			);
+        data.message ||
+        data.error ||
+        data.detail ||
+        data.details ||
+        "Erro desconhecido"
+      );
       return null;
     }
 
@@ -30,17 +30,17 @@ export async function getTeacher(token, id, setStatus, setErrorMessage) {
 
   } catch (error) {
     setStatus(500);
-		setErrorMessage("Erro de rede ou servidor");
+    setErrorMessage("Erro de rede ou servidor");
     return null;
   }
-	
+
 }
 
 export async function listTeachers(token, setStatus, setErrorMessage) {
 
-	try {
+  try {
 
-		const res = await fetch(`${apiUrl}/teachers/`, {
+    const res = await fetch(`${apiUrl}/teachers/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -48,17 +48,19 @@ export async function listTeachers(token, setStatus, setErrorMessage) {
       },
     });
 
-    const data = await res.json();
     setStatus(res.status);
+    if (res.status === 204) return [];
 
-    if(res.status !== 200) {
+    const data = await res.json();
+
+    if (res.status !== 200) {
       setErrorMessage(
-				data.message ||
-				data.error ||
-				data.detail || 
-				data.details ||
-				"Erro desconhecido"
-			);
+        data.message ||
+        data.error ||
+        data.detail ||
+        data.details ||
+        "Erro desconhecido"
+      );
       return [];
     }
 
@@ -66,106 +68,106 @@ export async function listTeachers(token, setStatus, setErrorMessage) {
 
   } catch (error) {
     setStatus(500);
-		setErrorMessage("Erro de rede ou servidor");
+    setErrorMessage("Erro de rede ou servidor");
     return [];
   }
-	
+
 }
 
 export async function createTeacher(token, data, setStatus, setErrorMessage) {
 
-	try {
+  try {
 
-		const res = await fetch(`${apiUrl}/teacher/create`, {
+    const res = await fetch(`${apiUrl}/teacher/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": token,
       },
-			body: JSON.stringify(data),
+      body: JSON.stringify(data),
     });
 
-		const responseData = await res.json();
+    const responseData = await res.json();
 
-		if (res.ok) {
+    if (res.ok) {
       setStatus(res.status);
       setStatus(res.status);
-			setErrorMessage(
-				responseData.message ||
-				responseData.error ||
-				responseData.detail || 
-				responseData.details ||
-				"Erro desconhecido"
-			);
+      setErrorMessage(
+        responseData.message ||
+        responseData.error ||
+        responseData.detail ||
+        responseData.details ||
+        "Erro desconhecido"
+      );
       return true;
 
     } else {
       setStatus(res.status);
       setStatus(res.status);
-			setErrorMessage(
-				responseData.message ||
-				responseData.error ||
-				responseData.detail || 
-				responseData.details ||
-				"Erro desconhecido"
-			);
+      setErrorMessage(
+        responseData.message ||
+        responseData.error ||
+        responseData.detail ||
+        responseData.details ||
+        "Erro desconhecido"
+      );
       return false;
     }
 
-	} catch (error) {
+  } catch (error) {
     setStatus(500);
     setErrorMessage("Erro de rede ou servidor");
     return false;
   }
-	
+
 }
 
 export async function editTeacher(token, id, data, setStatus, setErrorMessage) {
 
-	try {
-		const res = await fetch(`${apiUrl}/teacher/${id}/edit`, {
+  try {
+    const res = await fetch(`${apiUrl}/teacher/${id}/edit`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "Authorization": token,
       },
-			body: JSON.stringify(data),
+      body: JSON.stringify(data),
     });
 
-		const responseData = await res.json();
-		setStatus(res.status)
-		setErrorMessage(responseData.message || "Erro ao criar curso");
+    const responseData = await res.json();
+    setStatus(res.status)
+    setErrorMessage(responseData.message || "Erro ao criar curso");
 
-    if(res.status === 200)
+    if (res.status === 200)
       return true;
 
-	} catch {
-		return false;
-	}
+  } catch {
+    return false;
+  }
 
-	return false;
-	
+  return false;
+
 }
 
 export async function deleteTeacher(token, id) {
-	
-	try {
-		const res = await fetch(`${apiUrl}/teacher/${id}/delete`, {
-			method: "DELETE",
-			headers: {
-				"Authorization": token,
-			}
-		});
 
-		const data = await res.json();
+  try {
+    const res = await fetch(`${apiUrl}/teacher/${id}/delete`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": token,
+      }
+    });
 
-    if(res.status === 200)
+    const data = await res.json();
+
+    if (res.status === 200)
       return true;
 
-	} catch {
-		return false;
-	}
-	
-	return false;
+  } catch {
+    return false;
+  }
+
+  return false;
 
 }

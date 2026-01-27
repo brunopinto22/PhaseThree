@@ -8,5 +8,6 @@ urlpatterns = [
     path('representative/create', createRepresentative),
     path('representative/<int:pk>/edit', editRepresentative),
     path('representative/<int:pk>/delete', deleteRepresentative),
+    path('representative/<int:pk>/supervised-students/', getSupervisedStudents),
 
 ]

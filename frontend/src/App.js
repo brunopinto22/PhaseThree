@@ -9,13 +9,16 @@ import {
 	ListStudents, ViewStudent, EditStudent,
 	ListCourses, ViewCourse, EditCourse,
 	ListTeachers, ViewTeacher, EditTeacher,
-	ListProposals, ViewProposal, EditProposal,
+	ListProposals, ViewProposal, EditProposal, DecideProposal,
 	ListCompanies, ViewCompany, EditCompany,
 	ViewRepresentative, EditRepresentative,
 	ListCandidatures, ViewCandidature, EditCandidature,
 	ViewCalendar, EditCalendar,
 	RegisterTeacher,
+	ListInternships,
 } from './pages';
+import TeacherOrientation from './pages/Modules/Teacher/Orientation/orientation';
+import RepresentativeOrientation from './pages/Modules/Representative/Orientation/orientation';
 import { Layout } from "./components";
 import { testToken } from "./services";
 import { CompanyProvider, UserContext, UserProvider } from "./contexts";
@@ -200,6 +203,7 @@ function App() {
 							<Route path="list" element={<ListTeachers />} />
 							<Route path="view" element={<ViewTeacher />} />
 							<Route path="edit" element={<EditTeacher />} />
+							<Route path=":id/orientation" element={<TeacherOrientation />} />
 						</Route>
 
 						{/* Manage Companies */}
@@ -213,12 +217,14 @@ function App() {
 						<Route path="/representative">
 							<Route path="view" element={<ViewRepresentative />} />
 							<Route path="edit" element={<EditRepresentative />} />
+							<Route path=":id/orientation" element={<RepresentativeOrientation />} />
 						</Route>
 
 						{/* Manage Proposals */}
 						<Route path="/proposal">
 							<Route path="list" element={<ListProposals />} />
 							<Route path="view" element={<ViewProposal />} />
+							<Route path="decide" element={<DecideProposal />} />
 							<Route path="edit" element={<EditProposal />} />
 						</Route>
 
@@ -232,6 +238,11 @@ function App() {
 						{/* System Settings */}
 						<Route path="/settings">
 							<Route index element={<Settings />} />
+						</Route>
+
+						{/* Academic Services */}
+						<Route path="/academic-services">
+							<Route path="internships" element={<ListInternships />} />
 						</Route>
           </Route>
 

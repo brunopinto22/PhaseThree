@@ -10,7 +10,8 @@ class Accounts(AbstractUser):
         ('admin', 'Admin'),
         ('student', 'Student'),
         ('representative', 'Company Representative'),
-        ('teacher', 'Teacher')
+        ('teacher', 'Teacher'),
+        ('academic_services', 'Academic Services')
     )
     groups = models.ManyToManyField(
         'auth.Group',
@@ -33,6 +34,34 @@ class Settings(models.Model):
     student_password = models.CharField(max_length=255, null=False, blank=False)
     teacher_password = models.CharField(max_length=255, null=False, blank=False)
     representative_password = models.CharField(max_length=255, null=False, blank=False)
+    academic_services_password = models.CharField(max_length=255, null=False, blank=False)
+    
+    # REQ-6: Notification Settings
+    notify_placement_students = models.BooleanField(default=True, help_text="Send placement notifications to students")
+    notify_placement_companies = models.BooleanField(default=True, help_text="Send placement notifications to companies")
+    notify_placement_advisors = models.BooleanField(default=True, help_text="Send placement notifications to advisors")
+    
+    # REQ-7: Protocol Generation Settings
+    auto_generate_protocols = models.BooleanField(default=True, help_text="Automatically generate protocols when candidatures are placed")
+    
+    class Meta:
+        verbose_name = "System Settings"
+        verbose_name_plural = "System Settings"
+    
+    def __str__(self):
+        return "System Settings"
+    
+    # REQ-15: Calendar Notification Settings
+    notify_companies_new_calendars = models.BooleanField(
+        default=True,
+        help_text="Notify companies when new calendars are created"
+    )
+    
+    # REQ-16: Application Notification Settings
+    notify_companies_applications = models.BooleanField(
+        default=True,
+        help_text="Notify companies when students submit candidatures to their proposals"
+    )
 
 
 def validate_pdf(value):
@@ -62,6 +91,17 @@ class Student(models.Model):
 
     curriculum = models.FileField(upload_to='protected/curriculums/', validators=[validate_pdf], null=True, blank=True)
     calendar = models.ForeignKey('Calendar', on_delete=models.SET_NULL, related_name='students_in_calendar', null=True, blank=True)
+
+    VALIDATION_STATUS_CHOICES = [
+        ('pending', 'Por Validar'),
+        ('validated', 'Validated'),
+        ('rejected', 'Rejected'),
+    ]
+    validation_status = models.CharField(
+        max_length=20,
+        choices=VALIDATION_STATUS_CHOICES,
+        default='pending'
+    )
 
     active = models.BooleanField(default=True)
 
@@ -120,7 +160,6 @@ class Student(models.Model):
             "average",
             "subjects_done",
             "student_course",
-            "student_branch",
             "student_ects",
             "calendar",
         ]
@@ -351,6 +390,18 @@ class Calendar(models.Model):
     def __str__(self):
         return f"{self.calendar_year}/{self.calendar_year+1} - {self.calendar_semester}º Semestre"
 
+    def clean(self):
+        if self.min_proposals is not None and self.max_proposals is not None:
+            if self.min_proposals > self.max_proposals:
+                raise ValidationError({
+                    'min_proposals': 'O mínimo não pode ser maior que o máximo',
+                    'max_proposals': 'O máximo não pode ser menor que o mínimo'
+                })
+        if self.min_proposals is not None and self.min_proposals < 0:
+            raise ValidationError({'min_proposals': 'O mínimo deve ser maior ou igual a 0'})
+        if self.max_proposals is not None and self.max_proposals < 1:
+            raise ValidationError({'max_proposals': 'O máximo deve ser maior ou igual a 1'})
+
     def is_active(self):
         return self.submission_start <= date.today() <= self.placements
 
@@ -450,12 +501,15 @@ class Proposal(models.Model):
 class Candidature(models.Model):
     STATE_CHOICES = [
         ('submitted', 'Submitted'),
-        ('revision', 'Revision'),
         ('placed', 'Placed'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('revision', 'Revision'),
         ('protocol_generated', 'Protocol Generated'),
         ('presidency_signature', 'ISEC Signature'),
         ('company_signature', 'Company Signature'),
         ('student_signature', 'Student Signature'),
+        ('in_internship', 'In Internship'),
         ('finished', 'Finished'),
     ]
 
@@ -464,21 +518,123 @@ class Candidature(models.Model):
     state = models.CharField(max_length=20, choices=STATE_CHOICES, default='pending')
 
     candidature_submission_date = models.DateField()
+    last_updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Campos para colocação automática
+    placed_proposal = models.ForeignKey(
+        'Proposal', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='placed_candidatures',
+        help_text="Proposta na qual o aluno está atualmente colocado"
+    )
+    placement_attempt = models.PositiveIntegerField(
+        default=0,
+        help_text="Número de tentativas de colocação (0=não colocado ainda, 1=1ª tentativa, etc.)"
+    )
+    
+    # REQ-7: Automatic Protocol Generation
+    protocol_file = models.FileField(
+        upload_to='protocols/',
+        null=True,
+        blank=True,
+        help_text="Generated protocol document (PDF)"
+    )
+    protocol_generated_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Date when protocol was automatically generated"
+    )
 
     def __str__(self):
         return f"Candidature {self.id_candidature}"
+    
+    def change_state(self, new_state, changed_by=None, notes=None):
+        """
+        Altera estado da candidatura e registra no histórico.
+        
+        Args:
+            new_state: Novo estado (deve estar em STATE_CHOICES)
+            changed_by: User que fez a mudança (opcional)
+            notes: Observações sobre a mudança (opcional)
+        """
+        from django.core.exceptions import ValidationError
+        
+        # Validar que novo estado é válido
+        valid_states = [choice[0] for choice in self.STATE_CHOICES]
+        if new_state not in valid_states:
+            raise ValidationError(f"Estado '{new_state}' não é válido")
+        
+        # Salvar estado antigo
+        old_state = self.state
+        
+        # Se estado não mudou, não faz nada
+        if old_state == new_state:
+            return
+        
+        # Alterar estado
+        self.state = new_state
+        self.save()
+        
+        # Registrar no histórico
+        CandidatureStatusHistory.objects.create(
+            candidature=self,
+            old_state=old_state,
+            new_state=new_state,
+            changed_by=changed_by,
+            notes=notes
+        )
+    
+    def has_protocol(self) -> bool:
+        """Check if protocol has been generated."""
+        return bool(self.protocol_file)
 
 
 class CandidatureProposal(models.Model):
     STATE_CHOICES = [
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('rejected', 'Rejected'),
+        ('pending', 'Pending'),      # Aguardando colocação automática
+        ('placed', 'Placed'),        # Aluno colocado nesta proposta (aguardando decisão empresa)
+        ('accepted', 'Accepted'),    # Empresa aceitou
+        ('rejected', 'Rejected'),    # Empresa rejeitou OU passou para próxima
+        ('skipped', 'Skipped'),      # Pulado (aluno aceito em proposta de maior prioridade)
     ]
 
     candidature = models.ForeignKey('Candidature', on_delete=models.CASCADE, related_name='candidature_proposals')
     proposal = models.ForeignKey('Proposal', on_delete=models.CASCADE, related_name='proposal_candidatures')
+    priority = models.PositiveIntegerField(default=1, help_text="1 = primeira escolha, 2 = segunda escolha, etc.")
     state = models.CharField(max_length=20, choices=STATE_CHOICES, default='pending')
+    state_changed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['priority']  # Ordenar automaticamente por prioridade
+        unique_together = [
+            ['candidature', 'proposal'],  # Não pode ter proposta duplicada na mesma candidatura
+            ['candidature', 'priority']    # Não pode ter prioridade duplicada na mesma candidatura
+        ]
 
     def __str__(self):
-        return f"{self.candidature.student} - {self.proposal.proposal_title} - {self.state}"
+        return f"{self.candidature.student} - {self.proposal.proposal_title} (Prioridade {self.priority}) - {self.state}"
+
+
+class CandidatureStatusHistory(models.Model):
+    id_history = models.AutoField(primary_key=True)
+    candidature = models.ForeignKey('Candidature', on_delete=models.CASCADE, related_name='status_history')
+    
+    old_state = models.CharField(max_length=20, null=True, blank=True)
+    new_state = models.CharField(max_length=20, null=False, blank=False)
+    
+    changed_at = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey('Accounts', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    notes = models.TextField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-changed_at']
+        indexes = [
+            models.Index(fields=['candidature', '-changed_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.candidature} - {self.old_state} → {self.new_state} ({self.changed_at})"

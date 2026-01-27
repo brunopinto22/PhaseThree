@@ -29,3 +29,150 @@
 	flex-direction: column;
 	align-items: center;
 }
+
+.calendar-info {
+	background-color: var(--background-light, #f8f9fa);
+	padding: var(--spacing-lg);
+	border-radius: var(--border-radius, 8px);
+	margin-bottom: var(--spacing-lg);
+}
+
+.state-progress {
+	margin: var(--spacing-xl) 0;
+	padding: var(--spacing-lg);
+	background-color: var(--background-color-100);
+	border-radius: var(--border-radius, 8px);
+}
+
+.current-state-info {
+	margin-top: var(--spacing-xl);
+	padding: var(--spacing-lg);
+	background-color: var(--background-light, #f8f9fa);
+	border-radius: var(--border-radius, 8px);
+}
+
+.current-state-info h5 {
+	color: var(--primary-color, #007bff);
+	margin-bottom: var(--spacing-md);
+}
+
+.current-state-info .state-description {
+	color: var(--text-color-700);
+	margin-bottom: var(--spacing-sm);
+	line-height: 1.6;
+}
+
+.current-state-info .next-steps {
+	color: var(--text-color-600);
+	font-style: italic;
+	margin-top: var(--spacing-sm);
+}
+
+.candidature-details {
+	margin: var(--spacing-lg) 0;
+}
+
+.details-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: var(--spacing-md);
+}
+
+.detail-item {
+	display: flex;
+	gap: var(--spacing-sm);
+}
+
+.detail-item .state {
+	color: var(--primary-color, #007bff);
+	font-weight: 600;
+	text-transform: capitalize;
+}
+
+.badge {
+	padding: 4px 12px;
+	border-radius: 12px;
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.badge-warning {
+	background-color: #fff3cd;
+	color: #856404;
+}
+
+.badge-success {
+	background-color: #d4edda;
+	color: #155724;
+}
+
+.badge-danger {
+	background-color: #f8d7da;
+	color: #721c24;
+}
+
+.badge-info {
+	background-color: #cfe2ff;
+	color: #084298;
+}
+
+.badge-secondary {
+	background-color: #e2e3e5;
+	color: #41464b;
+}
+
+.no-candidature {
+	text-align: center;
+	padding: var(--spacing-xl);
+}
+
+.buttons button {
+	flex: 1;
+}
+
+.buttons button small {
+	font-size: 0.75rem;
+	margin-top: 4px;
+}
+
+/* Priority Badge */
+.priority-badge-small {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 36px;
+	height: 36px;
+	color: black;
+	font-weight: bold;
+	font-size: 15px;
+	border-radius: 50%;
+}
+
+.table-row td {
+	vertical-align: middle;
+}
+
+/* Placed proposal highlighting */
+.placed-row {
+	background-color: #e3f2fd;
+	border-left: 4px solid #1976d2;
+}
+
+.placed-indicator {
+	color: #1976d2;
+	font-weight: 600;
+	margin-left: 8px;
+	font-size: 0.9rem;
+}
+
+.detail-item.placed-proposal {
+	grid-column: 1 / -1;
+	background-color: #e3f2fd;
+	padding: 12px;
+	border-radius: 8px;
+	border-left: 4px solid #1976d2;
+}
+
+.detail-item.placed-proposal strong {
+	color: #1565c0;
+}

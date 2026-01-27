@@ -17,6 +17,43 @@ from api.token_manager import *
 from django.db import transaction
 
 
+@api_view(['GET'])
+def listCalendars(request):
+    """
+    Lista todos os calendários disponíveis.
+    Retorna lista simplificada com id, ano, semestre e curso.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        calendars = Calendar.objects.all().select_related('course').order_by('-calendar_year', '-calendar_semester')
+        
+        data = [
+            {
+                "id": c.id_calendar,
+                "title": str(c),
+                "year": c.calendar_year,
+                "semester": c.calendar_semester,
+                "course_id": c.course.id_course,
+                "course_name": c.course.course_name,
+            }
+            for c in calendars
+        ]
+
+        return Response(data, status=HTTP_200_OK)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
 def getCalendar(request, pk):
@@ -210,6 +247,42 @@ def createCalendar(request):
         )
         calendar.save()
 
+        # REQ-15: Notify companies about new calendar
+        try:
+            settings = Settings.objects.first()
+            if settings and getattr(settings, 'notify_companies_new_calendars', True):
+                # Check if async notification is requested
+                use_async = request.data.get("notify_async", False)
+                
+                if use_async:
+                    # Use Celery task for async notification
+                    from api.tasks.calendar_notifications import notify_companies_new_calendar_async
+                    task = notify_companies_new_calendar_async.delay(calendar.id_calendar)
+                    return Response({
+                        "message": "Calendário criado com sucesso. Notificações em processamento.",
+                        "task_id": task.id
+                    }, status=status.HTTP_201_CREATED)
+                else:
+                    # Synchronous notification
+                    from api.services.calendar_notifications import CalendarNotificationService
+                    notification_service = CalendarNotificationService()
+                    notification_results = notification_service.notify_companies_new_calendar(calendar)
+                    
+                    return Response({
+                        "message": "Calendário criado com sucesso.",
+                        "notifications": {
+                            "total": notification_results["total"],
+                            "successful": notification_results["successful"],
+                            "failed": notification_results["failed"]
+                        }
+                    }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            # Log error but don't fail calendar creation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error sending calendar notifications: {str(e)}")
+            # Continue with success response even if notifications fail
+
         return Response({"message":"Calendário criado com sucesso."}, status=status.HTTP_201_CREATED)
     except Course.DoesNotExist:
         return Response({"message": "Curso não encontrado."}, status=HTTP_404_NOT_FOUND)
@@ -323,4 +396,94 @@ def deleteCalendar(request, pk):
     except Calendar.DoesNotExist:
         return Response({"message": "Calendário não encontrado."}, status=HTTP_404_NOT_FOUND)
     except Exception as e:
+        return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def sendPlacementNotifications(request, pk):
+    """
+    Manually trigger placement result notifications for a specific calendar.
+    
+    This endpoint allows administrators and authorized teachers to manually
+    send placement notifications without waiting for the scheduled task.
+    
+    REQ-6: Placement Results Notification
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type not in ["admin", "teacher"]:
+        return Response({"message": "Sem permissão para enviar notificações"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        calendar = Calendar.objects.get(id_calendar=pk)
+    except Calendar.DoesNotExist:
+        return Response({"message": "Calendário não encontrado"}, status=HTTP_404_NOT_FOUND)
+
+    # Check teacher permissions
+    if user_type == "teacher":
+        try:
+            teacher = Teacher.objects.get(user__email=user_email)
+        except Teacher.DoesNotExist:
+            return Response({"message": "Docente não encontrado"}, status=HTTP_404_NOT_FOUND)
+
+        has_permission = False
+
+        # Check if teacher is in course commission
+        if calendar.course.commission.filter(id_teacher=teacher.id_teacher).exists():
+            has_permission = True
+
+        # Check calendar module permissions
+        if not has_permission:
+            try:
+                calendar_module = Module.objects.get(module_name='Calendários')
+                permission = Permissions.objects.get(teacher=teacher, module=calendar_module)
+                if permission.can_edit:
+                    has_permission = True
+            except (Module.DoesNotExist, Permissions.DoesNotExist):
+                pass
+
+        if not has_permission:
+            return Response({"message": "Sem permissão para enviar notificações deste calendário"}, status=HTTP_401_UNAUTHORIZED)
+
+    # Check if async parameter is passed
+    use_async = request.data.get("async", False)
+
+    try:
+        if use_async:
+            # Use Celery task for async processing
+            from api.tasks import send_placement_notifications_async
+            task = send_placement_notifications_async.delay(pk)
+            return Response({
+                "message": "Notificações em processamento",
+                "task_id": task.id,
+                "calendar": str(calendar)
+            }, status=HTTP_200_OK)
+        else:
+            # Synchronous processing
+            from api.tasks import send_placement_notifications_manual
+            result = send_placement_notifications_manual(pk)
+            
+            if result is None:
+                return Response({"message": "Erro ao processar notificações"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            return Response({
+                "message": "Notificações enviadas com sucesso",
+                "calendar": str(calendar),
+                "summary": {
+                    "total": result.get("total", 0),
+                    "successful": result.get("successful", 0),
+                    "failed": result.get("failed", 0),
+                    "placed_students": result.get("placed_students", 0),
+                    "rejected_students": result.get("rejected_students", 0),
+                    "companies_notified": result.get("companies_notified", 0),
+                    "advisors_notified": result.get("advisors_notified", 0),
+                }
+            }, status=HTTP_200_OK)
+
+    except Exception as e:
+        traceback.print_exc()
         return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

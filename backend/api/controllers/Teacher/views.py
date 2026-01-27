@@ -126,7 +126,7 @@ def listTeachers(request):
 
     try:
         if not Teacher.objects.all().exists():
-            return Response({"message": "Nenhum docente encontrado"}, status=status.HTTP_204_NO_CONTENT)
+            return Response([], status=status.HTTP_200_OK)
 
         teachers = Teacher.objects.all()
 
@@ -306,3 +306,108 @@ def deleteTeacher(request, pk):
         return Response({"detail": "Docente eliminado com sucesso"}, status=status.HTTP_200_OK)
     except Teacher.DoesNotExist:
         return Response({"error": "Docente não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def getSupervisedStudents(request, pk):
+    """
+    REQ-14: Orientation/Guidance - Get supervised students for a teacher
+    Lists students that the teacher is supervising as ISEC advisor
+    """
+    try:
+        auth_header = request.headers.get("Authorization")
+        
+        if not auth_header:
+            return Response({"error": "No auth header provided"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        user_id, user_email, user_type = decode_token(auth_header)
+
+        if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+            return Response({
+                "error": "Token error",
+                "user_email": user_email
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Verify teacher exists and user has permission
+        try:
+            teacher = Teacher.objects.get(id_teacher=pk)
+        except Teacher.DoesNotExist:
+            return Response({"error": "Teacher not found", "pk": pk}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if requesting user is the teacher or admin
+        if user_type == "teacher":
+            try:
+                requesting_teacher = Teacher.objects.get(user__email=user_email)
+                if requesting_teacher.id_teacher != int(pk):
+                    return Response({
+                        "error": "Teacher ID mismatch",
+                        "requesting_teacher_id": requesting_teacher.id_teacher,
+                        "pk": pk,
+                        "user_email": user_email
+                    }, status=status.HTTP_401_UNAUTHORIZED)
+            except Teacher.DoesNotExist:
+                return Response({
+                    "error": "Requesting teacher not found",
+                    "user_email": user_email
+                }, status=status.HTTP_401_UNAUTHORIZED)
+        elif user_type != "admin":
+            return Response({
+                "error": f"Invalid user type: {user_type}",
+                "user_type": user_type
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Get all proposals where this teacher is isec_advisor
+        proposals = Proposal.objects.filter(isec_advisor=teacher)
+
+        # Get all accepted candidatures for these proposals
+        accepted_candidatures = CandidatureProposal.objects.filter(
+            proposal__in=proposals,
+            state='accepted'
+        ).select_related(
+            'candidature__student__user',
+            'proposal',
+            'candidature__student__student_course'
+        )
+
+        # Build response data
+        supervised_data = []
+        for cp in accepted_candidatures:
+            candidature = cp.candidature
+            student = candidature.student
+            proposal = cp.proposal
+
+            supervised_data.append({
+                "candidature_id": candidature.id_candidature,
+                "student": {
+                    "id": student.student_number,
+                    "number": student.student_number,
+                    "name": student.student_name,
+                    "email": student.user.email,
+                    "course": student.student_course.course_name if student.student_course else None,
+                },
+                "proposal": {
+                    "id": proposal.id_proposal,
+                    "title": proposal.proposal_title,
+                    "type": proposal.get_proposal_type_display(),
+                },
+                "candidature_state": candidature.state,
+                "protocol_state": cp.state,
+                "submission_date": candidature.candidature_submission_date.isoformat() if candidature.candidature_submission_date else None,
+                "last_updated": candidature.last_updated.isoformat() if candidature.last_updated else None,
+            })
+
+        return Response(
+            {
+                "count": len(supervised_data),
+                "supervised_students": supervised_data
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        return Response(
+            {"error": f"Exception: {str(e)}", "trace": error_trace},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

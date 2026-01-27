@@ -3,11 +3,11 @@
   position: relative;
   height: 100svh;
   width: 100%;
-	overflow: hidden;
+  overflow-y: auto;
 }
 
 section {
-	padding: var(--spacing-l);
+  padding: var(--spacing-l);
 }
 
 #register-representative .image-container {
@@ -20,24 +20,25 @@ section {
   background-repeat: no-repeat;
   border-radius: var(--border-xs);
 }
+
 #register-representative .image-container img {
   height: 5%;
 }
 
 #register-representative .form {
-	padding: var(--spacing-m) var(--spacing-xl);
+  padding: var(--spacing-m) var(--spacing-xl);
 }
 
 #register-representative form {
-	gap: var(--spacing-m)
+  gap: var(--spacing-m)
 }
 
 #register-representative .title-container .title {
-	color: var(--primary-color-600);
-	text-align: left;
+  color: var(--primary-color-600);
+  text-align: left;
 }
 
 #register-representative .title-container .sub-title {
-	color: var(--text-color-600);
-	text-align: left;
+  color: var(--text-color-600);
+  text-align: left;
 }

@@ -82,6 +82,9 @@ def login(request):
             response_data["id"] = None
             response_data["company_id"] = None
 
+    elif user.user_type == "academic_services":
+        response_data["name"] = "Academic Services"
+
     return Response(response_data, status=200)
 
 
@@ -96,7 +99,8 @@ def setPassword(request):
     module_map = {
         "student": "Alunos",
         "teacher": "Docentes",
-        "representative": "Empresas"
+        "representative": "Empresas",
+        "academic_services": "Servicos Academicos"
     }
 
     data = request.data.copy()
@@ -299,17 +303,34 @@ def summary(request):
             s = Student.objects.get(user__email=user_email)
             c = s.calendar
 
-            data = {
-                "is_missing_info": s.is_missing_info(),
-                "calendar": {
-                    "id": c.id_calendar,
-                    "title": str(c),
-                    "submission_start": c.submission_start.strftime("%d/%m/%Y"),
-                    "submission_end": c.submission_end.strftime("%d/%m/%Y"),
-                    "divulgation": c.divulgation.strftime("%d/%m/%Y"),
-                    "candidatures": c.candidatures.strftime("%d/%m/%Y"),
-                    "placements": c.placements.strftime("%d/%m/%Y"),
+            if c is None:
+                data = {
+                    "is_missing_info": s.is_missing_info(),
+                    "calendar": None
                 }
+            else:
+                data = {
+                    "is_missing_info": s.is_missing_info(),
+                    "calendar": {
+                        "id": c.id_calendar,
+                        "title": str(c),
+                        "submission_start": c.submission_start.strftime("%d/%m/%Y"),
+                        "submission_end": c.submission_end.strftime("%d/%m/%Y"),
+                        "divulgation": c.divulgation.strftime("%d/%m/%Y"),
+                        "candidatures": c.candidatures.strftime("%d/%m/%Y"),
+                        "placements": c.placements.strftime("%d/%m/%Y"),
+                    }
+                }
+
+        elif user_type == "academic_services":
+            data = {
+                "nCourses": Course.objects.count(),
+                "nTeachers": Teacher.objects.count(),
+                "nStudents": Student.objects.count(),
+                "nCompanies": Company.objects.count(),
+                "nRepresentatives": Representative.objects.count(),
+                "nProposals": Proposal.objects.count(),
+                "nCandidatures": Candidature.objects.count(),
             }
 
         else:
@@ -327,7 +348,8 @@ def changePfp(request):
     module_mapping = {
         "student": "Alunos",
         "teacher": "Docentes",
-        "representative": "Empresas"
+        "representative": "Empresas",
+        "academic_services": "Servicos Academicos"
     }
 
     auth_header = request.headers.get("Authorization")

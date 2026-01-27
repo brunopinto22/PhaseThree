@@ -8,4 +8,7 @@ urlpatterns = [
     path('proposal/<int:pk>/edit', editProposal),
     path('proposal/<int:pk>/delete', deleteProposal),
     path('proposal/<int:pk>/pdf', generatePdf),
+    path('proposal/<int:proposal_id>/candidates/', getProposalCandidates),
+    path('proposal/<int:proposal_id>/candidates/<int:student_number>/accept', acceptCandidate),
+    path('proposal/<int:proposal_id>/candidates/<int:student_number>/reject', rejectCandidate),
 ]

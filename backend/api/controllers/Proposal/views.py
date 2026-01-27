@@ -8,12 +8,14 @@ from io import BytesIO
 import unicodedata
 from django.core.mail import send_mail
 from django.db.models import F, Value, IntegerField, Case, When
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
+from django.utils import timezone
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.status import *
+from rest_framework.decorators import api_view
 from docxtpl import DocxTemplate
 from docx2pdf import convert
 
@@ -202,6 +204,11 @@ def listProposals(request):
                 "calendar": {
                     "id": p.calendar.id_calendar,
                     "title": p.calendar.__str__(),
+                    "submission_start": p.calendar.submission_start.strftime("%d/%m/%Y"),
+                    "submission_end": p.calendar.submission_end.strftime("%d/%m/%Y"),
+                    "divulgation": p.calendar.divulgation.strftime("%d/%m/%Y"),
+                    "candidatures": p.calendar.candidatures.strftime("%d/%m/%Y"),
+                    "placements": p.calendar.placements.strftime("%d/%m/%Y"),
                 },
                 "course": {
                     "id": p.course.id_course,
@@ -563,3 +570,342 @@ def generatePdf(request, pk):
 
     except Exception as e:
         return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def getProposalCandidates(request, proposal_id):
+    """
+    Endpoint para representative ver candidatos de uma proposta.
+    Retorna lista de alunos que se candidataram com seus dados.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+        user_email == "Expired Token."
+        or user_email == "Invalid Token"
+        or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type != "representative":
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        representative = Representative.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
+
+        # Validar que representative é company_advisor da proposta
+        if proposal.company_advisor != representative:
+            return Response(
+                {"message": "Apenas o company advisor pode ver candidatos desta proposta"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # NOVO SISTEMA: Buscar apenas candidatos COLOCADOS ou ACEITOS nesta proposta
+        candidature_proposals = CandidatureProposal.objects.filter(
+            proposal=proposal,
+            state__in=['placed', 'accepted']  # Apenas colocados ou aceitos
+        ).select_related(
+            'candidature', 
+            'candidature__student',
+            'candidature__student__user',
+            'candidature__student__student_course',
+            'candidature__student__student_branch'
+        ).order_by('-candidature__student__average', 'candidature__candidature_submission_date')
+
+        # Contar candidatos aceites e colocados
+        accepted_count = candidature_proposals.filter(state='accepted').count()
+        placed_count = candidature_proposals.filter(state='placed').count()
+
+        # Montar lista de candidatos
+        candidates = []
+        for cp in candidature_proposals:
+            student = cp.candidature.student
+            candidates.append({
+                "student_number": student.student_number,
+                "student_name": student.student_name,
+                "student_email": student.user.email,
+                "student_average": student.average,  # NOVO: Incluir média
+                "course": student.student_course.course_name if student.student_course else None,
+                "branch": student.student_branch.branch_name if student.student_branch else None,
+                "curriculum_url": request.build_absolute_uri(student.curriculum.url) if student.curriculum else None,
+                "submission_date": cp.candidature.candidature_submission_date.strftime("%d/%m/%Y"),
+                "priority": cp.priority,  # NOVO: Incluir prioridade da proposta para o aluno
+                "state": cp.state,
+                "can_change": cp.state == 'placed'  # Só pode mudar se ainda estiver 'placed'
+            })
+
+        data = {
+            "proposal_id": proposal.id_proposal,
+            "proposal_title": proposal.proposal_title,
+            "slots": proposal.slots,
+            "accepted_count": accepted_count,
+            "placed_count": placed_count,  # NOVO
+            "calendar": {
+                "title": proposal.calendar.__str__(),
+                "submission_start": proposal.calendar.submission_start.strftime("%d/%m/%Y"),
+                "submission_end": proposal.calendar.submission_end.strftime("%d/%m/%Y"),
+                "divulgation": proposal.calendar.divulgation.strftime("%d/%m/%Y"),
+                "candidatures": proposal.calendar.candidatures.strftime("%d/%m/%Y"),
+                "placements": proposal.calendar.placements.strftime("%d/%m/%Y"),
+            },
+            "candidates": candidates
+        }
+
+        return JsonResponse(data, status=status.HTTP_200_OK)
+
+    except Representative.DoesNotExist:
+        return Response({"message": "Representative não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposta não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["PUT"])
+def acceptCandidate(request, proposal_id, student_number):
+    """
+    Endpoint para representative aceitar um candidato COLOCADO.
+    Novo sistema: empresa só pode aceitar/rejeitar candidatos já colocados pelo sistema.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+        user_email == "Expired Token."
+        or user_email == "Invalid Token"
+        or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type != "representative":
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        representative = Representative.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
+        student = Student.objects.get(student_number=student_number)
+
+        # Validar que representative é company_advisor
+        if proposal.company_advisor != representative:
+            return Response(
+                {"message": "Apenas o company advisor pode aceitar candidatos"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # Buscar candidatura do aluno
+        candidature = Candidature.objects.get(student=student)
+        
+        # Buscar CandidatureProposal
+        candidature_proposal = CandidatureProposal.objects.get(
+            candidature=candidature,
+            proposal=proposal
+        )
+
+        # VALIDAR: Candidato deve estar 'placed' nesta proposta
+        if candidature_proposal.state != 'placed':
+            return Response(
+                {"message": "Candidato não está colocado nesta proposta"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # ACEITAR CANDIDATO (na proposta)
+        candidature_proposal.state = 'accepted'
+        candidature_proposal.state_changed_at = timezone.now()
+        candidature_proposal.save()
+
+        # 1. Mudar estado da candidatura para 'accepted' (registrado como ação do representante)
+        candidature.change_state(
+            new_state='accepted',
+            changed_by=representative.user,
+            notes=f'Aceito pela empresa {proposal.company.company_name}'
+        )
+
+        # 2. Mudar automaticamente para 'revision' (registrado como ação do sistema)
+        candidature.change_state(
+            new_state='revision',
+            changed_by=None,
+            notes='Mudança automática do sistema após aceitação da empresa'
+        )
+
+        # 3. Verificações de conta do aluno
+        if student.validation_status == 'validated':
+            candidature.change_state(
+                new_state='protocol_generated',
+                changed_by=None,
+                notes='Mudança automática: Conta do aluno já se encontra validada'
+            )
+        elif student.validation_status == 'rejected':
+            candidature.change_state(
+                new_state='finished',
+                changed_by=None,
+                notes='Mudança automática: Conta do aluno foi rejeitada'
+            )
+        # Se for 'pending', permanece em 'revision', conforme solicitado
+
+        # Marcar todas as outras propostas como 'skipped'
+        CandidatureProposal.objects.filter(
+            candidature=candidature
+        ).exclude(id=candidature_proposal.id).update(
+            state='skipped',
+            state_changed_at=timezone.now()
+        )
+
+        # Adicionar student à proposta
+        proposal.students.add(student)
+
+        return Response(
+            {"message": "Candidato aceite com sucesso"},
+            status=HTTP_200_OK
+        )
+
+    except Representative.DoesNotExist:
+        return Response({"message": "Representative não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposta não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Candidature.DoesNotExist:
+        return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except CandidatureProposal.DoesNotExist:
+        return Response({"message": "Aluno não se candidatou a esta proposta"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["PUT"])
+def rejectCandidate(request, proposal_id, student_number):
+    """
+    Endpoint para representative rejeitar um candidato COLOCADO.
+    Novo sistema: após rejeição, tenta recolocar na próxima proposta da lista.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+        user_email == "Expired Token."
+        or user_email == "Invalid Token"
+        or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type != "representative":
+        return Response({"message": "Sem permissão"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        representative = Representative.objects.get(user__email=user_email)
+        proposal = Proposal.objects.get(id_proposal=proposal_id)
+        student = Student.objects.get(student_number=student_number)
+
+        # Validar que representative é company_advisor
+        if proposal.company_advisor != representative:
+            return Response(
+                {"message": "Apenas o company advisor pode rejeitar candidatos"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # Buscar candidatura do aluno
+        candidature = Candidature.objects.get(student=student)
+        
+        # Buscar CandidatureProposal
+        candidature_proposal = CandidatureProposal.objects.get(
+            candidature=candidature,
+            proposal=proposal
+        )
+
+        # VALIDAR: Candidato deve estar 'placed' nesta proposta
+        if candidature_proposal.state != 'placed':
+            return Response(
+                {"message": "Candidato não está colocado nesta proposta"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # REJEITAR nesta proposta
+        candidature_proposal.state = 'rejected'
+        candidature_proposal.state_changed_at = timezone.now()
+        candidature_proposal.save()
+
+        # TENTAR RECOLOCAR na próxima proposta da lista
+        next_proposals = CandidatureProposal.objects.filter(
+            candidature=candidature,
+            state='pending',
+            priority__gt=candidature_proposal.priority
+        ).select_related('proposal').order_by('priority')
+
+        recolocado = False
+        
+        for next_prop in next_proposals:
+            # Verificar vagas disponíveis
+            slots_ocupados = CandidatureProposal.objects.filter(
+                proposal=next_prop.proposal,
+                state='placed'
+            ).count()
+            
+            if next_prop.proposal.slots > slots_ocupados:
+                # RECOLOCAR
+                candidature.placed_proposal = next_prop.proposal
+                candidature.placement_attempt += 1
+                
+                next_prop.state = 'placed'
+                next_prop.state_changed_at = timezone.now()
+                next_prop.save()
+                
+                # Atualizar estado E registrar no histórico
+                candidature.change_state(
+                    new_state='placed',
+                    changed_by=representative.user,
+                    notes=f'Rejeitado em {proposal.proposal_title}, recolocado em {next_prop.proposal.proposal_title} (prioridade {next_prop.priority})'
+                )
+                
+                recolocado = True
+                break
+        
+        if not recolocado:
+            # SEM MAIS OPÇÕES - marcar como rejected
+            candidature.placed_proposal = None
+            
+            # Marcar todas as propostas restantes como rejected
+            candidature.candidature_proposals.filter(
+                state='pending'
+            ).update(state='rejected', state_changed_at=timezone.now())
+            
+            # Atualizar estado E registrar no histórico
+            candidature.change_state(
+                new_state='rejected',
+                changed_by=representative.user,
+                notes=f'Rejeitado em {proposal.proposal_title}. Sem vagas nas propostas restantes.'
+            )
+
+        message = "Candidato rejeitado"
+        if recolocado:
+            message += " e recolocado na próxima proposta da lista"
+        else:
+            message += ". Sem vagas nas propostas restantes."
+
+        return Response(
+            {"message": message, "recolocado": recolocado},
+            status=HTTP_200_OK
+        )
+
+    except Representative.DoesNotExist:
+        return Response({"message": "Representative não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Proposal.DoesNotExist:
+        return Response({"message": "Proposta não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Candidature.DoesNotExist:
+        return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except CandidatureProposal.DoesNotExist:
+        return Response({"message": "Aluno não se candidatou a esta proposta"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )

@@ -23,28 +23,33 @@ def decode_token(token):
     Args:
         token (str): The JWT token to decode.
     Returns:
-        tuple: A tuple containing the user ID and type if the token is valid.
-               If the token is expired, returns ("Expired Token.", None).
-               If the token is invalid, returns ("Invalid Token", None).
-               If the payload does not contain 'user_id', returns ("Payload does not contain 'user_id'.", None).
-    Raises:
-        jwt.ExpiredSignatureError: If the token has expired.
-        jwt.InvalidTokenError: If the token is invalid.
-        KeyError: If the payload does not contain 'user_id'.
+        tuple: A tuple containing (user_id, email, type) if the token is valid.
+               If the token is expired, returns ("Expired Token.", None, None).
+               If the token is invalid, returns ("Invalid Token", None, None).
+               If the payload does not contain required fields, returns ("Payload error", None, None).
     """
     try:
+        # Remove "Bearer " prefix if present
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        
+        if not token:
+            return "No token provided", None, None
+            
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        user_id = payload['user_id']
-        email = payload['email']
-        type = payload['type']
-        return user_id, email, type
+        user_id = payload.get('user_id')
+        email = payload.get('email')
+        user_type = payload.get('type')
+        
+        return user_id, email, user_type
     except jwt.ExpiredSignatureError:
-
-        return "Expired Token.", None
+        return "Expired Token.", None, None
     except jwt.InvalidTokenError:
-        return "Invalid Token", None
+        return "Invalid Token", None, None
     except KeyError:
-        return "Payload does not contain 'user_id'.", None
+        return "Payload does not contain 'user_id'.", None, None
+    except Exception as e:
+        return f"Token decode error: {str(e)}", None, None
 
 
 def verify_token(token):

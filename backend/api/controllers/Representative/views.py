@@ -194,3 +194,98 @@ def deleteRepresentative(request, pk):
             return Response({"message": "Sem permissão para eliminar um Curso"}, status=HTTP_401_UNAUTHORIZED)
 
     return Response({"message": "deleteRepresentative"}, status=HTTP_200_OK)
+
+
+@api_view(["GET"])
+def getSupervisedStudents(request, pk):
+    """
+    Retrieves the list of students supervised by a specific representative (as company advisor).
+    Only the representative themselves or an admin can access this endpoint.
+    
+    Parameters:
+    - pk: The ID of the representative
+    
+    Returns:
+    - List of students with candidature details, proposal info, and status tracking
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "Unauthorized"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        representative = Representative.objects.get(id_representative=pk)
+        
+        # Authorization check: User must be the representative or admin
+        if user_type != "admin":
+            user_representative = Representative.objects.get(user__email=user_email)
+            if user_representative.id_representative != representative.id_representative:
+                return Response(
+                    {"message": "Unauthorized"},
+                    status=HTTP_403_FORBIDDEN
+                )
+        
+        # Get all proposals where this representative is the company advisor
+        proposals = Proposal.objects.filter(company_advisor=representative)
+        
+        # Get all accepted candidatures for these proposals
+        candidatures = CandidatureProposal.objects.filter(
+            proposal__in=proposals,
+            state='accepted'
+        ).select_related(
+            'candidature__student__user',
+            'candidature__student__student_course',
+            'proposal'
+        ).order_by('-candidature__candidature_submission_date')
+        
+        supervised_students = []
+        
+        for cp in candidatures:
+            candidature = cp.candidature
+            student = candidature.student
+            proposal = cp.proposal
+            
+            student_data = {
+                "candidature_id": candidature.id_candidature,
+                "student": {
+                    "id": student.student_number,
+                    "number": student.student_number,
+                    "name": student.student_name,
+                    "email": student.user.email,
+                    "course": student.student_course.course_name if student.student_course else None
+                },
+                "proposal": {
+                    "id": proposal.id_proposal,
+                    "title": proposal.proposal_title,
+                    "type": proposal.get_proposal_type_display()
+                },
+                "candidature_state": candidature.state,
+                "protocol_state": cp.state,
+                "submission_date": candidature.candidature_submission_date.isoformat() if candidature.candidature_submission_date else None,
+                "last_updated": candidature.last_updated.isoformat() if candidature.last_updated else None
+            }
+            
+            supervised_students.append(student_data)
+        
+        data = {
+            "count": len(supervised_students),
+            "supervised_students": supervised_students
+        }
+        
+        return Response(data, status=HTTP_200_OK)
+        
+    except Representative.DoesNotExist:
+        return Response(
+            {"message": "Representative not found"},
+            status=HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        import traceback
+        return Response(
+            {
+                "message": f"Error: {str(e)}",
+                "trace": traceback.format_exc()
+            },
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )

@@ -28,6 +28,7 @@ const Register = () => {
 	const [contact, setContact] = useState();
 	const [website, setWebsite] = useState();
 	const [linkedin, setLinkedin] = useState();
+	const [gdprConsent, setGdprConsent] = useState(false);
 
 	const [errorMessage, setErrorMessage] = useState("");
 	const [error, setError] = useState(false);
@@ -35,6 +36,11 @@ const Register = () => {
 	const { setCompanyInfo } = useContext(CompanyContext);
 
 	const submit = () => {
+		if (!gdprConsent) {
+			setError(true);
+			setErrorMessage("Deve consentir com o processamento dos dados de acordo com o RGPD");
+			return;
+		}
 		setCompanyInfo({ name, email, address, code, nipc, contact, website, linkedin });
 		navigate("/register/representative")
 	}
@@ -62,7 +68,20 @@ const Register = () => {
 						<TextInput text='Website' value={website} setValue={setWebsite} />
 						<TextInput text='Linkedin' value={linkedin} setValue={setLinkedin} />
 
-            <PrimaryButton type='submit' content={<h6>Registar</h6>} action={submit} />
+					<div className='gdpr-consent d-flex flex-row align-items-start gap-2' style={{marginTop: '10px', marginBottom: '10px'}}>
+						<input 
+							type='checkbox' 
+							id='gdpr-consent-company' 
+							checked={gdprConsent}
+							onChange={(e) => setGdprConsent(e.target.checked)}
+							style={{marginTop: '5px', cursor: 'pointer', minWidth: '20px'}}
+						/>
+						<label htmlFor='gdpr-consent-company' style={{cursor: 'pointer', fontSize: '0.9em', margin: 0}}>
+							Concordo que os dados da empresa (Nome, Email, Morada, NIPC, Contacto) sejam processados de acordo com o Regulamento Geral de Proteção de Dados (RGPD) para fins de registo e gestão de propostas.
+						</label>
+					</div>
+
+                    <PrimaryButton type='submit' content={<h6>Registar</h6>} action={submit} />
 						{error && (<p className='error-message'>{errorMessage}</p>)}
 					</form>
 

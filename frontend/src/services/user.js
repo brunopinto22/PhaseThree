@@ -94,4 +94,42 @@ export async function getSummary(token, setStatus, setErrorMessage) {
     return null;
   }
 
-} 
+}
+
+
+/**
+ * GDPR Compliance: Right of Access
+ * Exports all personal data of the authenticated user
+ * @param {string} token - Authentication token
+ * @param {function} setStatus - State setter for HTTP status
+ * @param {function} setErrorMessage - State setter for error messages
+ * @returns {Promise<Object|null>} User data export or null on error
+ */
+export async function exportUserData(token, setStatus, setErrorMessage) {
+
+	try {
+
+		const res = await fetch(`${apiUrl}/user/data-export/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const response = await res.json();
+		setStatus(res.status);
+
+    if(res.status !== 200) {
+      setErrorMessage(response.message || "Erro ao exportar dados");
+      return null;
+    }
+
+    return response;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+
+}

@@ -37,6 +37,7 @@ def getStudent(request, pk):
             "is_missing_info": student.is_missing_info(),
             "pfp": request.build_absolute_uri(student.user.photo.url) if student.user.photo else None,
             "active": student.active,
+            "validation_status": student.validation_status,
             "name": student.student_name,
             "student_number": student.student_number,
             "email": student.user.email,
@@ -94,7 +95,7 @@ def listStudents(request):
     ):
         return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"message": "Sem permissão para para ver os Alunos"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
@@ -107,7 +108,7 @@ def listStudents(request):
     try:
         students = Student.objects.all()
         if not students.exists():
-            return Response({"message": "Nenhum aluno encontrado"},status=status.HTTP_204_NO_CONTENT)
+            return Response([], status=status.HTTP_200_OK)
 
         data = []
 
@@ -116,6 +117,7 @@ def listStudents(request):
                 "is_missing_info": s.is_missing_info(),
                 "pfp": s.user.photo.url if s.user.photo else None,
                 "active": s.active,
+                "validation_status": s.validation_status,
                 "student_number": s.student_number,
                 "name": s.student_name,
                 "email": s.user.email,
@@ -149,7 +151,7 @@ def registerStudent(request):
             return Response({"message": "Curso não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
 
         calendars = Calendar.objects.filter(course=course)
-        active_regs = [c for c in calendars if c.registrations and c.registrations >= date.today()]
+        active_regs = [c for c in calendars if c.registrations is None or c.registrations >= date.today()]
 
         if not active_regs:
             return Response({"message": "Não existe um calendário com inscrições ativas para este curso."}, status=status.HTTP_400_BAD_REQUEST)
@@ -211,7 +213,7 @@ def createStudent(request):
     ):
         return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"message": "Sem permissão para criar um Aluno"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
@@ -222,73 +224,172 @@ def createStudent(request):
             return Response({"message": "Sem permissão para criar um Aluno"}, status=HTTP_401_UNAUTHORIZED)
 
     try:
-        data = request.data.copy()
+        with transaction.atomic():
+            data = request.data.copy()
 
-        course = None
-        try:
-            course = Course.objects.get(id_course=data.get("student_course"))
-        except Course.DoesNotExist:
-            return Response({"message": "Curso não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
-
-        branch = None
-        branch_id = data.get("student_branch")
-        if branch_id:
+            course = None
             try:
-                branch = Branch.objects.get(id_branch=branch_id)
-            except Branch.DoesNotExist:
-                return Response({"message": "Ramo não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
+                course = Course.objects.get(id_course=data.get("student_course"))
+            except Course.DoesNotExist:
+                return Response({"message": "Curso não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Accounts.objects.filter(email=data.get("email")).exists():
-            return Response({"message": "Email já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            branch = None
+            branch_id = data.get("student_branch")
+            if branch_id:
+                try:
+                    branch = Branch.objects.get(id_branch=branch_id)
+                except Branch.DoesNotExist:
+                    return Response({"message": "Ramo não encontrado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Student.objects.filter(student_number=data.get("student_number")).exists():
-            return Response({"message": "Número de aluno já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            if Accounts.objects.filter(email=data.get("email")).exists():
+                return Response({"message": "Email já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Student.objects.filter(nif=data.get("nif")).exists():
-            return Response({"message": "NIF já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            if Student.objects.filter(student_number=data.get("student_number")).exists():
+                return Response({"message": "Número de aluno já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if Student.objects.filter(ident_doc=data.get("ident_doc")).exists():
-            return Response({"message": "Documento de identificação já registado."}, status=status.HTTP_400_BAD_REQUEST)
+            if Student.objects.filter(nif=data.get("nif")).exists():
+                return Response({"message": "NIF já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        settings = Settings.objects.first()
-        password = settings.student_password
-        if data.get("password"):
-            password = data.get("password")
+            if Student.objects.filter(ident_doc=data.get("ident_doc")).exists():
+                return Response({"message": "Documento de identificação já registado."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = Accounts.objects.create_user(
-            username=data["email"],
-            email=data["email"],
-            user_type="student",
-        )
-        user.set_password(password)
-        user.save()
+            settings = Settings.objects.first()
+            password = settings.student_password
+            if data.get("password"):
+                password = data.get("password")
 
-        student = Student.objects.create(
-            user=user,
-            student_number=data.get("student_number"),
-            student_name=data.get("student_name"),
-            nationality=data.get("nationality"),
-            ident_type=data.get("ident_type"),
-            ident_doc=data.get("ident_doc"),
-            nif=data.get("nif"),
-            gender=data.get("gender"),
-            address=data.get("address"),
-            contact=data.get("contact"),
-            current_year=data.get("year"),
-            average=data.get("average"),
-            subjects_done=data.get("subjects_done"),
-            student_course=course,
-            student_branch=branch,
-            student_ects=data.get("student_ects"),
-        )
+            user = Accounts.objects.create_user(
+                username=data["email"],
+                email=data["email"],
+                user_type="student",
+            )
+            user.set_password(password)
+            user.save()
 
-        for subj in data.pop('subjects', []):
-            student.add_subject(subj['subject_name'], subj.get('state', Subject.PENDING))
+            student = Student.objects.create(
+                user=user,
+                student_number=data.get("student_number"),
+                student_name=data.get("student_name"),
+                nationality=data.get("nationality", ""),
+                ident_type=data.get("ident_type"),
+                ident_doc=data.get("ident_doc"),
+                nif=data.get("nif"),
+                gender=data.get("gender"),
+                address=data.get("address"),
+                contact=data.get("contact"),
+                current_year=data.get("year"),
+                average=data.get("average"),
+                subjects_done=data.get("subjects_done"),
+                student_course=course,
+                student_branch=branch,
+                student_ects=data.get("student_ects"),
+            )
 
-        return Response({"message": "Aluno criado com sucesso"}, status=status.HTTP_201_CREATED)
+            for subj in data.pop('subjects', []):
+                student.add_subject(subj['subject_name'], subj.get('state', Subject.PENDING))
+
+            return Response({"message": "Aluno criado com sucesso"}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({"message": "Internal server error",}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
+def importStudents(request):
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type not in ["admin", "teacher", "academic_services"]:
+        return Response({"message": "Sem permissão para importar alunos"}, status=HTTP_401_UNAUTHORIZED)
+
+    students_data = request.data
+    if not isinstance(students_data, list):
+        return Response({"message": "Dados inválidos. Esperada uma lista de alunos."}, status=HTTP_400_BAD_REQUEST)
+
+    success_count = 0
+    errors = []
+    settings = Settings.objects.first()
+    default_password = settings.student_password if settings else "aluno@123"
+
+    for idx, data in enumerate(students_data):
+        try:
+            with transaction.atomic():
+                email = data.get("email")
+                student_number = data.get("student_number")
+
+                if not email or not student_number:
+                    errors.append(f"Linha {idx+1}: Email e número de aluno são obrigatórios.")
+                    continue
+
+                if Accounts.objects.filter(email=email).exists():
+                    errors.append(f"Linha {idx+1}: Email {email} já registado.")
+                    continue
+
+                if Student.objects.filter(student_number=student_number).exists():
+                    errors.append(f"Linha {idx+1}: Número {student_number} já registado.")
+                    continue
+
+                # Resolução inteligente do Curso (por ID ou Nome)
+                course_val = data.get("student_course")
+                course = None
+                if isinstance(course_val, int):
+                    course = Course.objects.filter(id_course=course_val).first()
+                if not course and course_val:
+                    course = Course.objects.filter(course_name__icontains=str(course_val)).first()
+                
+                if not course:
+                    errors.append(f"Linha {idx+1}: Curso '{course_val}' não encontrado.")
+                    continue
+
+                # Resolução inteligente do Calendário (ID ou automático para o mais recente do curso)
+                calendar_val = data.get("student_calendar")
+                calendar = None
+                if isinstance(calendar_val, int):
+                    calendar = Calendar.objects.filter(id_calendar=calendar_val).first()
+                
+                if not calendar:
+                    # Fallback: Usar o calendário mais recente associado a este curso
+                    calendar = Calendar.objects.filter(course=course).order_by('-id_calendar').first()
+
+                user = Accounts.objects.create_user(
+                    username=email,
+                    email=email,
+                    user_type="student",
+                )
+                user.set_password(default_password)
+                user.save()
+
+                Student.objects.create(
+                    user=user,
+                    student_number=student_number,
+                    student_name=data.get("student_name"),
+                    nationality=data.get("nationality", ""),
+                    ident_type=data.get("ident_type"),
+                    ident_doc=data.get("ident_doc"),
+                    nif=data.get("nif"),
+                    gender=data.get("gender"),
+                    address=data.get("address"),
+                    contact=data.get("contact"),
+                    current_year=data.get("year"),
+                    average=data.get("average"),
+                    subjects_done=data.get("subjects_done"),
+                    student_course=course,
+                    calendar=calendar,
+                    student_ects=data.get("student_ects"),
+                    validation_status=data.get("validation_status", "pending")
+                )
+                success_count += 1
+        except Exception as e:
+            errors.append(f"Linha {idx+1}: Erro inesperado: {str(e)}")
+
+    return Response({
+        "message": f"Processamento concluído. {success_count} alunos importados.",
+        "success_count": success_count,
+        "errors": errors
+    }, status=status.HTTP_200_OK if success_count > 0 else status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["PUT"])
@@ -310,7 +411,7 @@ def editStudent(request, pk):
         if student != self:
             return Response({"error":"Sem permissão para para editar o Aluno"}, status=status.HTTP_403_FORBIDDEN)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"detail": "login"}, status=HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
@@ -327,7 +428,9 @@ def editStudent(request, pk):
         student = Student.objects.get(student_number=pk)
         course = Course.objects.get(id_course=data.get("student_course"))
         branch = Branch.objects.get(id_branch=data.get("student_branch")) if data.get("student_branch") else None
-        calendar = Calendar.objects.get(id_calendar=data.get("student_calendar"))
+        
+        calendar_id = data.get("student_calendar")
+        calendar = Calendar.objects.get(id_calendar=calendar_id) if calendar_id else None
 
         if Accounts.objects.filter(email=data["email"]).exclude(pk=student.user.pk).exists():
             return Response({"message": "Este email já está em uso"}, status=status.HTTP_400_BAD_REQUEST)
@@ -340,6 +443,9 @@ def editStudent(request, pk):
 
         if user_type == "admin" or (user_type == "teacher" and has_permission):
             student.active = data['active']
+
+        if user_type == "admin" or user_type == "academic_services":
+            student.validation_status = data.get('validation_status', student.validation_status)
 
         student.user.email = data["email"]
         student.user.save()
@@ -394,7 +500,7 @@ def deleteStudent(request, pk):
     ):
         return Response({"detail": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    elif user_type not in ["admin", "teacher"]:
+    elif user_type not in ["admin", "teacher", "academic_services"]:
         return Response({"message": "Sem permissão para para eliminar o Aluno"}, status=status.HTTP_401_UNAUTHORIZED)
 
     elif user_type == "teacher":
@@ -406,8 +512,13 @@ def deleteStudent(request, pk):
 
     try:
         student = Student.objects.get(pk=pk)
-        student.active = False
-        student.save()
+        user = student.user
+        
+        with transaction.atomic():
+            student.delete()
+            if user:
+                user.delete()
+                
         return Response({"message": "Aluno eliminado com sucesso"}, status=status.HTTP_200_OK)
     except Student.DoesNotExist:
         return Response({"message": "Aluno não foi encontrado"}, status=status.HTTP_404_NOT_FOUND)
@@ -483,3 +594,291 @@ def removeFavorite(request, proposal_id):
         return Response({"message": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+def uploadCurriculum(request, pk):
+    """
+    Upload de currículo do aluno. 
+    O aluno só pode fazer upload do próprio currículo.
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    # Suporta "Token <jwt>" ou o token diretamente
+    parts = auth_header.split()
+    token_str = parts[1] if len(parts) == 2 and parts[0].lower() == "token" else auth_header
+
+    decoded = decode_token(token_str)
+    if not isinstance(decoded, tuple):
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    if len(decoded) == 3:
+        user_id, user_email, user_type = decoded
+    else:
+        # decode_token retornou mensagem de erro + None
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        student = Student.objects.get(student_number=pk)
+
+        # Verificar permissões
+        if user_type == "student":
+            self = Student.objects.get(user__email=user_email)
+            if student != self:
+                return Response(
+                    {"message": "Sem permissão para fazer upload do currículo de outro aluno"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        elif user_type != "admin":
+            return Response(
+                {"message": "Sem permissão para fazer upload de currículo"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Verificar se arquivo foi enviado
+        if "curriculum" not in request.FILES:
+            return Response(
+                {"message": "Nenhum arquivo foi enviado"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        curriculum_file = request.FILES["curriculum"]
+
+        # Verificar extensão
+        if not curriculum_file.name.lower().endswith(".pdf"):
+            return Response(
+                {"message": "Apenas arquivos PDF são aceitos"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verificar tamanho (máximo 10MB)
+        if curriculum_file.size > 10 * 1024 * 1024:
+            return Response(
+                {"message": "Arquivo muito grande. Máximo 10MB"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Apagar arquivo anterior se existir
+        if student.curriculum:
+            student.curriculum.delete()
+
+        # Salvar novo arquivo
+        student.curriculum = curriculum_file
+        student.save()
+
+        return Response(
+            {
+                "message": "Currículo enviado com sucesso",
+                "curriculum_url": student.curriculum.url if student.curriculum else None
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Student.DoesNotExist:
+        return Response(
+            {"message": "Aluno não encontrado"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return Response(
+            {"message": "Erro ao fazer upload", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+def getCurriculum(request, pk):
+    """
+    Obter informações do currículo do aluno.
+    O currículo é público para ser visto no perfil.
+    """
+    try:
+        student = Student.objects.get(student_number=pk)
+
+        if not student.curriculum:
+            return Response(
+                {"message": "Aluno ainda não tem currículo"},
+                status=status.HTTP_204_NO_CONTENT
+            )
+
+        # Build absolute URL com o domínio do backend
+        curriculum_url = request.build_absolute_uri(student.curriculum.url)
+
+        return Response(
+            {
+                "curriculum_url": curriculum_url,
+                "curriculum_name": student.curriculum.name.split("/")[-1]
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Student.DoesNotExist:
+        return Response(
+            {"message": "Aluno não encontrado"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return Response(
+            {"message": "Erro ao obter currículo", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["DELETE"])
+def deleteCurriculum(request, pk):
+    """Elimina o ficheiro e define o campo como null."""
+    auth_header = request.headers.get("Authorization")
+    
+    if not auth_header:
+        return Response({"message": "login"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+    except IndexError:
+        return Response({"message": "login"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    result = decode_token(token)
+    
+    if len(result) == 2:
+        return Response({"message": "login"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user_id, user_email, user_type = result
+
+    if user_type not in ["student", "admin"]:
+        return Response({"message": "Sem permissão"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        student = Student.objects.get(student_number=pk)
+        
+        if user_type == "student":
+            requester = Student.objects.get(user__email=user_email)
+            if requester.student_number != student.student_number:
+                return Response({"message": "Sem permissão"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not student.curriculum:
+            return Response({"message": "Sem currículo"}, status=status.HTTP_204_NO_CONTENT)
+
+        try:
+            student.curriculum.delete(save=False)
+        except Exception:
+            pass
+
+        student.curriculum = None
+        student.save()
+
+        return Response({"message": "Currículo eliminado"}, status=status.HTTP_200_OK)
+
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+def listStudentsWithInternships(request):
+    """
+    Endpoint para Academic Services ver estudantes com internships ativos.
+    Retorna estudantes que têm candidaturas com estado 'placed' ou 'protocol_generated'.
+    Query Params:
+        - calendar_id (opcional): filtra estudantes por calendário específico
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if (
+            user_email == "Expired Token."
+            or user_email == "Invalid Token"
+            or user_email == "Payload does not contain 'user_id'."
+    ):
+        return Response({"message": "login"}, status=HTTP_401_UNAUTHORIZED)
+
+    # Apenas admin e academic_services podem ver
+    elif user_type not in ["admin", "academic_services"]:
+        return Response({"message": "Sem permissão para ver estudantes com internships"}, status=HTTP_401_UNAUTHORIZED)
+
+    try:
+        # Obter calendar_id opcional dos query params
+        calendar_id = request.GET.get('calendar_id', None)
+        
+        # Filtrar estudantes que têm candidaturas com estado de internship ativo
+        internship_states = ['placed', 'protocol_generated', 'presidency_signature', 'company_signature', 'student_signature', 'in_internship', 'finished']
+        
+        students_query = Student.objects.filter(
+            students_candidatures__state__in=internship_states
+        )
+        
+        # Se calendar_id foi fornecido, filtrar por calendário através das proposals
+        if calendar_id:
+            students_query = students_query.filter(
+                students_candidatures__candidature_proposals__proposal__calendar__id_calendar=calendar_id
+            )
+        
+        students_with_internships = students_query.distinct()
+
+        if not students_with_internships.exists():
+            return Response([], status=status.HTTP_200_OK)
+
+        data = []
+
+        for s in students_with_internships:
+            # Obter informações de contacto de empresas e orientadores
+            candidatures = Candidature.objects.filter(student=s, state__in=internship_states)
+            
+            companies_contacts = []
+            advisors = []
+            
+            for candidature in candidatures:
+                proposals = CandidatureProposal.objects.filter(candidature=candidature)
+                for prop in proposals:
+                    # Empresa e contactos associados
+                    if (
+                        prop.proposal.company 
+                        and prop.proposal.company.id_company not in [c['company_id'] for c in companies_contacts]
+                    ):
+                        companies_contacts.append({
+                            'company_id': prop.proposal.company.id_company,
+                            'company_name': prop.proposal.company.company_name,
+                            'company_contact': prop.proposal.company.company_contact,
+                            'company_email': prop.proposal.company.company_email,
+                        })
+
+                    # Orientadores ISEC
+                    if prop.proposal.isec_advisor:
+                        advisor_info_isec = {
+                            'name': prop.proposal.isec_advisor.teacher_name,
+                            'email': prop.proposal.isec_advisor.user.email,
+                            'contact': prop.proposal.isec_advisor.user.email,
+                        }
+                        if advisor_info_isec not in advisors:
+                            advisors.append(advisor_info_isec)
+
+                    # Orientadores da Empresa (Representantes)
+                    if prop.proposal.company_advisor:
+                        advisor_info_company = {
+                            'name': prop.proposal.company_advisor.representative_name,
+                            'email': prop.proposal.company_advisor.user.email,
+                            'contact': prop.proposal.company_advisor.representative_contact,
+                        }
+                        if advisor_info_company not in advisors:
+                            advisors.append(advisor_info_company)
+
+            data.append({
+                "student_number": s.student_number,
+                "name": s.student_name,
+                "email": s.user.email,
+                "contact": s.contact,
+                "course": s.student_course.course_name,
+                "companies": companies_contacts,
+                "advisors": advisors,
+                "internship_status": [c.state for c in candidatures]
+            })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"message": "Erro interno do servidor", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

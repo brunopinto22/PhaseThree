@@ -183,3 +183,81 @@ export async function getPdf(token, id) {
   }
 
 }
+
+export async function getProposalCandidates(token, proposalId, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/proposal/${proposalId}/candidates/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if(res.status !== 200) {
+      setErrorMessage(data.message || "Erro desconhecido");
+      return null;
+    }
+
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
+
+export async function acceptCandidate(token, proposalId, studentNumber, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/proposal/${proposalId}/candidates/${studentNumber}/accept`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if(res.status !== 200) {
+      setErrorMessage(data.message || "Erro desconhecido");
+      return false;
+    }
+
+    return true;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return false;
+  }
+}
+
+export async function rejectCandidate(token, proposalId, studentNumber, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/proposal/${proposalId}/candidates/${studentNumber}/reject`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if(res.status !== 200) {
+      setErrorMessage(data.message || "Erro desconhecido");
+      return false;
+    }
+
+    return true;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return false;
+  }
+}
