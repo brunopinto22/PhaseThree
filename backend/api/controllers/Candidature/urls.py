@@ -15,5 +15,5 @@ urlpatterns = [
     path('candidature/<int:pk>/generate-protocol', views.generateProtocol),
     path('candidature/<int:pk>/download-protocol', views.downloadProtocol),
     path('candidature/generate-protocols-batch', views.generateProtocolsBatch),
+    path('candidature/create', views.createCandidature),
 ]
-

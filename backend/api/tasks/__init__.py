@@ -26,6 +26,10 @@ from .calendar_notifications import (
     notify_companies_new_calendar_async,
     notify_companies_new_calendar_manual,
 )
+from .application_notifications import (
+    notify_companies_application_async,
+    notify_companies_application_manual,
+)
 
 __all__ = [
     'verify_day_events',
@@ -37,4 +41,6 @@ __all__ = [
     'generate_protocol_async',
     'notify_companies_new_calendar_async',
     'notify_companies_new_calendar_manual',
+    'notify_companies_application_async',
+    'notify_companies_application_manual',
 ]
