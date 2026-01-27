@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.status import *
 from django.db import transaction
 from datetime import date
+from django.utils import timezone
 
 from api.models import *
 from api.permissions import *
@@ -516,26 +517,479 @@ def deleteCandidature(request):
     if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
         return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
 
-    # 2. Verificar se é student
-    if user_type != "student":
-        return Response({"message": "Sem permissão para deletar candidatura"}, status=HTTP_401_UNAUTHORIZED)
+    # 2. Lógica de deleção
+    try:
+        if user_type == "student":
+            # Estudante deleta a SUA própria candidatura
+            try:
+                student = Student.objects.get(user__email=user_email)
+                candidature = Candidature.objects.get(student=student)
+            except Student.DoesNotExist:
+                return Response({"message": "Estudante não encontrado"}, status=HTTP_404_NOT_FOUND)
+            except Candidature.DoesNotExist:
+                return Response({"message": "Você não possui candidatura para deletar"}, status=HTTP_404_NOT_FOUND)
+        
+        elif user_type in ["admin", "academic_services"]:
+            # Admin/Academic deleta POR ID
+            candidature_id = request.data.get("id")
+            if not candidature_id:
+                return Response({"message": "ID da candidatura é obrigatório"}, status=HTTP_400_BAD_REQUEST)
+            
+            try:
+                candidature = Candidature.objects.get(id_candidature=candidature_id)
+            except Candidature.DoesNotExist:
+                return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+        
+        else:
+            return Response({"message": "Sem permissão para deletar candidatura"}, status=HTTP_403_FORBIDDEN)
+
+        # Deletar candidatura
+        candidature.delete()
+        return Response({"message": "Candidatura deletada com sucesso"}, status=HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def listAllCandidatures(request):
+    """
+    Endpoint para listar todas as candidaturas.
+    Apenas admin e academic_services têm permissão.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    # 1. Autenticação
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    # 2. Verificar permissões (apenas admin e academic_services)
+    if user_type not in ["admin", "academic_services"]:
+        return Response(
+            {"message": "Sem permissão para ver lista de candidaturas"},
+            status=HTTP_403_FORBIDDEN
+        )
 
     try:
-        student = Student.objects.get(user__email=user_email)
-    except Student.DoesNotExist:
-        return Response({"message": "Estudante não encontrado"}, status=HTTP_404_NOT_FOUND)
+        # 3. Obter todas as candidaturas
+        candidatures = Candidature.objects.all().select_related(
+            'student', 
+            'student__user',
+            'student__student_course'
+        ).prefetch_related('candidature_proposals__proposal__company')
 
-    # 3. Buscar candidatura do estudante
+        candidatures_list = []
+        for candidature in candidatures:
+            # Obter a proposta principal (aceite ou primeira da lista)
+            candidature_proposals = candidature.candidature_proposals.all()
+            
+            # Tentar encontrar proposta aceite primeiro
+            main_proposal = None
+            for cp in candidature_proposals:
+                if cp.state == 'accepted':
+                    main_proposal = cp.proposal
+                    break
+            
+            # Se não há proposta aceite, usar a primeira
+            if not main_proposal and candidature_proposals:
+                main_proposal = candidature_proposals[0].proposal
+
+            # Determinar nome da empresa/docente
+            company_name = None
+            proposal_name = None
+            if main_proposal:
+                proposal_name = main_proposal.proposal_title
+                if main_proposal.company:
+                    company_name = main_proposal.company.company_name
+                elif main_proposal.isec_advisor:
+                    company_name = main_proposal.isec_advisor.teacher_name
+                else:
+                    company_name = "ISEC"
+
+            candidatures_list.append({
+                "id": candidature.id_candidature,
+                "studentNumber": candidature.student.student_number,
+                "studentName": candidature.student.student_name,
+                "companyName": company_name,
+                "proposalName": proposal_name,
+                "state": candidature.state,
+                "submissionDate": candidature.candidature_submission_date.strftime("%d/%m/%Y")
+            })
+
+        return Response(candidatures_list, status=HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def getCandidatureById(request, pk):
+    """
+    Endpoint para obter detalhes de uma candidatura específica por ID.
+    Estudantes podem ver apenas sua própria candidatura.
+    Admin e academic_services podem ver qualquer candidatura.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    # 1. Autenticação
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
     try:
-        candidature = Candidature.objects.get(student=student)
+        # 2. Obter candidatura
+        candidature = Candidature.objects.select_related(
+            'student',
+            'student__user',
+            'student__student_course',
+            'student__calendar'
+        ).prefetch_related('candidature_proposals__proposal__company').get(id_candidature=pk)
+
+        # 3. Verificar permissões
+        if user_type == "student":
+            student = Student.objects.get(user__email=user_email)
+            if candidature.student.student_number != student.student_number:
+                return Response(
+                    {"message": "Sem permissão para ver esta candidatura"},
+                    status=HTTP_401_UNAUTHORIZED
+                )
+        elif user_type not in ["admin", "academic_services"]:
+            return Response(
+                {"message": "Sem permissão para ver candidatura"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        # 4. Obter propostas da candidatura
+        candidature_proposals = candidature.candidature_proposals.all()
+        proposals_list = []
+        for cp in candidature_proposals:
+            proposals_list.append({
+                "id": cp.proposal.id_proposal,
+                "title": cp.proposal.proposal_title,
+                "company": {
+                    "id": cp.proposal.company.id_company if cp.proposal.company else None,
+                    "name": cp.proposal.company.company_name if cp.proposal.company else "ISEC"
+                },
+                "location": cp.proposal.location,
+                "type": cp.proposal.get_proposal_type_display(),
+                "state": cp.state
+            })
+
+        # 5. Obter estados disponíveis baseado no estado atual
+        current_state = candidature.state
+        available_next_states = get_available_next_states(current_state)
+
+        # 6. Preparar resposta
+        response_data = {
+            "id_candidature": candidature.id_candidature,
+            "state": candidature.state,
+            "submission_date": candidature.candidature_submission_date.strftime("%d/%m/%Y"),
+            "created_at": candidature.created_at.strftime("%d/%m/%Y %H:%M"),
+            "last_updated": candidature.last_updated.strftime("%d/%m/%Y %H:%M"),
+            "proposals": proposals_list,
+            "student": {
+                "student_number": candidature.student.student_number,
+                "student_name": candidature.student.student_name,
+                "course": candidature.student.student_course.course_name if candidature.student.student_course else None,
+                "email": candidature.student.user.email
+            },
+            "available_next_states": available_next_states
+        }
+
+        return Response(response_data, status=HTTP_200_OK)
+
     except Candidature.DoesNotExist:
-        return Response({"message": "Você não possui candidatura para deletar"}, status=HTTP_404_NOT_FOUND)
+        return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Student.DoesNotExist:
+        return Response({"message": "Aluno não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
-    # 4. Deletar candidatura (cascade vai deletar propostas e histórico relacionados)
-    candidature_id = candidature.id_candidature
-    candidature.delete()
 
-    return Response({
-        "message": "Candidatura deletada com sucesso",
-        "deleted_candidature_id": candidature_id
-    }, status=HTTP_200_OK)
+@api_view(['PUT'])
+def updateCandidatureState(request, pk):
+    print(f"🔄 Starting updateCandidatureState for ID: {pk}")
+    try:
+        auth_header = request.headers.get("Authorization")
+        print(f"debug: auth_header present: {bool(auth_header)}")
+        
+        user_id, user_email, user_type = decode_token(auth_header)
+        print(f"debug: decoded token: {user_email}, {user_type}")
+
+        # 1. Autenticação
+        if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+            return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+        # 2. Verificar permissões (apenas admin e academic_services)
+        if user_type not in ["admin", "academic_services"]:
+            return Response(
+                {"message": "Sem permissão para alterar estado"},
+                status=HTTP_403_FORBIDDEN
+            )
+
+        print("debug: permissions ok")
+
+        # 3. Obter dados da requisição
+        new_state = request.data.get("new_state")
+        notes = request.data.get("notes", "")
+        print(f"debug: new_state={new_state}")
+
+        if not new_state:
+            return Response({"message": "Novo estado é obrigatório"}, status=HTTP_400_BAD_REQUEST)
+
+        # 4. Validar que novo estado existe no modelo
+        valid_states = [choice[0] for choice in Candidature.STATE_CHOICES]
+        if new_state not in valid_states:
+            return Response(
+                {"message": f"Estado '{new_state}' inválido"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        print("debug: state valid")
+
+        # 5. Buscar candidatura
+        candidature = Candidature.objects.get(id_candidature=pk)
+        print(f"debug: candidature found: {candidature}")
+        
+        # 6. Validar transição de estado (Modificado: Permitir qualquer transição para correções manuais)
+        current_state = candidature.state
+        # available_next_states = get_available_next_states(current_state)
+        
+        # if new_state not in available_next_states and current_state != new_state:
+        #    # Permitir mudar para qualquer estado válido
+        #    pass
+
+        # 7. Obter user que está fazendo a mudança (usar ID para garantir unicidade)
+        user = Accounts.objects.get(pk=user_id)
+
+        # 8. Atualizar validation_status do estudante se necessário
+        if current_state == 'revision':
+            student = candidature.student
+            if new_state == 'protocol_generated':
+                # Conta validada
+                student.validation_status = 'validated'
+                student.save()
+                print(f"debug: student validation_status updated to 'validated'")
+            elif new_state == 'finished':
+                # Conta rejeitada
+                student.validation_status = 'rejected'
+                student.save()
+                print(f"debug: student validation_status updated to 'rejected'")
+
+        # 9. Alterar estado usando o método do modelo
+        candidature.change_state(new_state, changed_by=user, notes=notes)
+
+        # 10. Retornar candidatura atualizada
+        return Response({
+            "message": "Estado da candidatura atualizado com sucesso",
+            "candidature": {
+                "id": candidature.id_candidature,
+                "old_state": current_state,
+                "new_state": candidature.state,
+                "student_name": candidature.student.student_name,
+                "updated_at": candidature.last_updated.strftime("%d/%m/%Y %H:%M")
+            }
+        }, status=HTTP_200_OK)
+
+    except Candidature.DoesNotExist:
+        return Response({"message": "Candidatura não encontrada"}, status=HTTP_404_NOT_FOUND)
+    except Accounts.DoesNotExist:
+        return Response({"message": "Usuário não encontrado"}, status=HTTP_404_NOT_FOUND)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ ERROR in updateCandidatureState: {str(e)}")
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+def get_available_next_states(current_state):
+    """
+    Retorna lista de TODOS os estados disponíveis para permitir liberdade total de correção.
+    """
+    # Retorna todos os estados definidos no modelo
+    return [choice[0] for choice in Candidature.STATE_CHOICES]
+
+@api_view(['PUT'])
+def updateCandidatureProposalState(request):
+    """
+    Endpoint para academic_services e admin alterarem o estado de uma proposta específica.
+    Permite aceitar ou rejeitar propostas individuais dentro de uma candidatura.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    # 1. Autenticação
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    # 2. Verificar permissões (apenas admin e academic_services)
+    if user_type not in ["admin", "academic_services"]:
+        return Response(
+            {"message": "Sem permissão para alterar estado de proposta"},
+            status=HTTP_403_FORBIDDEN
+        )
+
+    try:
+        # 3. Obter dados da requisição
+        candidature_id = request.data.get("candidature_id")
+        proposal_id = request.data.get("proposal_id")
+        new_state = request.data.get("new_state")
+
+        if not candidature_id or not proposal_id or not new_state:
+            return Response(
+                {"message": "Campos 'candidature_id', 'proposal_id' e 'new_state' são obrigatórios"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # 4. Validar que novo estado é válido
+        valid_states = [choice[0] for choice in CandidatureProposal.STATE_CHOICES]
+        if new_state not in valid_states:
+            return Response(
+                {"message": f"Estado '{new_state}' não é válido. Estados permitidos: {valid_states}"},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        # 5. Buscar CandidatureProposal
+        candidature_proposal = CandidatureProposal.objects.select_related(
+            'candidature',
+            'candidature__student',
+            'proposal'
+        ).get(
+            candidature_id=candidature_id,
+            proposal_id=proposal_id
+        )
+
+        # 6. Salvar estado antigo
+        old_state = candidature_proposal.state
+
+        # 7. Atualizar estado
+        candidature_proposal.state = new_state
+        candidature_proposal.state_changed_at = timezone.now()
+        candidature_proposal.save()
+
+        # 8. Se aceitar uma proposta, rejeitar automaticamente as outras
+        if new_state == 'accepted':
+            CandidatureProposal.objects.filter(
+                candidature=candidature_proposal.candidature
+            ).exclude(
+                proposal=candidature_proposal.proposal
+            ).update(state='rejected', state_changed_at=timezone.now())
+
+        return Response({
+            "message": "Estado da proposta atualizado com sucesso",
+            "candidature_proposal": {
+                "candidature_id": candidature_proposal.candidature.id_candidature,
+                "proposal_id": candidature_proposal.proposal.id_proposal,
+                "proposal_title": candidature_proposal.proposal.proposal_title,
+                "old_state": old_state,
+                "new_state": candidature_proposal.state,
+                "student_name": candidature_proposal.candidature.student.student_name
+            }
+        }, status=HTTP_200_OK)
+
+    except CandidatureProposal.DoesNotExist:
+        return Response(
+            {"message": "Proposta não encontrada nesta candidatura"},
+            status=HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+def getActiveInternships(request):
+    """
+    Endpoint para academic_services e admin visualizarem todos os estágios ativos.
+    Considera estados: placed, protocol_generated, presidency_signature, company_signature, student_signature, finished.
+    """
+    auth_header = request.headers.get("Authorization")
+    user_id, user_email, user_type = decode_token(auth_header)
+
+    if user_email in ["Expired Token.", "Invalid Token", "Payload does not contain 'user_id'."]:
+        return Response({"message": "login"}, status=HTTP_400_BAD_REQUEST)
+
+    if user_type not in ["admin", "academic_services"]:
+        return Response(
+            {"message": "Sem permissão para ver estágios ativos"},
+            status=HTTP_403_FORBIDDEN
+        )
+
+    try:
+        active_states = [
+            'placed', 'protocol_generated', 'presidency_signature', 
+            'company_signature', 'student_signature', 'finished'
+        ]
+        
+        candidatures = Candidature.objects.filter(
+            state__in=active_states
+        ).select_related(
+            'student', 
+            'student__user',
+            'student__student_course'
+        ).prefetch_related('candidature_proposals__proposal__company')
+
+        internships_list = []
+        for candidature in candidatures:
+            # Obter a proposta aceite
+            proposal = None
+            c_proposal = candidature.candidature_proposals.filter(state='accepted').first()
+            if c_proposal:
+                proposal = c_proposal.proposal
+            
+            # Se não houver aceite (teoricamente deveria haver logo que passa de 'submitted'), 
+            # tenta a primeira da lista como fallback
+            if not proposal:
+                c_proposal = candidature.candidature_proposals.first()
+                if c_proposal:
+                    proposal = c_proposal.proposal
+
+            company_name = "N/A"
+            proposal_title = "N/A"
+            if proposal:
+                proposal_title = proposal.proposal_title
+                if proposal.company:
+                    company_name = proposal.company.company_name
+                elif proposal.isec_advisor:
+                    company_name = proposal.isec_advisor.teacher_name
+                else:
+                    company_name = "ISEC"
+
+            internships_list.append({
+                "id": candidature.id_candidature,
+                "student": {
+                    "number": candidature.student.student_number,
+                    "name": candidature.student.student_name,
+                    "course": candidature.student.student_course.course_name if candidature.student.student_course else "N/A",
+                    "course_acronym": candidature.student.student_course.course_acronym if candidature.student.student_course else "N/A",
+                    "email": candidature.student.user.email
+                },
+                "companyName": company_name,
+                "proposalName": proposal_title,
+                "state": candidature.state,
+                "submissionDate": candidature.candidature_submission_date.strftime("%d/%m/%Y")
+            })
+
+        return Response(internships_list, status=HTTP_200_OK)
+
+    except Exception as e:
+        return Response(
+            {"error": "Erro interno do servidor", "details": str(e)},
+            status=HTTP_500_INTERNAL_SERVER_ERROR
+        )
+

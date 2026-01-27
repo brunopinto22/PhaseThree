@@ -141,3 +141,234 @@ export async function getCandidatureHistory(token, candidatureId, setStatus, set
     return null;
   }
 }
+
+/**
+ * Obtém a lista de todas as candidaturas (apenas admin e academic_services)
+ * @param {string} token - Token de autenticação
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Array|null} - Lista de candidaturas ou null em caso de erro
+ */
+export async function getAllCandidatures(token, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/list/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    setStatus(res.status);
+
+    if (res.status === 204) {
+      return [];
+    }
+
+    const data = await res.json();
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao obter lista de candidaturas");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
+
+/**
+ * Obtém detalhes de uma candidatura específica por ID
+ * @param {string} token - Token de autenticação
+ * @param {number} candidatureId - ID da candidatura
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Object|null} - Dados completos da candidatura ou null em caso de erro
+ */
+export async function getCandidatureById(token, candidatureId, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/${candidatureId}/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao obter candidatura");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
+
+/**
+ * Atualiza o estado de uma candidatura (apenas admin e academic_services)
+ * @param {string} token - Token de autenticação
+ * @param {number} candidatureId - ID da candidatura
+ * @param {string} newState - Novo estado
+ * @param {string} notes - Notas sobre a mudança (opcional)
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Object|null} - Resposta de sucesso ou null em caso de erro
+ */
+export async function updateCandidatureState(token, candidatureId, newState, notes, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/${candidatureId}/state/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+      body: JSON.stringify({ new_state: newState, notes: notes || "" }),
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao atualizar estado");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
+
+/**
+ * Atualiza o estado de uma proposta específica dentro de uma candidatura
+ * @param {string} token - Token de autenticação
+ * @param {number} candidatureId - ID da candidatura
+ * @param {number} proposalId - ID da proposta
+ * @param {string} newState - Novo estado ('accepted' ou 'rejected')
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Object|null} - Resposta de sucesso ou null em caso de erro
+ */
+export async function updateCandidatureProposalState(token, candidatureId, proposalId, newState, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/proposal/state/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+      body: JSON.stringify({
+        candidature_id: candidatureId,
+        proposal_id: proposalId,
+        new_state: newState
+      }),
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao atualizar estado da proposta");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
+
+/**
+ * Deleta uma candidatura. Para estudantes, deleta a própria. Para admin/academic, deleta pelo ID.
+ * @param {string} token - Token de autenticação
+ * @param {number|null} candidatureId - ID da candidatura (obrigatório para admin/academic service, null para estudante)
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Object|null} - Resposta de sucesso ou null em caso de erro
+ */
+export async function deleteCandidature(token, candidatureId, setStatus, setErrorMessage) {
+  try {
+    const options = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    };
+
+    // Se for admin/academic, adiciona o ID no corpo
+    if (candidatureId) {
+      options.body = JSON.stringify({ id: candidatureId });
+    }
+
+    const res = await fetch(`${apiUrl}/candidature/delete/`, options);
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao deletar candidatura");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}
+
+
+/**
+ * Obtém a lista de estágios e colocações ativos (apenas admin e academic_services)
+ * @param {string} token - Token de autenticação
+ * @param {Function} setStatus - Callback para status HTTP
+ * @param {Function} setErrorMessage - Callback para mensagens de erro
+ * @returns {Array|null} - Lista de estágios ativos ou null em caso de erro
+ */
+export async function getActiveInternships(token, setStatus, setErrorMessage) {
+  try {
+    const res = await fetch(`${apiUrl}/candidature/active/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    const data = await res.json();
+    setStatus(res.status);
+
+    if (res.status !== 200) {
+      setErrorMessage(data.message || "Erro ao obter lista de estágios ativos");
+      return null;
+    }
+
+    setErrorMessage("");
+    return data;
+
+  } catch (error) {
+    setErrorMessage("Erro de rede ou servidor");
+    return null;
+  }
+}

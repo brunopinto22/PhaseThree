@@ -22,27 +22,27 @@ const List = () => {
 	};
 
 	useEffect(() => {
-    if (!userInfo) return;
+		if (!userInfo) return;
 
-    if (permissions["Docentes"].view === false && role !== "admin") {
-      navigate("/unauthorized");
-    }
-  }, [userInfo, permissions, role, navigate]);
+		if (permissions["Docentes"].view === false && role !== "admin") {
+			navigate("/unauthorized");
+		}
+	}, [userInfo, permissions, role, navigate]);
 
 	const [reload, setReload] = useState(false);
 	const [list, setList] = useState([]);
 	const [status, setStatus] = useState([]);
 	const [error, setError] = useState([]);
-	
+
 	useEffect(() => {
-    const fetchTeachers = async () => {
+		const fetchTeachers = async () => {
 			const token = localStorage.getItem("access_token");
 			const teachers = await listTeachers(token, setStatus, setError);
 			setList(teachers);
-    };
+		};
 
-    fetchTeachers();
-  }, [reload]);
+		fetchTeachers();
+	}, [reload]);
 
 	useEffect(() => {
 		if (status === 401) {
@@ -81,7 +81,7 @@ const List = () => {
 	const getFilteredList = () => {
 		return list.filter((item) => {
 			if (filters.active === false && !item.active) return false;
-			
+
 			return (
 				(filters.name === null || item.teacher_name.toLowerCase().includes(filters.name.toLowerCase())) &&
 				(filters.email === null || item.teacher_email.toLowerCase().includes(filters.email.toLowerCase())) &&
@@ -96,24 +96,24 @@ const List = () => {
 	}
 
 
-	const Row = ({active, id, name, email, area}) => {
-		
+	const Row = ({ active, id, name, email, area }) => {
+
 		const view = () => {
-			navigate("/teacher/view?id="+id);
+			navigate("/teacher/view?id=" + id);
 		}
 		const edit = () => {
-			navigate("/teacher/edit?id="+id);
+			navigate("/teacher/edit?id=" + id);
 		}
 		const handleDelete = async () => {
 			await deleteTeacher(localStorage.getItem("access_token"), Number(id));
 			setReload(prev => !prev);
 		}
 
-		return(
+		return (
 			<tr className={`table-row ${active ? "" : "disabled"}`}>
 				<th><p>{name}</p></th>
-				<th><p><a href={`mailto:`+ email}>{email}</a></p></th>
-				<th style={{width: 0}}><p>{area}</p></th>
+				<th><p><a href={`mailto:` + email}>{email}</a></p></th>
+				<th style={{ width: 0 }}><p>{area}</p></th>
 				<th>
 					<div className='d-flex gap-2'>
 						{(permissions['Docentes'].view || role === "admin") && <OptionButton type='view' action={view} />}
@@ -125,7 +125,7 @@ const List = () => {
 		);
 	}
 
-	return(
+	return (
 		<div className='teachers-list d-flex flex-column'>
 
 			<div className="top d-flex flex-row justify-content-between">
@@ -134,7 +134,7 @@ const List = () => {
 
 			<div className="d-flex flex-row justify-content-between align-items-end">
 				<div className="filters">
-					<CheckBox label={<p>Inativos</p>} value={filters.active} setValue={(e) => updateFilter("active", e)} />
+					<CheckBox label="Inativos" value={filters.active} setValue={(e) => updateFilter("active", e)} />
 				</div>
 
 				<div className="options d-flex gap-3 m-0 p-0">
@@ -147,16 +147,16 @@ const List = () => {
 			{list.length > 0 && (
 				<table>
 					<tr className='header'>
-						<th><p><input placeholder='Nome do Docente' onChange={(e) => setName(e.target.value)}/></p></th>
-						<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)}/></p></th>
-						<th><p><input placeholder='Área científica' onChange={(e) => setArea(e.target.value)}/></p></th>
+						<th><p><input placeholder='Nome do Docente' onChange={(e) => setName(e.target.value)} /></p></th>
+						<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)} /></p></th>
+						<th><p><input placeholder='Área científica' onChange={(e) => setArea(e.target.value)} /></p></th>
 						<th className='fit-column'></th>
 					</tr>
 
 					{getFilteredList().map(t => (
 						<Row key={t.id_teacher} active={t.active} id={t.id_teacher} name={t.teacher_name} email={t.teacher_email} area={t.scientific_area_name} />
 					))}
-					
+
 				</table>
 			)}
 

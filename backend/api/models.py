@@ -65,6 +65,17 @@ class Student(models.Model):
     curriculum = models.FileField(upload_to='protected/curriculums/', validators=[validate_pdf], null=True, blank=True)
     calendar = models.ForeignKey('Calendar', on_delete=models.SET_NULL, related_name='students_in_calendar', null=True, blank=True)
 
+    VALIDATION_STATUS_CHOICES = [
+        ('pending', 'Por Validar'),
+        ('validated', 'Validated'),
+        ('rejected', 'Rejected'),
+    ]
+    validation_status = models.CharField(
+        max_length=20,
+        choices=VALIDATION_STATUS_CHOICES,
+        default='pending'
+    )
+
     active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -463,6 +474,7 @@ class Proposal(models.Model):
 class Candidature(models.Model):
     STATE_CHOICES = [
         ('submitted', 'Submitted'),
+        ('placed', 'Placed'),
         ('revision', 'Revision'),
         ('placed', 'Placed'),
         ('accepted', 'Accepted'),  # Empresa aceitou o aluno

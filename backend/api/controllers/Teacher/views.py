@@ -126,7 +126,7 @@ def listTeachers(request):
 
     try:
         if not Teacher.objects.all().exists():
-            return Response({"message": "Nenhum docente encontrado"}, status=status.HTTP_204_NO_CONTENT)
+            return Response([], status=status.HTTP_200_OK)
 
         teachers = Teacher.objects.all()
 

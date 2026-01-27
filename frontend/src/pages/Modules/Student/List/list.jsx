@@ -2,7 +2,7 @@ import './list.css';
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OptionButton, PrimaryButton, SecundaryButton, Alert, Pill, CheckBox } from '../../../../components';
-import { deleteStudent, listStudents } from '../../../../services';
+import { deleteStudent, listStudents, importStudents } from '../../../../services';
 import { useDebounce } from '../../../../utils';
 import { UserContext } from '../../../../contexts';
 
@@ -11,18 +11,20 @@ const List = () => {
 	const { userInfo } = useContext(UserContext);
 	const [status, setStatus] = useState(0);
 	const [error, setError] = useState("");
+	const [success, setSuccess] = useState("");
 
 	const [reload, setReload] = useState(false);
+	const fileInputRef = useRef(null);
 
 	const [list, setList] = useState(null);
 	useEffect(() => {
-    const fetchStudents = async () => {
+		const fetchStudents = async () => {
 			const students = await listStudents(userInfo.token, setStatus, setError);
 			setList(students);
-    };
+		};
 
-    fetchStudents();
-  }, [userInfo, reload]);
+		fetchStudents();
+	}, [userInfo, reload]);
 
 	useEffect(() => {
 		if (status === 401) {
@@ -55,7 +57,7 @@ const List = () => {
 	}, [debouncedId, debouncedName, debouncedEmail, debouncedCourse, debouncedAcronym]);
 
 	const [filters, setFilters] = useState({
-		active: false,
+		pendingOnly: false,
 		id: null,
 		name: null,
 		acronym: null,
@@ -70,14 +72,15 @@ const List = () => {
 	const getFilteredList = () => {
 		if (!list) return [];
 		return list.filter((item) => {
-			if (filters.active === false && !item.active) return false;
+			if (filters.pendingOnly && item.validation_status !== 'pending') return false;
+			if (!filters.pendingOnly && !item.active) return false;
 
 			return (
 				(filters.id === null || item.student_number.toString().includes(filters.id.toString())) &&
 				(filters.name === null || item.name.toLowerCase().includes(filters.name.toLowerCase())) &&
 				(filters.email === null || item.email.toLowerCase().includes(filters.email.toLowerCase())) &&
-				(filters.course === null || 
-					item.course.toLowerCase().includes(filters.course.toLowerCase()) || 
+				(filters.course === null ||
+					item.course.toLowerCase().includes(filters.course.toLowerCase()) ||
 					item.course_acronym.toLowerCase().includes(filters.course.toLowerCase())
 				) &&
 				(filters.acronym === null || item.branch.acronym.toLowerCase().includes(filters.acronym.toLowerCase()))
@@ -88,10 +91,10 @@ const List = () => {
 	useLayoutEffect(() => {
 		const filteredList = getFilteredList();
 		if (filteredList.length === 0 && spanRef.current) {
-				const width = spanRef.current.offsetWidth;
-				setInputWidth(width);
+			const width = spanRef.current.offsetWidth;
+			setInputWidth(width);
 		}
-		else if(filteredList.length > 0 && spanRef.current)
+		else if (filteredList.length > 0 && spanRef.current)
 			setInputWidth(null)
 	}, [debouncedId, name, email, course, acronym, list]);
 
@@ -100,27 +103,75 @@ const List = () => {
 		navigate("/student/edit?new=true");
 	}
 
+	const handleImportClick = () => {
+		fileInputRef.current.click();
+	};
 
-	const Row = ({active, studentName, num, email, course, branch}) => {
-		
+	const handleFileChange = async (event) => {
+		const file = event.target.files[0];
+		if (!file) return;
+
+		setError("");
+		setSuccess("");
+
+		const reader = new FileReader();
+		reader.onload = async (e) => {
+			try {
+				const json = JSON.parse(e.target.result);
+				console.log("Importing JSON:", json);
+
+				const response = await importStudents(userInfo.token, json, setStatus, (msg) => {
+					console.error("Import Error Message:", msg);
+					setError(msg);
+				});
+
+				console.log("Import Response:", response);
+
+				if (response) {
+					if (response.success_count > 0) {
+						setSuccess(response.message);
+						setReload(prev => !prev);
+					}
+					if (response.errors && response.errors.length > 0) {
+						setError(prev => prev + (prev ? "\n" : "") + `Erros no processamento:\n${response.errors.join('\n')}`);
+					}
+				}
+			} catch (err) {
+				console.error("JSON Parse Error:", err);
+				setError("Erro ao ler o ficheiro JSON. Certifique-se que o formato está correto.");
+			}
+		};
+		reader.readAsText(file);
+		// Reset input
+		event.target.value = '';
+	};
+
+
+	const Row = ({ active, studentName, num, email, course, branch, validation_status }) => {
+
 		const view = () => {
-			navigate("/student/view?id="+num);
+			navigate("/student/view?id=" + num);
 		}
 		const edit = () => {
-			navigate("/student/edit?id="+num);
+			navigate("/student/edit?id=" + num);
 		}
 		const handleDelete = async () => {
 			await deleteStudent(userInfo.token, num, setStatus, setError);
 			setReload(prev => !prev);
 		}
 
-		return(
+		return (
 			<tr className={`table-row ${active ? "" : "disabled"}`}>
 				<th className='fit-column text-center'><p>{num}</p></th>
 				<th><p>{studentName}</p></th>
-				<th><p><a href={`mailto:`+ email}>{email}</a></p></th>
+				<th><p><a href={`mailto:` + email}>{email}</a></p></th>
 				<th><p>{course}</p></th>
-				<th style={{width: 0}}>{branch ? <Pill text={branch.acronym} color={branch.color} tooltip={branch.name} tooltipPosition='left' /> : "—"}</th>
+				<th style={{ width: 0 }}>{branch ? <Pill text={branch.acronym} color={branch.color} tooltip={branch.name} tooltipPosition='left' /> : "—"}</th>
+				<th>
+					{validation_status === 'validated' && <Pill text="Validado" color="green" />}
+					{validation_status === 'pending' && <Pill text="Por Validar" color="orange" />}
+					{validation_status === 'rejected' && <Pill text="Rejeitado" color="red" />}
+				</th>
 				<th>
 					<div className='d-flex gap-2'>
 						<OptionButton type='view' action={view} />
@@ -132,7 +183,7 @@ const List = () => {
 		);
 	}
 
-	return(
+	return (
 		<div className='students-list d-flex flex-column'>
 
 			<div className="top d-flex flex-row justify-content-between">
@@ -141,14 +192,28 @@ const List = () => {
 
 			<div className="d-flex flex-row justify-content-between align-items-end">
 				<div className="filters">
-					<CheckBox label={<p>Inativos</p>} value={filters.active} setValue={(e) => updateFilter("active", e)} />
+					<CheckBox label="Alunos por validar" value={filters.pendingOnly} setValue={(e) => updateFilter("pendingOnly", e)} />
 				</div>
 
 				<div className="options d-flex flex-row gap-3">
-					<SecundaryButton small content={<div className='d-flex flex-row gap-2'><i className="bi bi-cloud-upload"></i><p>Importar alunos</p></div>} />
+					<input
+						type="file"
+						ref={fileInputRef}
+						style={{ display: 'none' }}
+						accept=".json"
+						onChange={handleFileChange}
+					/>
+					<SecundaryButton
+						small
+						action={handleImportClick}
+						content={<div className='d-flex flex-row gap-2'><i className="bi bi-cloud-upload"></i><p>Importar alunos</p></div>}
+					/>
 					<PrimaryButton small action={add} content={<div className='d-flex flex-row gap-2'><i className="bi bi-plus-lg"></i><p>Adicionar aluno</p></div>} />
 				</div>
 			</div>
+
+			{success && <Alert text={success} type='success' />}
+			{error && <Alert text={error} type='danger' />}
 
 			{(list === null || list.length === 0) && <Alert text='Não existe nenhum aluno de momento' />}
 
@@ -175,17 +240,18 @@ const List = () => {
 								{id !== null && id !== undefined ? id : 'Nº aluno'}
 							</span>
 						</th>
-						<th><p><input placeholder='Nome do Aluno' onChange={(e) => setName(e.target.value)}/></p></th>
-						<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)}/></p></th>
-						<th><p><input placeholder='Curso' onChange={(e) => setCourse(e.target.value)}/></p></th>
-						<th><p><input style={{width:"100%", minWidth: "1vw"}}placeholder='Ramo' onChange={(e) => setAcronym(e.target.value)}/></p></th>
+						<th><p><input placeholder='Nome do Aluno' onChange={(e) => setName(e.target.value)} /></p></th>
+						<th><p><input placeholder='Email' onChange={(e) => setEmail(e.target.value)} /></p></th>
+						<th><p><input placeholder='Curso' onChange={(e) => setCourse(e.target.value)} /></p></th>
+						<th><p><input style={{ width: "100%", minWidth: "1vw" }} placeholder='Ramo' onChange={(e) => setAcronym(e.target.value)} /></p></th>
+						<th><p>Estado</p></th>
 						<th className='fit-column'></th>
 					</tr>
 
 					{getFilteredList().map(student => (
-						<Row key={student.student_number} studentName={student.name} num={student.student_number} email={student.email} course={student.course} branch={student.branch} active={student.active} />
+						<Row key={student.student_number} studentName={student.name} num={student.student_number} email={student.email} course={student.course} branch={student.branch} active={student.active} validation_status={student.validation_status} />
 					))}
-					
+
 				</table>
 			)}
 			{list?.length > 0 && getFilteredList()?.length === 0 && <Alert text='Não foi encontrado nenhum aluno' />}

@@ -17,6 +17,11 @@ class Command(BaseCommand):
             action='store_true',
             help='Clear existing data before seeding',
         )
+        parser.add_argument(
+            '--with-test-data',
+            action='store_true',
+            help='Also create test calendars, proposals, and candidatures',
+        )
 
     def handle(self, *args, **options):
         if options['clear']:
