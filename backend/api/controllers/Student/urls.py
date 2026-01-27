@@ -8,6 +8,9 @@ urlpatterns = [
     path('student/create', createStudent),
     path('student/<int:pk>/edit', editStudent),
     path('student/<int:pk>/delete', deleteStudent),
+    path('student/<int:pk>/curriculum/upload', uploadCurriculum),
+    path('student/<int:pk>/curriculum', getCurriculum),
+    path('student/<int:pk>/curriculum/delete', deleteCurriculum),
     path('student/favorite/add/<int:proposal_id>', addFavorite),
     path('student/favorite/remove/<int:proposal_id>', removeFavorite),
 ]

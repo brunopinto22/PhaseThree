@@ -1,0 +1,211 @@
+.curriculum-upload {
+  width: 100%;
+  margin: 20px 0;
+}
+
+.upload-container {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.drag-drop-zone {
+  position: relative;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  margin-bottom: 20px;
+}
+
+.drag-drop-zone:hover {
+  border-color: #007bff;
+  background: #f0f7ff;
+}
+
+.drag-drop-zone.active {
+  border-color: #007bff;
+  background: #e7f3ff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.drag-drop-content {
+  pointer-events: none;
+}
+
+.drag-drop-content i {
+  font-size: 48px;
+  color: #007bff;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.drag-drop-content p {
+  margin: 10px 0 5px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.drag-drop-content small {
+  display: block;
+  color: #999;
+  font-size: 13px;
+}
+
+.file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-selected {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.file-info i {
+  font-size: 24px;
+  color: #d32f2f;
+}
+
+.file-name {
+  margin: 0;
+  font-weight: 500;
+  color: #333;
+  word-break: break-word;
+}
+
+.file-size {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: #999;
+}
+
+.btn-remove {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.3s ease;
+  margin-left: 10px;
+}
+
+.btn-remove:hover {
+  color: #d32f2f;
+}
+
+.message {
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  animation: slideIn 0.3s ease;
+}
+
+.message i {
+  font-size: 16px;
+}
+
+.message-success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message-error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.btn-upload {
+  width: 100%;
+  padding: 12px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-upload:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-upload:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-upload i {
+  font-size: 18px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .upload-container {
+    padding: 15px;
+  }
+
+  .drag-drop-zone {
+    padding: 30px 15px;
+  }
+
+  .drag-drop-content i {
+    font-size: 36px;
+  }
+
+  .file-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

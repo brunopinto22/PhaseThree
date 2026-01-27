@@ -5,6 +5,7 @@ import { PrimaryButton, Alert } from '../../../../components';
 import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../../../../contexts';
 import { getStudent } from '../../../../services';
+import { getCurriculum } from '../../../../services/curriculum';
 
 function View() {
 
@@ -13,6 +14,8 @@ function View() {
 	const { userInfo } = useContext(UserContext);
 	const [status, setStatus] = useState(null);
 	const [error, setError] = useState(null);
+	const [curriculum, setCurriculum] = useState(null);
+	const [curriculumLoading, setCurriculumLoading] = useState(false);
   const id = searchParams.get('id');
 
 	const [studentData, setStudentData] = useState({
@@ -59,6 +62,24 @@ function View() {
 		fetchStudent();
 	}, [id, userInfo, navigate, status]);
 
+	useEffect(() => {
+		async function fetchCurriculum() {
+			try {
+				setCurriculumLoading(true);
+				const data = await getCurriculum(id, userInfo.token);
+				setCurriculum(data);
+			} catch (err) {
+				console.error('Erro ao obter currículo:', err);
+				setCurriculum(null);
+			} finally {
+				setCurriculumLoading(false);
+			}
+		}
+		if (id && userInfo.token) {
+			fetchCurriculum();
+		}
+	}, [id, userInfo.token]);
+
 	const pfp = studentData.pfp;
 	const fullName = studentData.name;
 	const parts = fullName.trim().split(" ");
@@ -83,7 +104,12 @@ function View() {
 	const todo = studentData.subjects.map(({ name, state }) => ({ name, state }));
 
 	const canEdit = userInfo?.role === "admin" || (userInfo?.role === "student" && userInfo.id === id) || userInfo?.perms["Alunos"].edit;
-	// TODO : abrir CV
+	
+	const handleCurriculumButton = () => {
+		if (curriculum && curriculum.curriculum_url) {
+			window.open(curriculum.curriculum_url, '_blank');
+		}
+	};
 
 
 	return(
@@ -100,8 +126,18 @@ function View() {
 				</div>
 
 				<div className="options">
-					<PrimaryButton content={<h6>Currículo</h6>}/>
-					{canEdit && (<PrimaryButton action={() => navigate("/student/edit?id="+id)} content={<h6>Editar Perfil</h6>}/>)}
+				<PrimaryButton 
+					action={handleCurriculumButton}
+					disabled={curriculumLoading || !curriculum}
+					content={<h6>{curriculumLoading ? 'A carregar...' : (curriculum ? 'Ver Currículo' : 'Currículo indisponível')}</h6>}
+				/>
+				{canEdit && (
+					<PrimaryButton
+						small
+						action={() => navigate(`/student/edit?id=${id}`)}
+						content={<h6>Editar Perfil</h6>}
+					/>
+				)}
 				</div>
 
 			</div>

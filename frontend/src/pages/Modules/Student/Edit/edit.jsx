@@ -8,6 +8,8 @@ import { useSearchParams } from "react-router-dom";
 import { PrimaryButton, SecundaryButton, TextInput, Dropdown, OptionButton, Alert, CheckBox, PfpModal } from '../../../../components';
 
 import { getStudent, createStudent, editStudent, getCourse, listCourses } from '../../../../services';
+import CurriculumUpload from '../../../../components/CurriculumUpload/curriculumUpload';
+import { getCurriculum, deleteCurriculum } from '../../../../services/curriculum';
 import { UserContext } from '../../../../contexts';
 
 
@@ -58,6 +60,8 @@ const Edit = () =>  {
 	const [error, setError] = useState("");
 
 	const [show, setShow] = useState(false);
+	const [showCurriculumUpload, setShowCurriculumUpload] = useState(false);
+	const [curriculum, setCurriculum] = useState(null);
 
 	const id = searchParams.get("id");
   const isNew = searchParams.get("new");
@@ -90,6 +94,7 @@ const Edit = () =>  {
 	const [courses, setCourses] = useState([]);
 	const [branches, setBranches] = useState([]);
 	const [calendars, setCalendars] = useState([]);
+	
 	useEffect(() => {
 		const fetchCourses = async () => {
 			const c = await listCourses(userInfo.token, setStatus, setError);
@@ -97,6 +102,28 @@ const Edit = () =>  {
 		};
 		fetchCourses();
 	}, []);
+
+	useEffect(() => {
+		if (id && !isNew) {
+			getCurriculum(id, userInfo.token).then(data => {
+				setCurriculum(data);
+			}).catch(() => {
+				setCurriculum(null);
+			});
+		}
+	}, [id, isNew, userInfo.token]);
+
+	const handleDeleteCurriculum = async () => {
+		if (window.confirm('Tem a certeza que deseja eliminar o curriculo?')) {
+			try {
+				await deleteCurriculum(id, userInfo.token);
+				setCurriculum(null);
+				alert('Curriculo eliminado com sucesso');
+			} catch (err) {
+				alert('Erro ao eliminar: ' + err.message);
+			}
+		}
+	};
 
 	useEffect(() => {
 		setBranch(null);
@@ -208,10 +235,22 @@ const Edit = () =>  {
 					<div className="options d-flex flex-column justify-content-center w-100">
 						{(userInfo?.role === "admin" || (userInfo?.role === "teacher" && userInfo.id !== id) || userInfo?.perms["Alunos"].edit) && <CheckBox value={active} setValue={setActive} label={"Ativo"} />}
 						<PrimaryButton small content={<p>Alterar Foto de Perfil</p>} action={() => setShow(true)} />
-						<PrimaryButton small content={<p>Alterar Currículo</p>} />
+						<PrimaryButton small content={<p>Alterar Currículo</p>} action={() => setShowCurriculumUpload(!showCurriculumUpload)} />
+						{curriculum && <SecundaryButton small content={<p>Eliminar Currículo</p>} action={handleDeleteCurriculum} />}
 						<PrimaryButton small content={<p>Alterar Palavra-Passe</p>} action={() => navigate("/setPassword", { state: { email: originalEmail } })} />
 					</div>
 				</div>
+				{showCurriculumUpload && (
+					<div className='col-sm-12 col-md-8'>
+						<CurriculumUpload 
+							studentId={id} 
+							token={userInfo.token}
+							onSuccess={() => {
+								setShowCurriculumUpload(false);
+							}}
+						/>
+					</div>
+				)}
 			</section>
 
 			<section className='row p-0'>
