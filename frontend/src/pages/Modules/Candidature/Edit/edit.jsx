@@ -75,10 +75,15 @@ const Edit = () => {
 					setMaxProposals(data.calendar.max);
 
 					if (data.has_candidature) {
-						setCandidature(data);
-						const selectedIds = data.proposals.map(p => p.id);
-						setSelectedProposals(selectedIds);
-					}
+					// Já tem candidatura - modo edição
+					setCandidature(data);
+					// Extrair IDs ordenados por prioridade
+					const orderedIds = data.proposals
+						.sort((a, b) => a.priority - b.priority)
+						.map(p => p.id);
+					setSelectedProposals(orderedIds);
+				}
+
 				}
 				setLoading(false);
 			} else if (userInfo.role === 'admin' || userInfo.role === 'academic_services') {

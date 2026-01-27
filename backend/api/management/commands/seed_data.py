@@ -478,6 +478,7 @@ class Command(BaseCommand):
                         student_branch=s_data["branch"],
                         student_ects=s_data["ects"],
                         calendar=s_data.get("calendar"),
+                        validation_status='pending',
                         active=True,
                     )
                     self.stdout.write(f'  Created: {s_data["name"]}')
