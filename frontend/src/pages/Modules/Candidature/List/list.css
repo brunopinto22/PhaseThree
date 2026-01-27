@@ -61,6 +61,10 @@
 	color: var(--orange);
 }
 
-.cap.start {
+.cap.in-internship {
 	color: var(--green);
+}
+
+.cap.finished {
+	color: var(--primary-color-600);
 }

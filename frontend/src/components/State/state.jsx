@@ -58,8 +58,8 @@ const OptionButton = ({ state = 0, hideState = false, hideText = false, classNam
 	};
 
 	return (
-		<div className={`state - text ${btnClass[state]} ${tooltip ? `tooltip tooltip-${tooltipPosition}` : ""} ${className} `}>
-			<i className={`bi ${iconMap[state]} `}></i>
+		<div className={`state-text ${btnClass[state]} ${tooltip ? `tooltip tooltip-${tooltipPosition}` : ""} ${className}`}>
+			<i className={`bi ${iconMap[state]}`}></i>
 			{!hideState && <b>Estado:</b>}
 			{!hideText && <p>{text[state]}</p>}
 			{tooltip && <p className="tooltiptext">{text[state]}</p>}
