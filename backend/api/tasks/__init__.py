@@ -20,6 +20,7 @@ from .notification_tasks import (
     send_placement_notifications_async,
     send_single_notification_async,
     send_bulk_notifications_async,
+    generate_protocol_async,
 )
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     'send_placement_notifications_async',
     'send_single_notification_async',
     'send_bulk_notifications_async',
+    'generate_protocol_async',
 ]
