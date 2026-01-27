@@ -6,11 +6,14 @@ import { PrimaryButton, SecundaryButton, Alert, CheckBox } from '../../../../com
 import { UserContext } from '../../../../contexts';
 import { getMyCandidature, submitCandidature, updateCandidature, getCandidatureById, updateCandidatureState, getCandidatureHistory, updateCandidatureProposalState } from '../../../../services';
 import { listProposals } from '../../../../services/proposals';
+import HistoryTimeline from '../../../../components/HistoryTimeline/historyTimeline';
 
 // Mapeamento de estados para labels em português
 const STATE_LABELS = {
 	'submitted': 'Submetida',
 	'revision': 'Em Revisão',
+	'accepted': 'Aceite pela Empresa',
+    'rejected': 'Rejeitado',
 	'placed': 'Colocada',
 	'protocol_generated': 'Protocolo Gerado',
 	'presidency_signature': 'Assinatura ISEC',
@@ -524,7 +527,9 @@ const Edit = () => {
 					</div>
 				</section>
 
-				{/* Histórico */}
+				<HistoryTimeline history={history} />
+
+				{/* Histórico
 				{history.length > 0 && (
 					<section className='p-0'>
 						<h5>Histórico de Mudanças</h5>
@@ -551,7 +556,7 @@ const Edit = () => {
 							</tbody>
 						</table>
 					</section>
-				)}
+				)} */}
 
 
 			</div>
