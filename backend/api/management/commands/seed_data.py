@@ -460,6 +460,12 @@ class Command(BaseCommand):
                     user.set_password(settings.student_password)
                     user.save()
 
+                    # Determine branch object: prefer explicit in data, otherwise use first branch of the student's course if available
+                    branch_obj = s_data.get("branch")
+                    if not branch_obj and s_data.get("course"):
+                        branches_qs = s_data["course"].branches.all()
+                        branch_obj = branches_qs[0] if branches_qs.exists() else None
+
                     student = Student.objects.create(
                         user=user,
                         student_number=s_data["number"],
@@ -475,7 +481,7 @@ class Command(BaseCommand):
                         average=s_data["average"],
                         subjects_done=s_data["subjects_done"],
                         student_course=s_data["course"],
-                        student_branch=s_data["branch"],
+                        student_branch=branch_obj,
                         student_ects=s_data["ects"],
                         calendar=s_data.get("calendar"),
                         validation_status='pending',
