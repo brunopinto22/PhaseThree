@@ -46,6 +46,28 @@ class Command(BaseCommand):
                     representative_password="representante@123",
                 )
 
+            # Create academic services user (used by admin/operations)
+            self.stdout.write('Creating academic_services user...')
+            TARGET_EMAIL = "servicos_academicos@isec.pt"
+            TARGET_USERNAME = "academic_services"
+            TARGET_PASSWORD = "servicos_academicos@123"
+
+            # Remove old users with legacy emails
+            old_emails = ["academic_services@test.com", TARGET_EMAIL]
+            deleted = Accounts.objects.filter(email__in=old_emails).delete()
+            if deleted[0] > 0:
+                self.stdout.write(f'  Removed {deleted[0]} old academic_services users')
+
+            # Create if not exists
+            if not Accounts.objects.filter(email=TARGET_EMAIL).exists():
+                Accounts.objects.create_user(
+                    username=TARGET_USERNAME,
+                    email=TARGET_EMAIL,
+                    password=TARGET_PASSWORD,
+                    user_type="academic_services",
+                )
+                self.stdout.write(f'  Created academic_services user: {TARGET_EMAIL}')
+
             # Create Scientific Areas
             self.stdout.write('Creating Scientific Areas...')
             areas = []
