@@ -8,8 +8,9 @@
 .state-tracker .state {
 	position: relative;
 	display: flex;
-	gap: var(--spacing-s);
-	width: 200%;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
 	z-index: 1;
 }
 
@@ -26,25 +27,26 @@
 	border-radius: 100%;
 }
 
-.state-tracker .state .icon::before {
+.state-tracker .state::before {
 	content: '';
 	position: absolute;
-	top: 50%;
+	top: 1.5vw;
+	/* Metade da altura do ícone (3vw) */
 	left: 50%;
-	transform: translateY(-50%);
-	width: 400%;
+	width: 100%;
 	height: var(--fs-100);
 	background-color: var(--background-color-600);
 	z-index: -1;
 }
 
-.state-tracker .state:last-child .icon::before {
-	display: none;
+.state-tracker .state.last::before {
+	display: none !important;
 }
 
-.state-tracker .state .icon i{
+.state-tracker .state .icon i {
 	font-size: var(--icon-size-s);
 }
+
 .state-tracker .state .icon b {
 	font-size: var(--fs-400);
 }
@@ -67,37 +69,37 @@
 }
 
 
-.state.done .icon{
+.state.done .icon,
+.state.current .icon {
 	background-color: var(--primary-color-600);
 	color: var(--background-color-100);
 	outline-color: transparent;
 }
-.state.done .icon::before {
+
+.state.done::before {
 	background-color: var(--primary-color-500);
 }
-.state.done .label {
-	color: var(--text-color-500);
-}
-.state.done .description {
-	color: var(--text-color-300);
+
+.state.current::before {
+	background-color: var(--primary-color-600);
 }
 
-.state.current .icon {
+.state-tracker .state.last::before {
+	display: none !important;
+}
+
+.state.next .icon {
 	background-color: var(--background-color-100);
 	color: var(--primary-color-600);
 	outline-color: var(--primary-color-600);
 }
-.state.current .label {
+
+.state.next .label {
 	color: var(--text-color-900);
 }
-.state.current .description {
-	color: var(--text-color-700);
-}
 
-/* Make the connector (edge) after the current state red so it indicates
-   the current step is done and we're waiting for the next one */
-.state.current .icon::before {
-	background-color: var(--primary-color-600);
+.state.next .description {
+	color: var(--text-color-700);
 }
 
 .state.to-do .icon {

@@ -24,11 +24,11 @@ const StateTracker = ({ currentState }) => {
 
 	const currentIndex = states.findIndex(s => s.key === currentState);
 
-	const State = ({ index, state, isCurrent, isDone }) => {
+	const State = ({ index, state, isCurrent, isDone, isNext, isLast }) => {
 		return (
-			<div className={`state ${isDone ? "done" : isCurrent ? "current" : "to-do"}`}>
+			<div className={`state ${isDone ? "done" : isCurrent ? "current" : isNext ? "next" : "to-do"} ${isLast ? "last" : ""}`}>
 				<div className="icon noselect">
-					{isDone ? <i className="bi bi-check-lg"></i> : <b>{index}</b>}
+					{(isDone || isCurrent) ? <i className="bi bi-check-lg"></i> : <b>{index}</b>}
 				</div>
 				<p className="label">{state.label}</p>
 				<p className="description">{state.description}</p>
@@ -46,6 +46,8 @@ const StateTracker = ({ currentState }) => {
 					state={state}
 					isCurrent={index === currentIndex}
 					isDone={index < currentIndex}
+					isNext={index === currentIndex + 1}
+					isLast={index === states.length - 1}
 				/>
 			))}
 		</div>
